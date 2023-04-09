@@ -1,5 +1,29 @@
 // Contains the API Gateway, authorizers, Cognito, and IAM (not too sure about the last two)
 
+// This file contains logic to act as an API builder:
+// The general idea is that the developer of the lambdas will simply create a package of lambdas
+// in which each lambda has its own folder. Inside that folder will exist a metadata.json file 
+// which will includ the name of the function, the route for the api endpoint associated with it,
+// a list of roles allowed to access that API, and other various config.
+
+// Example:
+
+//  Folder Structure
+//  endpoints/
+//      getAllUsers/
+//          metadata.json
+//          index.js
+//              
+
+// metadata.json
+// {
+//     "apiPath"    :  "posts",
+//     "httpMethod" :  "GET",
+//     "roles?"     :  ["basic-user", "logistics"],
+//     "runtime?"   :  "NODE_JS_14_X"
+// }
+  
+
 // TODO add some logic to the metadata.json file of the Lambda functions to allow the developer to pass the role that the function should be allowed to use
 
 
