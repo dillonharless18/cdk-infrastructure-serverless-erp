@@ -34,24 +34,16 @@
 
 import { CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as acm from 'aws-cdk-lib/aws-certificatemanager';
-import { BucketEncryption, BucketAccessControl, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
-import {
-  ViewerCertificate,
-  ViewerProtocolPolicy,
-  HttpVersion,
-  PriceClass,
-  OriginAccessIdentity,
-} from 'aws-cdk-lib/aws-cloudfront';
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
-import { HostedZone, RecordSet } from 'aws-cdk-lib/aws-route53';
-import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as fs from "fs";
 import path = require('path');
+import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import { Certificate, DnsValidatedCertificate } from 'aws-cdk-lib/aws-certificatemanager';
+import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
 
 interface ApiStackProps extends StackProps {
+    apiName: string,
     branch: string;
     domainName: string;
 }
@@ -64,6 +56,13 @@ export class ApiStack extends Stack {
         [key: string]: string
     }
 
+    // Use to create api names
+    const BRANCH_TO_STAGE_MAP: branchToSubdomainTypes = {
+        development: 'development-',
+        test:        'test-',
+        main:        ''
+    }
+
     // Use to create subdomains programmatically like dev.example.com, test.example.com, example.com
     const BRANCH_TO_SUBDOMAIN_MAP: branchToSubdomainTypes = {
         development: 'dev.',
@@ -71,123 +70,119 @@ export class ApiStack extends Stack {
         main:        ''
     }
 
-    const { branch, domainName } = props
+    const { apiName, branch, domainName } = props
 
     if ( !domainName ) throw new Error(`Error in API stack. domainName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     const DOMAIN_NAME = domainName;
     
     if ( !branch ) throw new Error(`Error in API stack. branch does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
-    const DOMAIN_WITH_SUBDOMAIN = `${BRANCH_TO_SUBDOMAIN_MAP[branch]}${domainName}`
+    
+    // Set the path to the Lambda functions directory
+    const functionsPath = path.resolve(__dirname, '../lambdas');
 
-    const WWW_DOMAIN_WITH_SUBDOMAIN = `www.${DOMAIN_WITH_SUBDOMAIN}`;
+    // Get the metadata for each Lambda function
+    const functionMetadata = getFunctionMetadata(functionsPath);
 
-    // Hosted Zone name should match the domain
-    const hostedZone = new HostedZone(this, 'HostedZone', {
-      zoneName: `${BRANCH_TO_SUBDOMAIN_MAP[branch]}onexerp.com`,
+
+
+
+    //////////////////////////
+    /////      API       /////
+    //////////////////////////
+
+    // Create the API Gateway REST API
+    let restApiName = `${BRANCH_TO_STAGE_MAP[branch]}${apiName}`
+    const api = new apigateway.RestApi(this, restApiName, {
+      restApiName
     });
 
-    // TODO Create NS records for lower envs in prod - look for a good automated solution for this
-    //      The issue is referencing NS records before they exist
-    // if ( branch === 'main' ) {
-    //     new RecordSet(this, `RecordSet-${branch}` {
-    //     })
-    // }
-
-    // How to delegate NS records to hostedZone in prod account in the most automated
-
-
-    const siteBucket = new s3.Bucket(this, 'WebsiteBucket', {
-        encryption: BucketEncryption.S3_MANAGED,
-        removalPolicy: RemovalPolicy.DESTROY,
-        autoDeleteObjects: true,
-        // No website related settings
-        accessControl: BucketAccessControl.PRIVATE,
-        publicReadAccess: false,
-        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+    // Pull in the hosted zone
+    const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
+        domainName: `${BRANCH_TO_SUBDOMAIN_MAP[branch]}onexerp.com`,
     });
 
-    const accessIdentity = new OriginAccessIdentity(this, `CloudfrontAccess-${branch}`);
-    const cloudfrontUserAccessPolicy = new PolicyStatement();
-    cloudfrontUserAccessPolicy.addActions('s3:GetObject');
-    cloudfrontUserAccessPolicy.addPrincipals(accessIdentity.grantPrincipal);
-    cloudfrontUserAccessPolicy.addResources(siteBucket.arnForObjects('*'));
-    siteBucket.addToResourcePolicy(cloudfrontUserAccessPolicy);
+    // API Subdomain
+    const apiSubdomain = `api.${BRANCH_TO_SUBDOMAIN_MAP[branch]}onexerp.com`
 
-    // This step will block deployment until you add the relevant CNAME records through your domain registrar
-    // Make sure you visit https://us-east-1.console.aws.amazon.com/acm/home?region=us-east-1#/certificates
-    // to check the CNAME records that need to be added
-    // Idea for extension: build a Lambda custom resource that makes an API call to your domain registrar
-    // to add the relevant CNAME records
-    // (Obviously if you're using Route53, you can bypass this step):
-    // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront-readme.html#domain-names-and-certificates
-    const cert = new acm.Certificate(this, `WebCert-${branch}`, {
-        domainName: WWW_DOMAIN_WITH_SUBDOMAIN,
-        subjectAlternativeNames: [DOMAIN_WITH_SUBDOMAIN],
-        validation: CertificateValidation.fromDns(),
+    // Look up the certficate
+    const certificate = new DnsValidatedCertificate(this, 'Certificate', {
+        domainName: apiSubdomain,
+        hostedZone,
+        region: 'us-east-1', // The certificate must be created in the us-east-1 region for API Gateway
     });
-
-    const ROOT_INDEX_FILE = 'index.html';
-    const cfDist = new cloudfront.CloudFrontWebDistribution(this, `CfDistribution-${branch}`, {
-        comment: 'CDK Cloudfront Secure S3',
-        viewerCertificate: ViewerCertificate.fromAcmCertificate(cert, {
-            aliases: [DOMAIN_WITH_SUBDOMAIN, WWW_DOMAIN_WITH_SUBDOMAIN],
-        }),
-        defaultRootObject: ROOT_INDEX_FILE,
-        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        httpVersion: HttpVersion.HTTP2,
-        priceClass: PriceClass.PRICE_CLASS_100, // the cheapest
-        originConfigs: [
-            {
-            s3OriginSource: {
-                originAccessIdentity: accessIdentity,
-                s3BucketSource: siteBucket,
-                // originPath: `/`, // TODO replace this...
-            },
-            behaviors: [
-                {
-                compress: true,
-                isDefaultBehavior: true,
-                },
-            ],
-            },
-        ],
-        // Allows React to handle all errors internally
-        errorConfigurations: [
-            {
-            errorCachingMinTtl: 300, // in seconds
-            errorCode: 403,
-            responseCode: 200,
-            responsePagePath: `/${ROOT_INDEX_FILE}`,
-            },
-            {
-            errorCachingMinTtl: 300, // in seconds
-            errorCode: 404,
-            responseCode: 200,
-            responsePagePath: `/${ROOT_INDEX_FILE}`,
-            },
-        ],
+    
+    // Create a custom domain with the minimum TLS version set to 1.2
+    const customDomain = new apigateway.DomainName(this, 'CustomDomain', {
+        certificate,
+        domainName: apiSubdomain,
+        endpointType: apigateway.EndpointType.REGIONAL,
+        securityPolicy: apigateway.SecurityPolicy.TLS_1_2,
+    });
+    
+    // Associate the custom domain with the API
+    const domainMapping = api.addDomainName('DomainMapping', {
+        domainName: customDomain.domainName,
+        certificate: certificate
     });
 
-    const deployment = new BucketDeployment(this, 'DeployWebsite', {
-        sources: [Source.asset('../website-code/build')],
-        destinationBucket: siteBucket,
+    // Create a Route 53 alias record for the custom domain
+    new ARecord(this, 'AliasRecord', {
+        zone: hostedZone,
+        recordName: apiSubdomain,
+        target: RecordTarget.fromAlias(new ApiGatewayDomain(customDomain)),
     });
 
-    // TODO add a CF invalidation here
+    // TODO Look into API versioning and see if this should be handled more programmatically
+    // Add the '/api/v1' base path for the API
+    const apiV1 = api.root.addResource('api').addResource('v1');
 
-    // You will need output to create a www CNAME record to
-    new CfnOutput(this, 'CfDomainName', {
-        value: cfDist.distributionDomainName,
-        description: 'Create a CNAME record with name `www` and value of this CF distribution URL',
+
+
+
+    //////////////////////////
+    ///      Lambdas       ///
+    //////////////////////////
+
+    // TODO - Create the Lambda Authorizer(s)
+
+    // Crate the Lambda endpoints
+
+    // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
+    functionMetadata.forEach((metadata) => {
+      // Create the Lambda function
+      const lambdaFunction = new lambda.Function(this, `Lambda-${metadata.name}`, {
+        code: lambda.Code.fromAsset(path.join(functionsPath, metadata.name)),
+        handler: 'index.handler',
+        runtime: lambda.Runtime.NODEJS_18_X,
+      });
+
+      // Create the API Gateway integration for the Lambda function
+      const lambdaIntegration = new apigateway.LambdaIntegration(lambdaFunction);
+
+      // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
+      apiV1.addResource(metadata.apiPath).addMethod(metadata.httpMethod, lambdaIntegration);
     });
-    new CfnOutput(this, 'S3BucketName', {
-        value: `s3://${siteBucket.bucketName}/`,
-        description: 'Use this with `aws s3 sync` to upload your static website files',
-    });
-    new CfnOutput(this, 'CfDistId', {
-        value: cfDist.distributionId,
-        description: 'Use this ID to perform a cache invalidation to see changes to your site immediately',
-    });
+
 
   }
+}
+
+// Function to get metadata for Lambda functions
+function getFunctionMetadata(functionsPath: string) {
+  // Get the list of directories inside the functions folder
+  const functionDirectories = fs.readdirSync(functionsPath).filter((dir) => {
+    return fs.lstatSync(path.join(functionsPath, dir)).isDirectory();
+  });
+
+  // Iterate through the directories and read the metadata.json files
+  return functionDirectories.map((dir) => {
+    const metadataPath = path.join(functionsPath, dir, 'metadata.json');
+    if (fs.existsSync(metadataPath)) {
+      // Parse the metadata.json content and return it as an object
+      return JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+    } else {
+      // Throw an error if the metadata.json file is missing
+      throw new Error(`metadata.json file is missing in the '${dir}' Lambda function directory.`);
+    }
+  });
 }

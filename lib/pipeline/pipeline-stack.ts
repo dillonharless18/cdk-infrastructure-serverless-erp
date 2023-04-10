@@ -21,6 +21,7 @@ export function createResourceName(branch: string, resourceName: string) {
 }
 
 interface PipelineStackProps extends cdk.StackProps {
+    apiName: string;
     domainName: string;
     source: CodePipelineSource;
     pipelineSource: CodePipelineSource;
@@ -33,6 +34,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         super(scope, id, props);
 
         if ( !props ) throw Error ("props is not defined")
+        if ( !props.apiName ) throw Error ("apiName is not defined")
         if ( !props.branch ) throw Error("branch is not defined.")
         if ( !props.source ) throw Error("source is not defined.")
         if ( !props.pipelineName ) throw Error("pipelineName is not defined.")
@@ -76,6 +78,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         const deployCognitoDeploymentStage = pipeline.addStage(cognitoDeploymentStage);
 
         const apiDeploymentStage = new ApiDeploymentStage(this, 'Deploy', {
+            apiName: props.apiName,
             branch: props.branch,
             domainName: props.domainName
         });

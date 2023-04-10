@@ -5,6 +5,7 @@ import { InfrastructurePipelineStack } from '../lib/pipeline/pipeline-stack';
 
 const app = new cdk.App();
 
+const API_NAME            = "oneXerpAPI"
 const DEV_BRANCH          = "development"
 const DEV_CODESTAR_ARN    = "arn:aws:codestar-connections:us-east-1:136559125535:connection/c59440ca-db21-4051-b54a-810bbc89464f"
 const DOMAIN_NAME         = "onexerp.com"
@@ -20,6 +21,7 @@ const LAMBDA_REPO         = "dillonCF/oneXerp-Lambdas"
 // NOTE: Ensure you have the lambdas folder pulled down when you deploy the first time to avoid errors.
 
 new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${DEV_BRANCH}`, {
+    apiName: API_NAME,
     branch: DEV_BRANCH,
     domainName: DOMAIN_NAME,
     pipelineName: PIPELINE_NAME,
@@ -32,10 +34,11 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${DEV_BRANCH}`, {
     }),
     source: CodePipelineSource.connection(LAMBDA_REPO, DEV_BRANCH, {
         connectionArn: DEV_CODESTAR_ARN
-    }),
+    })
 });
 
 new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${PROD_BRANCH}`, {
+    apiName: API_NAME,
     branch: PROD_BRANCH,
     domainName: DOMAIN_NAME,
     pipelineName: PIPELINE_NAME,
