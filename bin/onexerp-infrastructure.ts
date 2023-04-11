@@ -26,8 +26,8 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${DEV_BRANCH}`, {
     domainName: DOMAIN_NAME,
     pipelineName: PIPELINE_NAME,
     env: {
-        account: process.env.CDK_DEPLOY_ACCOUNT || process.env.CDK_DEFAULT_ACCOUNT, 
-        region: process.env.CDK_DEPLOY_REGION || process.env.CDK_DEFAULT_REGION 
+        account: process.env.CDK_DEPLOY_ACCOUNT || "136559125535", 
+        region: process.env.CDK_DEPLOY_REGION || "us-east-1" 
     },
     pipelineSource: CodePipelineSource.connection(INFRA_REPO, DEV_BRANCH, {
         connectionArn: DEV_CODESTAR_ARN
@@ -43,8 +43,8 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${PROD_BRANCH}`, {
     domainName: DOMAIN_NAME,
     pipelineName: PIPELINE_NAME,
     env: {
-        account: process.env.CDK_DEPLOY_ACCOUNT || process.env.CDK_DEFAULT_ACCOUNT, 
-        region: process.env.CDK_DEPLOY_REGION || process.env.CDK_DEFAULT_REGION 
+        account: process.env.CDK_DEPLOY_ACCOUNT || "743614460397", 
+        region: process.env.CDK_DEPLOY_REGION || "us-east-1"
     },
     pipelineSource: CodePipelineSource.connection(INFRA_REPO, PROD_BRANCH, {
         connectionArn: PROD_CODESTAR_ARN

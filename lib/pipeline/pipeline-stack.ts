@@ -7,15 +7,6 @@ import { IamDeploymentStage } from './stages/deploy-iam';
 import { CognitoDeploymentStage } from './stages/deploy-cognito';
 import { DatabaseDeploymentStage } from './stages/deploy-database';
 
-
-// Generates resource named based on branch
-
-// TODO Explore this option to see if it works better
-// export function createResourceName(node: Node, resourceName: string) {
-//     const branch = node.tryGetContext("branch");
-//     return `${branch}-${resourceName}`;
-// }
-
 export function createResourceName(branch: string, resourceName: string) {
     return `${resourceName}-${branch}`;
 }
@@ -45,13 +36,14 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             synth: new CodeBuildStep("Synth", {
                 input: props?.pipelineSource,
                 additionalInputs: {
-                    '../website-code': props?.source
+                    // '../website-code': props?.source
+                    '../../lambdas': props?.source
                 },
                 commands: [
-                    "cd ../website-code", // step out and into the website code and build it
-                    "npm ci",
-                    "npm run build",
-                    "cd -",
+                    // "cd ../website-code", // step out and into the website code and build it
+                    // "npm ci",
+                    // "npm run build",
+                    // "cd -",
                     "npm ci",
                     "npm run build",
                     "npx cdk synth"

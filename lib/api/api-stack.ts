@@ -78,7 +78,11 @@ export class ApiStack extends Stack {
     if ( !branch ) throw new Error(`Error in API stack. branch does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     
     // Set the path to the Lambda functions directory
-    const functionsPath = path.resolve(__dirname, '../lambdas');
+    const lambdasPath = path.resolve(__dirname, '../../lambdas');
+    const testLambdasPath = path.resolve(__dirname, '../../test_lambdas');
+    const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
+    console.log(`functionsPath: ${functionsPath}`)
+
 
     // Get the metadata for each Lambda function
     const functionMetadata = getFunctionMetadata(functionsPath);
@@ -110,7 +114,7 @@ export class ApiStack extends Stack {
         hostedZone,
         region: 'us-east-1', // The certificate must be created in the us-east-1 region for API Gateway
     });
-    
+
     // Create a custom domain with the minimum TLS version set to 1.2
     const customDomain = new apigateway.DomainName(this, 'CustomDomain', {
         certificate,
@@ -169,20 +173,22 @@ export class ApiStack extends Stack {
 
 // Function to get metadata for Lambda functions
 function getFunctionMetadata(functionsPath: string) {
-  // Get the list of directories inside the functions folder
   const functionDirectories = fs.readdirSync(functionsPath).filter((dir) => {
     return fs.lstatSync(path.join(functionsPath, dir)).isDirectory();
   });
 
-  // Iterate through the directories and read the metadata.json files
-  return functionDirectories.map((dir) => {
+  console.log('Function directories:', functionDirectories);
+
+  const functionMetadata = functionDirectories.map((dir) => {
     const metadataPath = path.join(functionsPath, dir, 'metadata.json');
     if (fs.existsSync(metadataPath)) {
-      // Parse the metadata.json content and return it as an object
-      return JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+      const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+      console.log('Parsed metadata:', metadata);
+      return metadata;
     } else {
-      // Throw an error if the metadata.json file is missing
       throw new Error(`metadata.json file is missing in the '${dir}' Lambda function directory.`);
     }
   });
+
+  return functionMetadata;
 }

@@ -1,0 +1,6 @@
+{
+    "apiPath"    :  "users",
+    "httpMethod" :  "GET",
+    "runtime"    :  "NODE_JS_18_X",
+    "name"       :  "getAllUsers"
+}
