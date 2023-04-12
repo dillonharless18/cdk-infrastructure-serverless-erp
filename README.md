@@ -114,11 +114,11 @@ Here is an example of a `metadata.json` file:
 
 `name`: *Required.* String: Must match the folder name.
 
-`allowedGroups`: *Defaults to ["admin", "basic_user", "logistics", "project_manager", "driver"] (so all roles)* Array of strings: Will be used to restrict the API endpoint to various roles within oneXerp's ecosystem. The allowed values for the array can be seen in the default at the beginning of this definition.
+`allowedGroups`: *Defaults to ["admin", "basic_user", "logistics", "project_manager", "driver"] (all roles)* Array of strings: Will be used to restrict the API endpoint to various roles within oneXerp's ecosystem.
 
-## Adding New Lambda Functions
+## Adding API Endpoints
 
-To add a new Lambda function, follow these steps:
+To add a new API endpoint, follow these steps:
 
 1. Create a new directory in the oneXerp-Lambdas repository.
 2. Inside the new directory, create a `metadata.json` file with the following properties:
@@ -127,7 +127,7 @@ To add a new Lambda function, follow these steps:
    - `name`: The name of the function (e.g., `getPoLineItemComments`)
    - `allowedGroups`: The oneXerp roles that will be allowed to access the API Endpoint. Options are: [basic_user, driver, logistics, project_manager, admin]
 3. Create the Lambda function's code file (e.g., `index.js`) inside the new directory
-4. The `ApiStack` will automatically create the Lambda function, integration, and API Gateway resource based on the `metadata.json` file
+4. The `ApiStack` will automatically create the Lambda function, integration, and API Gateway resource based on the `metadata.json` file. It will associate it with the proper Cognito User Pools according to the allowedGroups property in the metadata.json file.
 
 ## Testing
 
