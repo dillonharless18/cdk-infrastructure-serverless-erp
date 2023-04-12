@@ -23,6 +23,7 @@ const LAMBDA_REPO         = "dillonCF/oneXerp-Lambdas"
 new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${DEV_BRANCH}`, {
     apiName: API_NAME,
     branch: DEV_BRANCH,
+    certificateArn: "arn:aws:acm:us-east-1:136559125535:certificate/4fb61b1f-0934-4b3f-9070-a8f1036e7430",
     domainName: DOMAIN_NAME,
     pipelineName: PIPELINE_NAME,
     env: {
@@ -40,6 +41,7 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${DEV_BRANCH}`, {
 new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${PROD_BRANCH}`, {
     apiName: API_NAME,
     branch: PROD_BRANCH,
+    certificateArn: "arn:aws:acm:us-east-1:743614460397:certificate/57206c73-27f6-4fee-bf04-3297fa3a0703",
     domainName: DOMAIN_NAME,
     pipelineName: PIPELINE_NAME,
     env: {

@@ -9,8 +9,9 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
   // WHEN
   const stack = new ApiStack(app, 'TestApiStack', {
     apiName: 'TestApi',
-    branch: 'main',
-    domainName: 'example.com',
+    branch: 'development',
+    certficateArn: 'arn:aws:acm:us-east-1:136559125535:certificate/4fb61b1f-0934-4b3f-9070-a8f1036e7430',
+    domainName: 'test.com',
     env: {
         account: '136559125535',
         region: 'us-east-1'
@@ -18,11 +19,15 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
   });
   const template = Template.fromStack(stack);
 
+  console.log(`Logging the template in api-stack.test.ts:\n`)
+  console.log(JSON.stringify(template.toJSON(), null, 2));
+
+
   // THEN
   // Check if the API Gateway exists
   template.resourceCountIs('AWS::ApiGateway::RestApi', 1);
 
-  // Check if the Lambda function exists
+  // Check if the Lambda function(s) exists
   template.resourceCountIs('AWS::Lambda::Function', 1);
 
   // Check if the API Gateway has a resource with the expected path

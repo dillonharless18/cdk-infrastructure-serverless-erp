@@ -39,11 +39,12 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as fs from "fs";
 import path = require('path');
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
-import { Certificate, DnsValidatedCertificate } from 'aws-cdk-lib/aws-certificatemanager';
+import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
 
 interface ApiStackProps extends StackProps {
     apiName: string,
+    certficateArn: string, // Use for custom domain for API Gateway
     branch: string;
     domainName: string;
 }
@@ -70,12 +71,14 @@ export class ApiStack extends Stack {
         main:        ''
     }
 
-    const { apiName, branch, domainName } = props
+    const { apiName, branch, certficateArn, domainName } = props
 
     if ( !domainName ) throw new Error(`Error in API stack. domainName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     const DOMAIN_NAME = domainName;
     
     if ( !branch ) throw new Error(`Error in API stack. branch does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
+    
+    if ( !certficateArn ) throw new Error(`Error in API stack. certificateArn does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     
     // Set the path to the Lambda functions directory
     const lambdasPath = path.resolve(__dirname, '../../lambdas');
@@ -94,46 +97,38 @@ export class ApiStack extends Stack {
     /////      API       /////
     //////////////////////////
 
+    const subdomain = `${BRANCH_TO_SUBDOMAIN_MAP[branch]}${domainName}`
+
+    // API Subdomain
+    const apiSubdomain = `api.${subdomain}`
+
     // Create the API Gateway REST API
     let restApiName = `${BRANCH_TO_STAGE_MAP[branch]}${apiName}`
     const api = new apigateway.RestApi(this, restApiName, {
-      restApiName
+      restApiName: restApiName,
     });
 
     // Pull in the hosted zone
     const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
-        domainName: `${BRANCH_TO_SUBDOMAIN_MAP[branch]}onexerp.com`,
+        domainName: `${BRANCH_TO_SUBDOMAIN_MAP[branch]}${domainName}`,
     });
-
-    // API Subdomain
-    const apiSubdomain = `api.${BRANCH_TO_SUBDOMAIN_MAP[branch]}onexerp.com`
-
+  
     // Look up the certficate
-    const certificate = new DnsValidatedCertificate(this, 'Certificate', {
-        domainName: apiSubdomain,
-        hostedZone,
-        region: 'us-east-1', // The certificate must be created in the us-east-1 region for API Gateway
-    });
-
-    // Create a custom domain with the minimum TLS version set to 1.2
-    const customDomain = new apigateway.DomainName(this, 'CustomDomain', {
-        certificate,
-        domainName: apiSubdomain,
-        endpointType: apigateway.EndpointType.REGIONAL,
-        securityPolicy: apigateway.SecurityPolicy.TLS_1_2,
-    });
-    
-    // Associate the custom domain with the API
-    const domainMapping = api.addDomainName('DomainMapping', {
-        domainName: customDomain.domainName,
-        certificate: certificate
+    const certificate = Certificate.fromCertificateArn(this, `CertificateArn-${apiSubdomain}`, certficateArn);
+  
+    // Associate a custom domain with the API
+    const customDomainName = api.addDomainName('CustomDomainName', {
+      domainName: apiSubdomain, // Use the subdomain under the delegated domain
+      certificate: certificate,
+      endpointType: apigateway.EndpointType.REGIONAL,
+      securityPolicy: apigateway.SecurityPolicy.TLS_1_2,
     });
 
     // Create a Route 53 alias record for the custom domain
     new ARecord(this, 'AliasRecord', {
         zone: hostedZone,
         recordName: apiSubdomain,
-        target: RecordTarget.fromAlias(new ApiGatewayDomain(customDomain)),
+        target: RecordTarget.fromAlias(new ApiGatewayDomain(customDomainName)),
     });
 
     // TODO Look into API versioning and see if this should be handled more programmatically
@@ -166,8 +161,6 @@ export class ApiStack extends Stack {
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
       apiV1.addResource(metadata.apiPath).addMethod(metadata.httpMethod, lambdaIntegration);
     });
-
-
   }
 }
 

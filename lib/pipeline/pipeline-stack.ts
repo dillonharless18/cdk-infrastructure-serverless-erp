@@ -13,6 +13,7 @@ export function createResourceName(branch: string, resourceName: string) {
 
 interface PipelineStackProps extends cdk.StackProps {
     apiName: string;
+    certificateArn: string;
     domainName: string;
     source: CodePipelineSource;
     pipelineSource: CodePipelineSource;
@@ -72,6 +73,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         const apiDeploymentStage = new ApiDeploymentStage(this, 'Deploy', {
             apiName: props.apiName,
             branch: props.branch,
+            certificateArn: props.certificateArn,
             domainName: props.domainName
         });
         const deployApiDeploymentStage = pipeline.addStage(apiDeploymentStage);

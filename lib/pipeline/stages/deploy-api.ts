@@ -6,6 +6,7 @@ import { ApiStack } from '../../api/api-stack';
 interface CustomStageProps extends StageProps {
     apiName: string;
     branch: string;
+    certificateArn: string;
     domainName: string;
 }
 
@@ -15,6 +16,7 @@ export class ApiDeploymentStage extends Stage {
         new ApiStack(this, 'Infrastructure', {
             apiName: props.apiName,
             branch: props.branch,
+            certficateArn: props.certificateArn,
             domainName: props.domainName
         });
     }
