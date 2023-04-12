@@ -109,8 +109,11 @@ Here is an example of a metadata.json file:
 ```
 
 `apiPath`: *Required.* This is used to create all the necessary nested resources in API Gateway. If a path doesn't exist, it will be created.
+
 `httpMethod`: *Required.* The method associated with the api endpoint.
+
 `name`: *Required.* Must match the folder name.
+
 `roles`: *Under development*. Will be used to restrict the API endpoint to various roles within oneXerp's ecosystem.
 
 
