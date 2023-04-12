@@ -131,26 +131,31 @@ export class CognitoStack extends Stack {
     const adminGroup = new cognito.CfnUserPoolGroup(this, 'AdminGroup', {
         groupName: 'admin_group',
         userPoolId: userPool.userPoolId,
+        precedence: 0
     });
 
     const basicUserGroup = new cognito.CfnUserPoolGroup(this, 'BasicUserGroup', {
         groupName: 'basic_user_group',
         userPoolId: userPool.userPoolId,
+        precedence: 4
     });
 
     const logisticsGroup = new cognito.CfnUserPoolGroup(this, 'LogisticsGroup', {
         groupName: 'logistics_group',
         userPoolId: userPool.userPoolId,
+        precedence: 2
     });
 
     const projectManagerGroup = new cognito.CfnUserPoolGroup(this, 'ProjectManagerGroup', {
         groupName: 'project_manager_group',
         userPoolId: userPool.userPoolId,
+        precedence: 1
     });
   
     const driverGroup = new cognito.CfnUserPoolGroup(this, 'DriverGroup', {
         groupName: 'driver_group',
         userPoolId: userPool.userPoolId,
+        precedence: 3
     });
 
     const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
