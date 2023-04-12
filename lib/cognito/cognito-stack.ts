@@ -168,15 +168,9 @@ export class CognitoStack extends Stack {
         ]
     });
 
+    
     new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
         identityPoolId: identityPool.ref,
-        roles: {
-          'admin': adminRole.roleArn,
-          'basic_user': basicUserRole.roleArn,
-          'logistics': logisticsRole.roleArn,
-          'project_manager': projectManagerRole.roleArn,
-          'driver': driverRole.roleArn,
-        },
         roleMappings: {
             'cognito:preferred_role': {
             type: 'Token',
