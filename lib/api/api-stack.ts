@@ -1,7 +1,7 @@
 /* eslint-disable no-new */
 /* eslint-disable import/prefer-default-export */
 
-import { CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Fn, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -77,6 +77,16 @@ export class ApiStack extends Stack {
       restApiName: restApiName,
     });
 
+    // Add Cognito Authorizer to the API Gateway
+    const userPoolArn = Fn.importValue('UserPoolArn');
+    const authorizer = new apigateway.CfnAuthorizer(this, 'CognitoAuthorizer', {
+      name: 'CognitoAuthorizer',
+      type: 'COGNITO_USER_POOLS',
+      identitySource: 'method.request.header.Authorization',
+      providerArns: [userPoolArn],
+      restApiId: api.restApiId,
+    });
+
     // Pull in the hosted zone
     const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
         domainName: `${BRANCH_TO_SUBDOMAIN_MAP[branch]}${domainName}`,
@@ -111,10 +121,6 @@ export class ApiStack extends Stack {
     //////////////////////////
     ///      Lambdas       ///
     //////////////////////////
-
-    // TODO - Create the Lambda Authorizer(s)
-
-    // Create the Lambda endpoints
 
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {

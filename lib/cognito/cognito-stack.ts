@@ -217,6 +217,12 @@ export class CognitoStack extends Stack {
     // Output the domain name for the user pool
     new cdk.CfnOutput(this, 'UserPoolDomainOutput', {
         value: userPoolDomain.domainName,
+        exportName: 'UserPoolDomainOutput',
+    });
+
+    new cdk.CfnOutput(this, 'UserPoolArnOutput', {
+        value: userPool.userPoolArn,
+        exportName: 'UserPoolArn',
     });
 
   }
