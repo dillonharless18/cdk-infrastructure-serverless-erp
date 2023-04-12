@@ -72,7 +72,7 @@ Description of folder contents:
 
 - `bin/`: Contains the entry point file for the CDK app
 - `lib/`: Contains the CDK constructs and stacks used to define the infrastructure
-  - `api/`: Contains the `ApiStack` which creates the API Gateway and associated resources
+  - `api/`: Contains the `ApiStack` which creates the API Gateway and associated resources. This stack will reach out to the oneXerp-Lambdas repository to dynamically create the API endpoints. *More details below.*
   - `database/`: Contains the `DatabaseStack` for creating and managing the database resources
   - `iam/`: Contains the `IamStack` for creating and managing IAM resources
     - `roles/`: Contains JSON files for each role of OneXerp (e.g., admin, basic_user, logistics, project_manager, driver)
