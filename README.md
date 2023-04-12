@@ -53,7 +53,7 @@ The repository is organized as follows:
 - `lambdas/`: Contains the Lambda functions used in the project
   - Each Lambda function has its own directory with a `metadata.json` file describing the function's configuration
 
-  .
+.
 +-- bin/
 |   +-- onexerp-infrastructure.ts
 +-- lib/
