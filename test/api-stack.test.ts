@@ -19,10 +19,6 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
   });
   const template = Template.fromStack(stack);
 
-  // console.log(`Logging the template in api-stack.test.ts:\n`)
-  // console.log(JSON.stringify(template.toJSON(), null, 2));
-
-
   // THEN
   // Check if the API Gateway exists
   template.resourceCountIs('AWS::ApiGateway::RestApi', 1);
@@ -38,7 +34,6 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
     PathPart: 'v1',
   });
 
-  
   // Check if the API Gateway has a resource with the expected path for the getUsers Lambda function
   template.hasResourceProperties('AWS::ApiGateway::Resource', {
     PathPart: 'users',
@@ -48,7 +43,6 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
   template.hasResourceProperties('AWS::ApiGateway::Method', {
     HttpMethod: 'GET',
   });
-
 
   // Check if the API Gateway has a resource with the expected path for the getPoLineItemComments Lambda function
   template.hasResourceProperties('AWS::ApiGateway::Resource', {
@@ -70,4 +64,16 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
   // Check if the custom domain and Route53 record exist
   template.resourceCountIs('AWS::ApiGateway::DomainName', 1);
   template.resourceCountIs('AWS::Route53::RecordSet', 1);
+
+  // Check if the API Gateway has an authorizer
+  template.resourceCountIs('AWS::ApiGateway::Authorizer', 1);
+
+  // Check if the API Gateway has a GET method using the authorizer
+  // template.hasResourceProperties('AWS::ApiGateway::Method', {
+  //   HttpMethod: 'GET',
+  //   AuthorizationType: 'COGNITO_USER_POOLS',
+  //   AuthorizerId: {
+  //     Ref: 'AWS::ApiGateway::Authorizer', // Replace this with the actual Authorizer Logical ID
+  //   },
+  // });
 });
