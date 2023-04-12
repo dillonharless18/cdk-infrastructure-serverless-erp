@@ -136,7 +136,7 @@ export class ApiStack extends Stack {
     const apiV1 = api.root.addResource('api').addResource('v1');
     
 
-    
+
 
 
     //////////////////////////
@@ -154,6 +154,7 @@ export class ApiStack extends Stack {
         code: lambda.Code.fromAsset(path.join(functionsPath, metadata.name)),
         handler: 'index.handler',
         runtime: lambda.Runtime.NODEJS_18_X,
+        functionName: `${metadata.name}` // TODO see if this will be problematic at all 
       });
 
       // Create the API Gateway integration for the Lambda function
@@ -194,7 +195,7 @@ const createNestedResource = (parentResource: apigateway.Resource, path: string)
   let currentResource = parentResource;
 
   for (const part of pathParts) {
-    currentResource = currentResource.addResource(part);
+    currentResource = currentResource.addResource(part); // TODO decide whether the long resource names this is making is okay
   }
 
   return currentResource;

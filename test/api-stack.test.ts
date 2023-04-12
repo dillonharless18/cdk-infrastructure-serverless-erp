@@ -28,7 +28,7 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
   template.resourceCountIs('AWS::ApiGateway::RestApi', 1);
 
   // Check if the Lambda function(s) exists
-  template.resourceCountIs('AWS::Lambda::Function', 1);
+  template.resourceCountIs('AWS::Lambda::Function', 2);
 
   // Check if the API Gateway has a resource with the expected path
   template.hasResourceProperties('AWS::ApiGateway::Resource', {
@@ -38,9 +38,33 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
     PathPart: 'v1',
   });
 
-  // Check if the API Gateway has the expected method for the Lambda function
+  
+  // Check if the API Gateway has a resource with the expected path for the getUsers Lambda function
+  template.hasResourceProperties('AWS::ApiGateway::Resource', {
+    PathPart: 'users',
+  });
+
+  // Check if the API Gateway has a GET method
   template.hasResourceProperties('AWS::ApiGateway::Method', {
-    HttpMethod: 'GET', // Replace with the appropriate HTTP method from your metadata.json
+    HttpMethod: 'GET',
+  });
+
+
+  // Check if the API Gateway has a resource with the expected path for the getPoLineItemComments Lambda function
+  template.hasResourceProperties('AWS::ApiGateway::Resource', {
+    PathPart: 'purchase-orders',
+  });
+  template.hasResourceProperties('AWS::ApiGateway::Resource', {
+    PathPart: '{purchaseOrderId}',
+  });
+  template.hasResourceProperties('AWS::ApiGateway::Resource', {
+    PathPart: 'line-items',
+  });
+  template.hasResourceProperties('AWS::ApiGateway::Resource', {
+    PathPart: '{lineItemId}',
+  });
+  template.hasResourceProperties('AWS::ApiGateway::Resource', {
+    PathPart: 'comments',
   });
 
   // Check if the custom domain and Route53 record exist
