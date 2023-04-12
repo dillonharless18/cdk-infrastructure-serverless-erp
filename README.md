@@ -81,7 +81,7 @@ Description of folder contents:
 
 ## API Creation
 
-The API stack watches the oneXerp-Lambdas repository to dynamically create the API endpoints. It expects the following structure:
+The API stack watches the oneXerp-Lambdas repository to dynamically create the API endpoints. It expects the following structure (example names used here):
 
 ```md
 .
