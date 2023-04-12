@@ -93,7 +93,7 @@ The API stack watches the oneXerp-Lambdas repository to dynamically create the A
 |   └── index.ts
 ```
 
-It uses the metadata.json file within each Lambda file to create the necessary API Gateway resources. See the `test_lambdas` folder for an example. These Lambdas are used for unit testing the CDK.
+It uses the metadata.json file within each Lambda file to create the necessary API Gateway resources. See the `test_lambdas` folder for an example. These `test_lambdas` are used for unit testing the CDK.
 
 ### Breakdown of metadata.json file
 
