@@ -38,8 +38,6 @@ To deploy the infrastructure using AWS CDK, run the following command:
 TODO. There are a few things that need to be checked before deploying. Details to come on this piece. Eventually though, once that piece is done, you can simply run cdk deploy. From that point forward the pipelines will take care of any changes in the repositories.
 ```
 
-This command will create or update the CloudFormation stack with the resources defined in the CDK app.
-
 ## Structure
 
 The repository is organized as follows:
@@ -47,6 +45,11 @@ The repository is organized as follows:
 - `bin/`: Contains the entry point file for the CDK app
 - `lib/`: Contains the CDK constructs and stacks used to define the infrastructure
   - `api/`: Contains the `ApiStack` which creates the API Gateway and associated resources
+  - `database/`: Contains the `DatabaseStack` for creating and managing the database resources
+  - `iam/`: Contains the `IamStack` for creating and managing IAM resources
+    - `roles/`: Contains JSON files for each role of OneXerp (e.g., admin, basic_user, logistics, project_manager, driver)
+  - `cognito/`: Contains the `CognitoStack` for creating and managing Cognito resources
+  - `pipeline/`: Contains the `PipelineStack` for creating and managing the CI/CD pipeline
 - `lambdas/`: Contains the Lambda functions used in the project
   - Each Lambda function has its own directory with a `metadata.json` file describing the function's configuration
 
