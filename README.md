@@ -42,7 +42,7 @@ TODO. There are a few things that need to be checked before deploying. Details t
 
 The repository is organized as follows:
 
-```
+```md
 .
 ├── bin/
 │   └── onexerp-infrastructure.ts
@@ -83,7 +83,7 @@ Description of folder contents:
 
 The API stack watches the oneXerp-Lambdas repository to dynamically create the API endpoints. It expects the following structure:
 
-```
+```md
 .
 ├── getAllUsers/
 │   ├── metadata.json
@@ -99,7 +99,7 @@ It uses the metadata.json file within each Lambda file to create the necessary A
 
 Here is an example of a metadata.json file:
 
-```
+```json
 {
   "apiPath": "purchase-orders/{purchaseOrderId}/line-items/{lineItemId}/comments",
   "httpMethod": "GET",
