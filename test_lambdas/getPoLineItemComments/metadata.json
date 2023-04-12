@@ -1,0 +1,6 @@
+{
+  "apiPath": "purchase-orders/{purchaseOrderId}/line-items/{lineItemId}/comments",
+  "httpMethod": "GET",
+  "name": "getPoLineItemComments",
+  "runtime"    :  "NODE_JS_18_X"
+}

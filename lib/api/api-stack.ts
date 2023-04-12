@@ -134,8 +134,9 @@ export class ApiStack extends Stack {
     // TODO Look into API versioning and see if this should be handled more programmatically
     // Add the '/api/v1' base path for the API
     const apiV1 = api.root.addResource('api').addResource('v1');
+    
 
-
+    
 
 
     //////////////////////////
@@ -144,7 +145,7 @@ export class ApiStack extends Stack {
 
     // TODO - Create the Lambda Authorizer(s)
 
-    // Crate the Lambda endpoints
+    // Create the Lambda endpoints
 
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
@@ -159,13 +160,14 @@ export class ApiStack extends Stack {
       const lambdaIntegration = new apigateway.LambdaIntegration(lambdaFunction);
 
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
-      apiV1.addResource(metadata.apiPath).addMethod(metadata.httpMethod, lambdaIntegration);
+      const nestedResource = createNestedResource(apiV1, metadata.apiPath);
+      nestedResource.addMethod(metadata.httpMethod, lambdaIntegration);
     });
   }
 }
 
 // Function to get metadata for Lambda functions
-function getFunctionMetadata(functionsPath: string) {
+const getFunctionMetadata = (functionsPath: string) => {
   const functionDirectories = fs.readdirSync(functionsPath).filter((dir) => {
     return fs.lstatSync(path.join(functionsPath, dir)).isDirectory();
   });
@@ -184,4 +186,16 @@ function getFunctionMetadata(functionsPath: string) {
   });
 
   return functionMetadata;
+}
+
+// Function to create a nested resource for a given path
+const createNestedResource = (parentResource: apigateway.Resource, path: string): apigateway.Resource => {
+  const pathParts = path.split('/').filter((part) => part !== '');
+  let currentResource = parentResource;
+
+  for (const part of pathParts) {
+    currentResource = currentResource.addResource(part);
+  }
+
+  return currentResource;
 }
