@@ -53,33 +53,31 @@ The repository is organized as follows:
 - `lambdas/`: Contains the Lambda functions used in the project
   - Each Lambda function has its own directory with a `metadata.json` file describing the function's configuration
 
+```
 .
-+-- bin/
-|   +-- onexerp-infrastructure.ts
-+-- lib/
-|   +-- api/
-|   |   +-- api-stack.ts
-|   +-- database/
-|   |   +-- database-stack.ts
-|   +-- iam/
-|   |   +-- iam-stack.ts
-|   |   +-- roles/
-|   |       +-- admin.json
-|   |       +-- basic_user.json
-|   |       +-- logistics.json
-|   |       +-- project_manager.json
-|   |       +-- driver.json
-|   +-- cognito/
-|   |   +-- cognito-stack.ts
-|   +-- pipeline/
-|       +-- pipeline-stack.ts
-+-- lambdas/
-|   +-- <function_name>/
-|       +-- index.ts
-|       +-- metadata.json
-+-- package.json
-+-- README.md
-+-- tsconfig.json
+├── bin/
+│   └── onexerp-infrastructure.ts
+├── lib/
+│   ├── api/
+│   │   └── api-stack.ts
+│   ├── database/
+│   │   └── database-stack.ts
+│   ├── iam/
+│   │   ├── iam-stack.ts
+│   │   └── roles/
+│   │       ├── admin.json
+│   │       ├── basic_user.json
+│   │       ├── logistics.json
+│   │       ├── project_manager.json
+│   │       └── driver.json
+│   ├── cognito/
+│   │   └── cognito-stack.ts
+│   └── pipeline/
+│       └── pipeline-stack.ts
+├── package.json
+├── README.md
+└── tsconfig.json
+```
 
 ## Adding New Lambda Functions
 
