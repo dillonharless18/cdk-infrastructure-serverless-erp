@@ -21,8 +21,16 @@ export class CognitoStack extends Stack {
   constructor(scope: Construct, id: string, props: CognitoStackProps) {
     super(scope, id, props);
     
+
     type branchToSubdomainTypes = {
         [key: string]: string
+    }
+
+    // Use to create cognito user pools domain names
+    const BRANCH_TO_STAGE_MAP: branchToSubdomainTypes = {
+        development: 'development-',
+        test:        'test-',
+        main:        ''
     }
 
     // Use to create subdomains programmatically like dev.example.com, test.example.com, example.com
@@ -123,7 +131,7 @@ export class CognitoStack extends Stack {
     const userPoolDomain = new cognito.UserPoolDomain(this, 'UserPoolDomain', {
         userPool,
         cognitoDomain: {
-            domainPrefix: DOMAIN_WITH_SUBDOMAIN,
+            domainPrefix: `${BRANCH_TO_STAGE_MAP[branch]}${domainName}`,
         },
     });
   
