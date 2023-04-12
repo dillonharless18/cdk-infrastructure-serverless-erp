@@ -116,7 +116,6 @@ Here is an example of a metadata.json file:
 
 `roles`: *Under development*. Will be used to restrict the API endpoint to various roles within oneXerp's ecosystem.
 
-
 ## Adding New Lambda Functions
 
 To add a new Lambda function, follow these steps:
