@@ -79,16 +79,51 @@ Description of folder contents:
   - `cognito/`: Contains the `CognitoStack` for creating and managing Cognito resources
   - `pipeline/`: Contains the `PipelineStack` for creating and managing the CI/CD pipeline
 
+## API Creation
+
+The API stack watches the oneXerp-Lambdas repository to dynamically create the API endpoints. It expects the following structure:
+
+```
+.
+├── getAllUsers/
+│   ├── metadata.json
+|   └── index.ts
+├── getPoLineItemComments/
+│   ├── metadata.json
+|   └── index.ts
+```
+
+It uses the metadata.json file within each Lambda file to create the necessary API Gateway resources. See the `test_lambdas` folder for an example. These Lambdas are used for unit testing the CDK.
+
+### Breakdown of metadata.json file
+
+Here is an example of a metadata.json file:
+
+```
+{
+  "apiPath": "purchase-orders/{purchaseOrderId}/line-items/{lineItemId}/comments",
+  "httpMethod": "GET",
+  "name": "getPoLineItemComments",
+  roles: ["basic_user"]
+}
+```
+
+`apiPath`: *Required.* This is used to create all the necessary nested resources in API Gateway. If a path doesn't exist, it will be created.
+`httpMethod`: *Required.* The method associated with the api endpoint.
+`name`: *Required.* Must match the folder name.
+`roles`: *Under development*. Will be used to restrict the API endpoint to various roles within oneXerp's ecosystem.
+
+
 ## Adding New Lambda Functions
 
 To add a new Lambda function, follow these steps:
 
-1. Create a new directory under `lambdas/` for the new function
+1. Create a new directory in the oneXerp-Lambdas repository.
 2. Inside the new directory, create a `metadata.json` file with the following properties:
    - `apiPath`: The API path for the function (e.g., `purchase-orders/{purchaseOrderId}/line-items/{lineItemId}/comments`)
    - `httpMethod`: The HTTP method for the function (e.g., `GET`)
    - `name`: The name of the function (e.g., `getPoLineItemComments`)
-   - `runtime`: The runtime for the function (e.g., `NODE_JS_18_X`)
+   - `roles`: The roles that will be allowed to access the API Endpoint. Options are: [basic_user, driver, logistics, project_manager, admin]
 3. Create the Lambda function's code file (e.g., `index.js`) inside the new directory
 4. The `ApiStack` will automatically create the Lambda function, integration, and API Gateway resource based on the `metadata.json` file
 
@@ -101,7 +136,3 @@ npm test
 ```
 
 This will run the Jest tests found in the `test/` directory.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
