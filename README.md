@@ -1,6 +1,6 @@
 # OneXerp Infrastructure Repository
 
-This repository contains the AWS CDK code for creating and managing the infrastructure of OneXerp. It includes the resources required for the API Gateway, Lambda functions, and other relateresources.
+This repository contains the AWS CDK code for creating and managing the infrastructure of OneXerp. It includes the resources required for the API Gateway, Lambda functions, and other related resources.
 
 ## Getting Started
 
@@ -15,7 +15,7 @@ This repository contains the AWS CDK code for creating and managing the infrastr
 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-repo/one-xerp-infrastructure.git
+git clone https://github.com/dillonCF/oneXerp-Infrastructure.git
 ```
 
 2. Change into the repository directory
@@ -35,7 +35,7 @@ npm install
 To deploy the infrastructure using AWS CDK, run the following command:
 
 ```bash
-cdk deploy
+TODO. There are a few things that need to be checked before deploying. Details to come on this piece. Eventually though, once that piece is done, you can simply run cdk deploy. From that point forward the pipelines will take care of any changes in the repositories.
 ```
 
 This command will create or update the CloudFormation stack with the resources defined in the CDK app.
