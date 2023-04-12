@@ -21,10 +21,13 @@ test('Cognito stack is created correctly', () => {
         main: `${applicationName.toLowerCase()}`
     }
 
+    
     // WHEN
     const stack = new CognitoStack(app, 'TestCognitoStack', {domainName, branch, applicationName});
     const template = Template.fromStack(stack);
-
+    
+    console.log(JSON.stringify(template, null, 2))
+    
     // THEN Check if the UserPool is created
     template.hasResourceProperties('AWS::Cognito::UserPool', {AutoVerifiedAttributes: ['email']});
 

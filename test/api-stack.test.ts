@@ -20,6 +20,8 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
   const template = Template.fromStack(stack);
 
   // THEN
+  console.log(JSON.stringify(template, null, 2))
+  
   // Check if the API Gateway exists
   template.resourceCountIs('AWS::ApiGateway::RestApi', 1);
 
