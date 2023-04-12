@@ -137,7 +137,13 @@ export class ApiStack extends Stack {
 
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
       const nestedResource = createNestedResource(apiV1, metadata.apiPath);
-      nestedResource.addMethod(metadata.httpMethod, lambdaIntegration);
+      nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
+        authorizationType: apigateway.AuthorizationType.COGNITO,
+        authorizer: {
+          authorizerId: authorizer.ref
+        },
+        authorizationScopes: metadata.allowedGroups.map((group: string) => `cognito-idp:${group}`),
+      });
     });
   }
 }
@@ -155,6 +161,7 @@ const getFunctionMetadata = (functionsPath: string) => {
     if (fs.existsSync(metadataPath)) {
       const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
       console.log('Parsed metadata:', metadata);
+      metadata.allowedGroups = metadata.allowedGroups || []; // Ensures we always have an array
       return metadata;
     } else {
       throw new Error(`metadata.json file is missing in the '${dir}' Lambda function directory.`);

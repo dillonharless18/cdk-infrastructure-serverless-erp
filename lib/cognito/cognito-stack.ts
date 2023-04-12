@@ -126,35 +126,35 @@ export class CognitoStack extends Stack {
   
     // Define user pool groups for different roles
     const adminGroup = new cognito.CfnUserPoolGroup(this, 'AdminGroup', {
-        groupName: 'admin_group',
+        groupName: 'admin',
         userPoolId: userPool.userPoolId,
         precedence: 0,
         roleArn: adminRole.roleArn
     });
 
     const basicUserGroup = new cognito.CfnUserPoolGroup(this, 'BasicUserGroup', {
-        groupName: 'basic_user_group',
+        groupName: 'basic_user',
         userPoolId: userPool.userPoolId,
         precedence: 4,
         roleArn: basicUserRole.roleArn
     });
 
     const logisticsGroup = new cognito.CfnUserPoolGroup(this, 'LogisticsGroup', {
-        groupName: 'logistics_group',
+        groupName: 'logistics',
         userPoolId: userPool.userPoolId,
         precedence: 2,
         roleArn: logisticsRole.roleArn
     });
 
     const projectManagerGroup = new cognito.CfnUserPoolGroup(this, 'ProjectManagerGroup', {
-        groupName: 'project_manager_group',
+        groupName: 'project_manager',
         userPoolId: userPool.userPoolId,
         precedence: 1,
         roleArn: projectManagerRole.roleArn
     });
   
     const driverGroup = new cognito.CfnUserPoolGroup(this, 'DriverGroup', {
-        groupName: 'driver_group',
+        groupName: 'driver',
         userPoolId: userPool.userPoolId,
         precedence: 3,
         roleArn: driverRole.roleArn

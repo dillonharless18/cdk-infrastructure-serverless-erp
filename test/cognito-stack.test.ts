@@ -50,7 +50,7 @@ test('Cognito stack is created correctly', () => {
     });
 
     // Check if the UserPoolGroups are created
-    const groupNames = ['admin_group', 'basic_user_group', 'logistics_group', 'project_manager_group', 'driver_group'];
+    const groupNames = ['admin', 'basic_user', 'logistics', 'project_manager', 'driver'];
 
     groupNames.forEach((groupName) => {
         template.hasResourceProperties('AWS::Cognito::UserPoolGroup', {GroupName: groupName});

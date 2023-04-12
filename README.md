@@ -104,17 +104,17 @@ Here is an example of a `metadata.json` file:
   "apiPath": "purchase-orders/{purchaseOrderId}/line-items/{lineItemId}/comments",
   "httpMethod": "GET",
   "name": "getPoLineItemComments",
-  "roles": ["basic_user"]
+  "allowedGroups": ["basic_user"]
 }
 ```
 
-`apiPath`: *Required.* This is used to create all the necessary nested resources in API Gateway. If a path doesn't exist, it will be created.
+`apiPath`: *Required.* String: This is used to create all the necessary nested resources in API Gateway. If a path doesn't exist, it will be created.
 
-`httpMethod`: *Required.* The method associated with the api endpoint.
+`httpMethod`: *Required.* String: The method associated with the api endpoint.
 
-`name`: *Required.* Must match the folder name.
+`name`: *Required.* String: Must match the folder name.
 
-`roles`: *Under development*. Will be used to restrict the API endpoint to various roles within oneXerp's ecosystem.
+`allowedGroups`: *Under development*. Array of strings: Will be used to restrict the API endpoint to various roles within oneXerp's ecosystem.
 
 ## Adding New Lambda Functions
 
@@ -125,7 +125,7 @@ To add a new Lambda function, follow these steps:
    - `apiPath`: The API path for the function (e.g., `purchase-orders/{purchaseOrderId}/line-items/{lineItemId}/comments`)
    - `httpMethod`: The HTTP method for the function (e.g., `GET`)
    - `name`: The name of the function (e.g., `getPoLineItemComments`)
-   - `roles`: The roles that will be allowed to access the API Endpoint. Options are: [basic_user, driver, logistics, project_manager, admin]
+   - `allowedGroups`: The oneXerp roles that will be allowed to access the API Endpoint. Options are: [basic_user, driver, logistics, project_manager, admin]
 3. Create the Lambda function's code file (e.g., `index.js`) inside the new directory
 4. The `ApiStack` will automatically create the Lambda function, integration, and API Gateway resource based on the `metadata.json` file
 
