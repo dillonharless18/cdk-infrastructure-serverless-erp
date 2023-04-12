@@ -42,17 +42,6 @@ TODO. There are a few things that need to be checked before deploying. Details t
 
 The repository is organized as follows:
 
-- `bin/`: Contains the entry point file for the CDK app
-- `lib/`: Contains the CDK constructs and stacks used to define the infrastructure
-  - `api/`: Contains the `ApiStack` which creates the API Gateway and associated resources
-  - `database/`: Contains the `DatabaseStack` for creating and managing the database resources
-  - `iam/`: Contains the `IamStack` for creating and managing IAM resources
-    - `roles/`: Contains JSON files for each role of OneXerp (e.g., admin, basic_user, logistics, project_manager, driver)
-  - `cognito/`: Contains the `CognitoStack` for creating and managing Cognito resources
-  - `pipeline/`: Contains the `PipelineStack` for creating and managing the CI/CD pipeline
-- `lambdas/`: Contains the Lambda functions used in the project
-  - Each Lambda function has its own directory with a `metadata.json` file describing the function's configuration
-
 ```
 .
 ├── bin/
@@ -78,6 +67,17 @@ The repository is organized as follows:
 ├── README.md
 └── tsconfig.json
 ```
+
+Description of folder contents:
+
+- `bin/`: Contains the entry point file for the CDK app
+- `lib/`: Contains the CDK constructs and stacks used to define the infrastructure
+  - `api/`: Contains the `ApiStack` which creates the API Gateway and associated resources
+  - `database/`: Contains the `DatabaseStack` for creating and managing the database resources
+  - `iam/`: Contains the `IamStack` for creating and managing IAM resources
+    - `roles/`: Contains JSON files for each role of OneXerp (e.g., admin, basic_user, logistics, project_manager, driver)
+  - `cognito/`: Contains the `CognitoStack` for creating and managing Cognito resources
+  - `pipeline/`: Contains the `PipelineStack` for creating and managing the CI/CD pipeline
 
 ## Adding New Lambda Functions
 
