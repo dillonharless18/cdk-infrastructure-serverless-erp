@@ -6,23 +6,9 @@
 
 import { CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as acm from 'aws-cdk-lib/aws-certificatemanager';
-import { BucketEncryption, BucketAccessControl, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
-import {
-  ViewerCertificate,
-  ViewerProtocolPolicy,
-  HttpVersion,
-  PriceClass,
-  OriginAccessIdentity,
-} from 'aws-cdk-lib/aws-cloudfront';
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
-import { HostedZone, RecordSet } from 'aws-cdk-lib/aws-route53';
-import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
-import path = require('path');
-
+import * as cdk from 'aws-cdk-lib';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as iam from 'aws-cdk-lib/aws-iam';
 interface CognitoStackProps extends StackProps {
     branch: string;
     domainName: string;
@@ -53,113 +39,62 @@ export class CognitoStack extends Stack {
 
     const WWW_DOMAIN_WITH_SUBDOMAIN = `www.${DOMAIN_WITH_SUBDOMAIN}`;
 
-    // Hosted Zone name should match the domain
-    const hostedZone = new HostedZone(this, 'HostedZone', {
-      zoneName: `${BRANCH_TO_SUBDOMAIN_MAP[branch]}onexerp.com`,
-    });
-
-    // TODO Create NS records for lower envs in prod - look for a good automated solution for this
-    //      The issue is referencing NS records before they exist
-    // if ( branch === 'main' ) {
-    //     new RecordSet(this, `RecordSet-${branch}` {
-    //     })
-    // }
-
-    // How to delegate NS records to hostedZone in prod account in the most automated
-
-
-    const siteBucket = new s3.Bucket(this, 'WebsiteBucket', {
-        encryption: BucketEncryption.S3_MANAGED,
-        removalPolicy: RemovalPolicy.DESTROY,
-        autoDeleteObjects: true,
-        // No website related settings
-        accessControl: BucketAccessControl.PRIVATE,
-        publicReadAccess: false,
-        blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-    });
-
-    const accessIdentity = new OriginAccessIdentity(this, `CloudfrontAccess-${branch}`);
-    const cloudfrontUserAccessPolicy = new PolicyStatement();
-    cloudfrontUserAccessPolicy.addActions('s3:GetObject');
-    cloudfrontUserAccessPolicy.addPrincipals(accessIdentity.grantPrincipal);
-    cloudfrontUserAccessPolicy.addResources(siteBucket.arnForObjects('*'));
-    siteBucket.addToResourcePolicy(cloudfrontUserAccessPolicy);
-
-    // This step will block deployment until you add the relevant CNAME records through your domain registrar
-    // Make sure you visit https://us-east-1.console.aws.amazon.com/acm/home?region=us-east-1#/certificates
-    // to check the CNAME records that need to be added
-    // Idea for extension: build a Lambda custom resource that makes an API call to your domain registrar
-    // to add the relevant CNAME records
-    // (Obviously if you're using Route53, you can bypass this step):
-    // https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_cloudfront-readme.html#domain-names-and-certificates
-    const cert = new acm.Certificate(this, `WebCert-${branch}`, {
-        domainName: WWW_DOMAIN_WITH_SUBDOMAIN,
-        subjectAlternativeNames: [DOMAIN_WITH_SUBDOMAIN],
-        validation: CertificateValidation.fromDns(),
-    });
-
-    const ROOT_INDEX_FILE = 'index.html';
-    const cfDist = new cloudfront.CloudFrontWebDistribution(this, `CfDistribution-${branch}`, {
-        comment: 'CDK Cloudfront Secure S3',
-        viewerCertificate: ViewerCertificate.fromAcmCertificate(cert, {
-            aliases: [DOMAIN_WITH_SUBDOMAIN, WWW_DOMAIN_WITH_SUBDOMAIN],
-        }),
-        defaultRootObject: ROOT_INDEX_FILE,
-        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        httpVersion: HttpVersion.HTTP2,
-        priceClass: PriceClass.PRICE_CLASS_100, // the cheapest
-        originConfigs: [
-            {
-            s3OriginSource: {
-                originAccessIdentity: accessIdentity,
-                s3BucketSource: siteBucket,
-                // originPath: `/`, // TODO replace this...
-            },
-            behaviors: [
-                {
-                compress: true,
-                isDefaultBehavior: true,
-                },
-            ],
-            },
-        ],
-        // Allows React to handle all errors internally
-        errorConfigurations: [
-            {
-            errorCachingMinTtl: 300, // in seconds
-            errorCode: 403,
-            responseCode: 200,
-            responsePagePath: `/${ROOT_INDEX_FILE}`,
-            },
-            {
-            errorCachingMinTtl: 300, // in seconds
-            errorCode: 404,
-            responseCode: 200,
-            responsePagePath: `/${ROOT_INDEX_FILE}`,
-            },
-        ],
-    });
-
-    const deployment = new BucketDeployment(this, 'DeployWebsite', {
-        sources: [Source.asset('../website-code/build')],
-        destinationBucket: siteBucket,
-    });
-
-    // TODO add a CF invalidation here
-
-    // You will need output to create a www CNAME record to
-    new CfnOutput(this, 'CfDomainName', {
-        value: cfDist.distributionDomainName,
-        description: 'Create a CNAME record with name `www` and value of this CF distribution URL',
-    });
-    new CfnOutput(this, 'S3BucketName', {
-        value: `s3://${siteBucket.bucketName}/`,
-        description: 'Use this with `aws s3 sync` to upload your static website files',
-    });
-    new CfnOutput(this, 'CfDistId', {
-        value: cfDist.distributionId,
-        description: 'Use this ID to perform a cache invalidation to see changes to your site immediately',
-    });
+    // Define the user pool
+    const userPool = new cognito.UserPool(this, 'MyUserPool', {
+        selfSignUpEnabled: true, // Allow users to sign up
+        userVerification: {
+          emailStyle: cognito.VerificationEmailStyle.CODE, // Use verification code sent via email
+        },
+        signInAliases: { // Allow users to sign in using their email address as well as a username
+          email: true,
+          username: true,
+        },
+        autoVerify: { // Automatically verify the email address of newly created users
+          email: true,
+        },
+        passwordPolicy: { // Set password policy requirements
+          minLength: 8,
+          requireDigits: true,
+          requireLowercase: true,
+          requireUppercase: true,
+          requireSymbols: true,
+        },
+      });
+  
+      // Define the app client for the user pool
+      const userPoolClient = new cognito.UserPoolClient(this, 'MyUserPoolClient', {
+        userPool,
+        generateSecret: false, // Disable generation of client secret
+        authFlows: { // Enable username/password-based authentication
+          userPassword: true,
+        },
+      });
+  
+      // Define a domain for the user pool (e.g., my-domain.auth.us-west-2.amazoncognito.com)
+      const userPoolDomain = new cognito.UserPoolDomain(this, 'MyUserPoolDomain', {
+        userPool,
+        cognitoDomain: {
+          domainPrefix: 'my-domain',
+        },
+      });
+  
+      // Define the default user pool group
+      const defaultGroup = new cognito.CfnUserPoolGroup(this, 'MyUserPoolGroup', {
+        groupName: 'Default',
+        userPoolId: userPool.userPoolId,
+      });
+  
+      // Grant permissions to the app client to access the user pool
+      userPoolClient.node.addDependency(defaultGroup);
+      userPoolClient.addToPrincipalPolicy(new iam.PolicyStatement({
+        actions: ['cognito-idp:AdminGetUser'],
+        resources: [userPool.userPoolArn],
+      }));
+  
+      // Output the domain name for the user pool
+      new cdk.CfnOutput(this, 'UserPoolDomain', {
+        value: userPoolDomain.domainName,
+      });
 
   }
 }
