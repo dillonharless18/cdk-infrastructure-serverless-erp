@@ -1,36 +1,78 @@
-# Repo Overview
-Contains all IaaC - databases, APIs, IAM, etc.
+# OneXerp Infrastructure Repository
 
-Stacks:
+This repository contains the AWS CDK code for creating and managing the infrastructure of OneXerp. It includes the resources required for the API Gateway, Lambda functions, and other relateresources.",
 
-UI Stack Cloudfront, certs, S3 hosting, etc.
+## Getting Started
 
-Permissions Stack IAM roles, Cognito, any KMS, etc.
+### Prerequisites
 
-Data Stack DynamoDB, Streams maybe
+1. [Node.js](https://nodejs.org/) (v14.x or later)
+2. [AWS CLI](https://aws.amazon.com/cli/)
+3. [AWS CDK](https://aws.amazon.com/cdk/)
 
-Analytics Stack Quicksight, Athena, Glue, etc.
+### Installation
 
-API Stack AppSync, VTL resolvers
+1. Clone the repository
 
-One SQS Stack per logical component of application
+```bash
+git clone https://github.com/your-repo/one-xerp-infrastructure.git
+```
 
-Lambda Stack - TBD Need to determine benefits and trade-offs for separating code (putting only code into the Lambda repo) and creating them here vs Creating CDK Constructs and the code in the Lambda repo
+2. Change into the repository directory
 
+```bash
+cd one-xerp-infrastructure
+```
 
+3. Install the required dependencies
 
+```bash
+npm install
+```
 
-# Welcome to your CDK TypeScript project
+## Deployment
 
-This is a blank project for CDK development with TypeScript.
+To deploy the infrastructure using AWS CDK, run the following command:
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+```bash
+cdk deploy
+```
 
-## Useful commands
+This command will create or update the CloudFormation stack with the resources defined in the CDK app.
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk synth`       emits the synthesized CloudFormation template
+## Structure
+
+The repository is organized as follows:
+
+- `bin/`: Contains the entry point file for the CDK app
+- `lib/`: Contains the CDK constructs and stacks used to define the infrastructure
+  - `api/`: Contains the `ApiStack` which creates the API Gateway and associated resources
+- `lambdas/`: Contains the Lambda functions used in the project
+  - Each Lambda function has its own directory with a `metadata.json` file describing the function's configuration
+
+## Adding New Lambda Functions
+
+To add a new Lambda function, follow these steps:
+
+1. Create a new directory under `lambdas/` for the new function
+2. Inside the new directory, create a `metadata.json` file with the following properties:
+   - `apiPath`: The API path for the function (e.g., `purchase-orders/{purchaseOrderId}/line-items/{lineItemId}/comments`)
+   - `httpMethod`: The HTTP method for the function (e.g., `GET`)
+   - `name`: The name of the function (e.g., `getPoLineItemComments`)
+   - `runtime`: The runtime for the function (e.g., `NODE_JS_18_X`)
+3. Create the Lambda function's code file (e.g., `index.js`) inside the new directory
+4. The `ApiStack` will automatically create the Lambda function, integration, and API Gateway resource based on the `metadata.json` file
+
+## Testing
+
+To run the tests, execute the following command:
+
+```bash
+npm test
+```
+
+This will run the Jest tests found in the `test/` directory.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
