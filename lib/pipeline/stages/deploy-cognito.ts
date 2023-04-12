@@ -7,6 +7,7 @@ import { CognitoStack } from '../../cognito/cognito-stack';
 
 
 interface CustomStageProps extends StageProps {
+    applicationName: string;
     branch: string;
     domainName: string;
 }
@@ -15,6 +16,7 @@ export class CognitoDeploymentStage extends Stage {
     constructor(scope: Construct, id: string, props: CustomStageProps) {
         super(scope, id, props);
         new CognitoStack(this, 'Infrastructure', {
+            applicationName: props.applicationName,
             branch: props.branch,
             domainName: props.domainName
         });

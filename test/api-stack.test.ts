@@ -19,8 +19,8 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
   });
   const template = Template.fromStack(stack);
 
-  console.log(`Logging the template in api-stack.test.ts:\n`)
-  console.log(JSON.stringify(template.toJSON(), null, 2));
+  // console.log(`Logging the template in api-stack.test.ts:\n`)
+  // console.log(JSON.stringify(template.toJSON(), null, 2));
 
 
   // THEN

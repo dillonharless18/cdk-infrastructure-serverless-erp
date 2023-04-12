@@ -13,6 +13,7 @@ export function createResourceName(branch: string, resourceName: string) {
 
 interface PipelineStackProps extends cdk.StackProps {
     apiName: string;
+    applicationName: string;
     certificateArn: string;
     domainName: string;
     source: CodePipelineSource;
@@ -66,6 +67,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
 
         const cognitoDeploymentStage = new CognitoDeploymentStage(this, 'Deploy', {
             branch: props.branch,
+            applicationName: props.applicationName,
             domainName: props.domainName
         });
         const deployCognitoDeploymentStage = pipeline.addStage(cognitoDeploymentStage);

@@ -5,6 +5,7 @@ import { InfrastructurePipelineStack } from '../lib/pipeline/pipeline-stack';
 
 const app = new cdk.App();
 
+const APPLICATION_NAME    = "oneXerp"
 const API_NAME            = "oneXerpAPI"
 const DEV_BRANCH          = "development"
 const DEV_CODESTAR_ARN    = "arn:aws:codestar-connections:us-east-1:136559125535:connection/c59440ca-db21-4051-b54a-810bbc89464f"
@@ -17,11 +18,13 @@ const INFRA_REPO          = "dillonCF/oneXerp-Infrastructure"
 const LAMBDA_REPO         = "dillonCF/oneXerp-Lambdas"
 
 
+
 // To deploy just one stack, run `cdk deploy {stack-name}`.
 // NOTE: Ensure you have the lambdas folder pulled down when you deploy the first time to avoid errors.
 
 new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${DEV_BRANCH}`, {
     apiName: API_NAME,
+    applicationName: APPLICATION_NAME,
     branch: DEV_BRANCH,
     certificateArn: "arn:aws:acm:us-east-1:136559125535:certificate/4fb61b1f-0934-4b3f-9070-a8f1036e7430",
     domainName: DOMAIN_NAME,
@@ -40,6 +43,7 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${DEV_BRANCH}`, {
 
 new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}-${PROD_BRANCH}`, {
     apiName: API_NAME,
+    applicationName: APPLICATION_NAME,
     branch: PROD_BRANCH,
     certificateArn: "arn:aws:acm:us-east-1:743614460397:certificate/57206c73-27f6-4fee-bf04-3297fa3a0703",
     domainName: DOMAIN_NAME,

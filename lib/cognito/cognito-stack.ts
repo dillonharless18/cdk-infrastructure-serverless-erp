@@ -13,7 +13,7 @@ import path = require('path');
 
 interface CognitoStackProps extends StackProps {
     branch: string;
-
+    applicationName: string;
     domainName: string;
 }
 
@@ -27,28 +27,17 @@ export class CognitoStack extends Stack {
     }
 
     // Use to create cognito user pools domain names
-    const BRANCH_TO_STAGE_MAP: branchToSubdomainTypes = {
-        development: 'development-',
-        test:        'test-',
-        main:        ''
-    }
-
-    // Use to create subdomains programmatically like dev.example.com, test.example.com, example.com
-    const BRANCH_TO_SUBDOMAIN_MAP: branchToSubdomainTypes = {
-        development: 'dev.',
-        test:        'test.',
-        main:        ''
+    const BRANCH_TO_AUTH_PREFIX: branchToSubdomainTypes = {
+        development: `dev-${props.applicationName.toLowerCase()}`,
+        test:        `test-${props.applicationName.toLowerCase()}`,
+        main:        `${props.applicationName.toLowerCase()}`
     }
 
     const { branch, domainName } = props
 
     if ( !domainName ) throw new Error(`Error in cognito stack. domainName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
-    const DOMAIN_NAME = domainName;
-    
-    if ( !branch ) throw new Error(`Error in cognito stack. branch does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
-    const DOMAIN_WITH_SUBDOMAIN = `${BRANCH_TO_SUBDOMAIN_MAP[branch]}${domainName}`
 
-    const WWW_DOMAIN_WITH_SUBDOMAIN = `www.${DOMAIN_WITH_SUBDOMAIN}`;
+    
 
 
     //////////////////////////
@@ -84,11 +73,11 @@ export class CognitoStack extends Stack {
 
 
     // Create the roles using the createRole function
-    const adminRole = createRole(this, 'AdminRole', 'admin_role', adminPolicyDocument);
-    const basicUserRole = createRole(this, 'BasicUserRole', 'basic_user_role', basicUserPolicyDocument);
-    const logisticsRole = createRole(this, 'LogisticsRole', 'logistics_role', logisticsPolicyDocument);
-    const projectManagerRole = createRole(this, 'ProjectManagerRole', 'project_manager_role', projectManagerPolicyDocument);
-    const driverRole = createRole(this, 'DriverRole', 'driver_role', driverPolicyDocument);
+    const adminRole = createRole(this, 'admin_role', 'admin_role', adminPolicyDocument);
+    const basicUserRole = createRole(this, 'basic_user_role', 'basic_user_role', basicUserPolicyDocument);
+    const logisticsRole = createRole(this, 'logistics_role', 'logistics_role', logisticsPolicyDocument);
+    const projectManagerRole = createRole(this, 'project_manager_role', 'project_manager_role', projectManagerPolicyDocument);
+    const driverRole = createRole(this, 'driver_role', 'driver_role', driverPolicyDocument);
 
 
 
@@ -131,7 +120,7 @@ export class CognitoStack extends Stack {
     const userPoolDomain = new cognito.UserPoolDomain(this, 'UserPoolDomain', {
         userPool,
         cognitoDomain: {
-            domainPrefix: `${BRANCH_TO_STAGE_MAP[branch]}${domainName}`,
+            domainPrefix: `${BRANCH_TO_AUTH_PREFIX[branch]}`,
         },
     });
   
@@ -139,31 +128,36 @@ export class CognitoStack extends Stack {
     const adminGroup = new cognito.CfnUserPoolGroup(this, 'AdminGroup', {
         groupName: 'admin_group',
         userPoolId: userPool.userPoolId,
-        precedence: 0
+        precedence: 0,
+        roleArn: adminRole.roleArn
     });
 
     const basicUserGroup = new cognito.CfnUserPoolGroup(this, 'BasicUserGroup', {
         groupName: 'basic_user_group',
         userPoolId: userPool.userPoolId,
-        precedence: 4
+        precedence: 4,
+        roleArn: basicUserRole.roleArn
     });
 
     const logisticsGroup = new cognito.CfnUserPoolGroup(this, 'LogisticsGroup', {
         groupName: 'logistics_group',
         userPoolId: userPool.userPoolId,
-        precedence: 2
+        precedence: 2,
+        roleArn: logisticsRole.roleArn
     });
 
     const projectManagerGroup = new cognito.CfnUserPoolGroup(this, 'ProjectManagerGroup', {
         groupName: 'project_manager_group',
         userPoolId: userPool.userPoolId,
-        precedence: 1
+        precedence: 1,
+        roleArn: projectManagerRole.roleArn
     });
   
     const driverGroup = new cognito.CfnUserPoolGroup(this, 'DriverGroup', {
         groupName: 'driver_group',
         userPoolId: userPool.userPoolId,
-        precedence: 3
+        precedence: 3,
+        roleArn: driverRole.roleArn
     });
 
     const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
@@ -221,7 +215,7 @@ export class CognitoStack extends Stack {
     })
           
     // Output the domain name for the user pool
-    new cdk.CfnOutput(this, 'UserPoolDomain', {
+    new cdk.CfnOutput(this, 'UserPoolDomainOutput', {
         value: userPoolDomain.domainName,
     });
 
