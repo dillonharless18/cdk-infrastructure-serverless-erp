@@ -1,6 +1,6 @@
 # OneXerp Infrastructure Repository
 
-This repository contains the AWS CDK code for creating and managing the infrastructure of OneXerp. It includes the resources required for the API Gateway, Lambda functions, and other relateresources.",
+This repository contains the AWS CDK code for creating and managing the infrastructure of OneXerp. It includes the resources required for the API Gateway, Lambda functions, and other relateresources.
 
 ## Getting Started
 
