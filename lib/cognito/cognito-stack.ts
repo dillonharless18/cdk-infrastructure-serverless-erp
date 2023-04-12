@@ -1,4 +1,3 @@
-
 /* eslint-disable no-new */
 /* eslint-disable import/prefer-default-export */
 
@@ -9,8 +8,12 @@ import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as fs from "fs";
+import path = require('path');
+
 interface CognitoStackProps extends StackProps {
     branch: string;
+
     domainName: string;
 }
 
@@ -39,8 +42,54 @@ export class CognitoStack extends Stack {
 
     const WWW_DOMAIN_WITH_SUBDOMAIN = `www.${DOMAIN_WITH_SUBDOMAIN}`;
 
+
+    //////////////////////////
+    ///      IAM Roles     ///
+    //////////////////////////
+
+    // Create IAM roles for the identity pool
+    function createRole(scope: Construct, id: string, roleName: string, policyDocument: iam.PolicyDocument): iam.Role {
+        const role = new iam.Role(scope, id, {
+          roleName: roleName,
+          assumedBy: new iam.FederatedPrincipal('cognito-identity.amazonaws.com', {}, 'sts:AssumeRoleWithWebIdentity'),
+          inlinePolicies: {
+            [`${roleName}Policy`]: policyDocument,
+          },
+        });
+      
+        return role;
+    }
+      
+    
+    const adminRolePolicy = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'iam', 'roles', 'admin.json'), 'utf-8'));
+    const basicUserRolePolicy = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'iam', 'roles', 'basic_user.json'), 'utf-8'));
+    const logisticsRolePolicy = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'iam', 'roles', 'logistics.json'), 'utf-8'));
+    const projectManagerRolePolicy = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'iam', 'roles', 'project_manager.json'), 'utf-8'));
+    const driverRolePolicy = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'iam', 'roles', 'driver.json'), 'utf-8'));
+
+    // Define the policy documents for each role
+    const adminPolicyDocument = iam.PolicyDocument.fromJson(adminRolePolicy);
+    const basicUserPolicyDocument = iam.PolicyDocument.fromJson(basicUserRolePolicy);
+    const logisticsPolicyDocument = iam.PolicyDocument.fromJson(logisticsRolePolicy);
+    const projectManagerPolicyDocument = iam.PolicyDocument.fromJson(projectManagerRolePolicy);
+    const driverPolicyDocument = iam.PolicyDocument.fromJson(driverRolePolicy);
+
+
+    // Create the roles using the createRole function
+    const adminRole = createRole(this, 'AdminRole', 'admin_role', adminPolicyDocument);
+    const basicUserRole = createRole(this, 'BasicUserRole', 'basic_user_role', basicUserPolicyDocument);
+    const logisticsRole = createRole(this, 'LogisticsRole', 'logistics_role', logisticsPolicyDocument);
+    const projectManagerRole = createRole(this, 'ProjectManagerRole', 'project_manager_role', projectManagerPolicyDocument);
+    const driverRole = createRole(this, 'DriverRole', 'driver_role', driverPolicyDocument);
+
+
+
+    //////////////////////////
+    ///      Cognito       ///
+    //////////////////////////
+
     // Define the user pool
-    const userPool = new cognito.UserPool(this, 'MyUserPool', {
+    const userPool = new cognito.UserPool(this, 'UserPool', {
         selfSignUpEnabled: true, // Allow users to sign up
         userVerification: {
           emailStyle: cognito.VerificationEmailStyle.CODE, // Use verification code sent via email
@@ -59,42 +108,115 @@ export class CognitoStack extends Stack {
           requireUppercase: true,
           requireSymbols: true,
         },
-      });
+    });
   
-      // Define the app client for the user pool
-      const userPoolClient = new cognito.UserPoolClient(this, 'MyUserPoolClient', {
+    // Define the app client for the user pool
+    const userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
         userPool,
         generateSecret: false, // Disable generation of client secret
         authFlows: { // Enable username/password-based authentication
           userPassword: true,
         },
-      });
+    });
   
-      // Define a domain for the user pool (e.g., my-domain.auth.us-west-2.amazoncognito.com)
-      const userPoolDomain = new cognito.UserPoolDomain(this, 'MyUserPoolDomain', {
+    // Define a domain for the user pool (e.g., my-domain.auth.us-west-2.amazoncognito.com)
+    const userPoolDomain = new cognito.UserPoolDomain(this, 'UserPoolDomain', {
         userPool,
         cognitoDomain: {
-          domainPrefix: 'my-domain',
+            domainPrefix: DOMAIN_WITH_SUBDOMAIN,
         },
-      });
+    });
   
-      // Define the default user pool group
-      const defaultGroup = new cognito.CfnUserPoolGroup(this, 'MyUserPoolGroup', {
-        groupName: 'Default',
+    // Define user pool groups for different roles
+    const adminGroup = new cognito.CfnUserPoolGroup(this, 'AdminGroup', {
+        groupName: 'admin_group',
         userPoolId: userPool.userPoolId,
-      });
+    });
+
+    const basicUserGroup = new cognito.CfnUserPoolGroup(this, 'BasicUserGroup', {
+        groupName: 'basic_user_group',
+        userPoolId: userPool.userPoolId,
+    });
+
+    const logisticsGroup = new cognito.CfnUserPoolGroup(this, 'LogisticsGroup', {
+        groupName: 'logistics_group',
+        userPoolId: userPool.userPoolId,
+    });
+
+    const projectManagerGroup = new cognito.CfnUserPoolGroup(this, 'ProjectManagerGroup', {
+        groupName: 'project_manager_group',
+        userPoolId: userPool.userPoolId,
+    });
   
-      // Grant permissions to the app client to access the user pool
-      userPoolClient.node.addDependency(defaultGroup);
-      userPoolClient.addToPrincipalPolicy(new iam.PolicyStatement({
-        actions: ['cognito-idp:AdminGetUser'],
-        resources: [userPool.userPoolArn],
-      }));
-  
-      // Output the domain name for the user pool
-      new cdk.CfnOutput(this, 'UserPoolDomain', {
+    const driverGroup = new cognito.CfnUserPoolGroup(this, 'DriverGroup', {
+        groupName: 'driver_group',
+        userPoolId: userPool.userPoolId,
+    });
+
+    const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
+        allowUnauthenticatedIdentities: false,
+        cognitoIdentityProviders: [
+          {
+            clientId: userPoolClient.userPoolClientId,
+            providerName: userPool.userPoolProviderName,
+          },
+        ]
+    });
+
+    new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
+        identityPoolId: identityPool.ref,
+        roles: {
+          'admin': adminRole.roleArn,
+          'basic_user': basicUserRole.roleArn,
+          'logistics': logisticsRole.roleArn,
+          'project_manager': projectManagerRole.roleArn,
+          'driver': driverRole.roleArn,
+        },
+        roleMappings: {
+            'cognito:preferred_role': {
+            type: 'Token',
+            ambiguousRoleResolution: 'Deny',
+            rulesConfiguration: {
+                rules: [
+                    {
+                        claim: 'cognito:preferred_role',
+                        matchType: 'Equals',
+                        roleArn: adminRole.roleArn,
+                        value: adminGroup.groupName ?? '',
+                    },
+                    {
+                        claim: 'cognito:preferred_role',
+                        matchType: 'Equals',
+                        roleArn: basicUserRole.roleArn,
+                        value: basicUserGroup.groupName ?? '',
+                    },
+                    {
+                        claim: 'cognito:preferred_role',
+                        matchType: 'Equals',
+                        roleArn: logisticsRole.roleArn,
+                        value: logisticsGroup.groupName ?? '',
+                    },
+                    {
+                        claim: 'cognito:preferred_role',
+                        matchType: 'Equals',
+                        roleArn: projectManagerRole.roleArn,
+                        value: projectManagerGroup.groupName ?? '',
+                    },
+                    {
+                        claim: 'cognito:preferred_role',
+                        matchType: 'Equals',
+                        roleArn: driverRole.roleArn,
+                        value: driverGroup.groupName ?? '',
+                    },
+                ]
+            },
+        }}
+    })
+          
+    // Output the domain name for the user pool
+    new cdk.CfnOutput(this, 'UserPoolDomain', {
         value: userPoolDomain.domainName,
-      });
+    });
 
   }
 }
