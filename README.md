@@ -114,7 +114,7 @@ Here is an example of a `metadata.json` file:
 
 `name`: *Required.* String: Must match the folder name.
 
-`allowedGroups`: *Under development*. Array of strings: Will be used to restrict the API endpoint to various roles within oneXerp's ecosystem.
+`allowedGroups`: *Defaults to ["admin", "basic_user", "logistics", "project_manager", "driver"] (so all roles)* Array of strings: Will be used to restrict the API endpoint to various roles within oneXerp's ecosystem. The allowed values for the array can be seen in the default at the beginning of this definition.
 
 ## Adding New Lambda Functions
 
