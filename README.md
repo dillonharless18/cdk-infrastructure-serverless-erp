@@ -104,7 +104,7 @@ Here is an example of a metadata.json file:
   "apiPath": "purchase-orders/{purchaseOrderId}/line-items/{lineItemId}/comments",
   "httpMethod": "GET",
   "name": "getPoLineItemComments",
-  roles: ["basic_user"]
+  "roles": ["basic_user"]
 }
 ```
 
