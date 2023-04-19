@@ -49,17 +49,6 @@ export class ApiStack extends Stack {
     
     if ( !certficateArn ) throw new Error(`Error in API stack. certificateArn does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     
-    // Set the path to the Lambda functions directory
-    const lambdasPath = path.resolve(__dirname, '../../lambdas/endpoints');
-    const testLambdasPath = path.resolve(__dirname, '../../test_lambdas/endpoints');
-    const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
-    console.log(`functionsPath: ${functionsPath}`)
-
-
-    // Get the metadata for each Lambda function
-    const functionMetadata = getFunctionMetadata(functionsPath);
-
-
 
 
     //////////////////////////
@@ -113,14 +102,26 @@ export class ApiStack extends Stack {
     // TODO Look into API versioning and see if this should be handled more programmatically
     // Add the '/api/v1' base path for the API
     const apiV1 = api.root.addResource('api').addResource('v1');
+
+    //////////////////////////
+    /////    End API     /////
+    //////////////////////////
     
-
-
 
 
     //////////////////////////
     ///      Lambdas       ///
     //////////////////////////
+
+    // Set the path to the Lambda functions directory
+    const lambdasPath = path.resolve(__dirname, '../../lambdas/endpoints');
+    const testLambdasPath = path.resolve(__dirname, '../../test_lambdas/endpoints');
+    const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
+    console.log(`functionsPath: ${functionsPath}`)
+
+
+    // Get the metadata for each Lambda function
+    const functionMetadata = getFunctionMetadata(functionsPath);
 
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
@@ -145,8 +146,18 @@ export class ApiStack extends Stack {
         authorizationScopes: metadata.allowedGroups.map((group: string) => `cognito-idp:${group}`),
       });
     });
+
+    ///////////////////////////
+    ///     End Lambdas     ///
+    ///////////////////////////
+
   }
 }
+
+
+//////////////////////////
+///      Helpers       ///
+//////////////////////////
 
 // Function to get metadata for Lambda functions
 const getFunctionMetadata = (functionsPath: string) => {
