@@ -50,8 +50,8 @@ export class ApiStack extends Stack {
     if ( !certficateArn ) throw new Error(`Error in API stack. certificateArn does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     
     // Set the path to the Lambda functions directory
-    const lambdasPath = path.resolve(__dirname, '../../lambdas');
-    const testLambdasPath = path.resolve(__dirname, '../../test_lambdas');
+    const lambdasPath = path.resolve(__dirname, '../../lambdas/endpoints');
+    const testLambdasPath = path.resolve(__dirname, '../../test_lambdas/endpoints');
     const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
     console.log(`functionsPath: ${functionsPath}`)
 

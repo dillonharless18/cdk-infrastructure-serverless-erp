@@ -85,12 +85,16 @@ The API stack watches the oneXerp-Lambdas repository to dynamically create the A
 
 ```md
 .
-├── getAllUsers/
-│   ├── metadata.json
-|   └── index.ts
-├── getPoLineItemComments/
-│   ├── metadata.json
-|   └── index.ts
+├── endpoints/
+│   ├── getAllUsers/
+│   │   ├── metadata.json
+│   │   └── index.ts
+│   └── getPoLineItemComments/
+│       ├── metadata.json
+│       └── index.ts
+├── someOtherFolder/
+│   └── someFile.js
+└── anotherFile.js
 ```
 
 It uses the `metadata.json` file within each Lambda file to create the necessary API Gateway resources. See the `test_lambdas` folder for an example. These `test_lambdas` are used for unit testing the CDK.
@@ -120,7 +124,7 @@ Here is an example of a `metadata.json` file:
 
 To add a new API endpoint, follow these steps:
 
-1. Create a new directory in the oneXerp-Lambdas repository.
+1. Create a new directory inside the `endpoints/` folder in the oneXerp-Lambdas repository.
 2. Inside the new directory, create a `metadata.json` file with the following properties:
    - `apiPath`: The API path for the function (e.g., `purchase-orders/{purchaseOrderId}/line-items/{lineItemId}/comments`)
    - `httpMethod`: The HTTP method for the function (e.g., `GET`)
