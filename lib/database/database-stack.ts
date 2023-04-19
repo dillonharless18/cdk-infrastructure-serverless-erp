@@ -2,7 +2,9 @@
 /* eslint-disable no-new */
 /* eslint-disable import/prefer-default-export */
 
-/* This page is inspired by this blog - https://awstip.com/aws-cdk-template-for-hosting-a-static-website-in-s3-served-via-cloudfront-e810ffcaff0c */
+// Using a workaround for Aurora Serverless V2:
+// https://github.com/aws/aws-cdk/issues/20197
+// https://github.com/Compulsed/serverless-aurora-lambda/blob/main/lib/serverless-aurora-lambda.ts
 
 import { CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
