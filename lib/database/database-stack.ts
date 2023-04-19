@@ -77,7 +77,9 @@ export class DatabaseStack extends Stack {
         vpc: databaseVPC,
         securityGroups: [databaseSecurityGroup],
         defaultDatabaseName: 'database',
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        // TODO Decide on what exactly to do here
+        // removalPolicy: branch === 'development' ? cdk.RemovalPolicy.SNAPSHOT : cdk.RemovalPolicy.RETAIN,
+        removalPolicy: cdk.RemovalPolicy.SNAPSHOT,
         scaling: {
         autoPause: cdk.Duration.minutes(10),
         minCapacity: rds.AuroraCapacityUnit.ACU_1,
