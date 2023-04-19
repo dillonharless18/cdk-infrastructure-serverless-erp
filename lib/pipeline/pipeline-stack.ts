@@ -59,11 +59,13 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         });
         const deployDatabaseDeploymentStage = pipeline.addStage(databaseDeploymentStage);
 
-        const iamDeploymentStage = new IamDeploymentStage(this, 'Deploy', {
-            branch: props.branch,
-            domainName: props.domainName
-        });
-        const deployIamDeploymentStage = pipeline.addStage(iamDeploymentStage);
+        // TODO - Determine if we even need an IAM stack for anything
+
+        // const iamDeploymentStage = new IamDeploymentStage(this, 'Deploy', {
+        //     branch: props.branch,
+        //     domainName: props.domainName
+        // });
+        // const deployIamDeploymentStage = pipeline.addStage(iamDeploymentStage);
 
         const cognitoDeploymentStage = new CognitoDeploymentStage(this, 'Deploy', {
             branch: props.branch,
@@ -76,7 +78,9 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             apiName: props.apiName,
             branch: props.branch,
             certificateArn: props.certificateArn,
-            domainName: props.domainName
+            domainName: props.domainName,
+            vpc: databaseDeploymentStage.vpc,
+            securityGroup: databaseDeploymentStage.securityGroup
         });
         const deployApiDeploymentStage = pipeline.addStage(apiDeploymentStage);
     }

@@ -1,3 +1,4 @@
+import { ISecurityGroup, IVpc } from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 import { Stage, StageProps } from 'aws-cdk-lib';
 import { ApiStack } from '../../api/api-stack';
@@ -8,6 +9,8 @@ interface CustomStageProps extends StageProps {
     branch: string;
     certificateArn: string;
     domainName: string;
+    securityGroup: ISecurityGroup
+    vpc: IVpc
 }
 
 export class ApiDeploymentStage extends Stage {
@@ -17,7 +20,9 @@ export class ApiDeploymentStage extends Stage {
             apiName: props.apiName,
             branch: props.branch,
             certficateArn: props.certificateArn,
-            domainName: props.domainName
+            domainName: props.domainName,
+            securityGroup: props.securityGroup,
+            vpc: props.vpc
         });
     }
 }

@@ -17,6 +17,13 @@ interface DatabaseStackProps extends StackProps {
 }
 
 export class DatabaseStack extends Stack {
+  
+  // Expose the VPC and security group as public properties
+  public readonly vpc: ec2.IVpc;
+  public readonly securityGroup: ec2.ISecurityGroup;
+  public readonly clusterEndpointSocketAddress: string;
+
+
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
     
@@ -42,11 +49,11 @@ export class DatabaseStack extends Stack {
     const WWW_DOMAIN_WITH_SUBDOMAIN = `www.${DOMAIN_WITH_SUBDOMAIN}`;
 
     // Create a VPC for the database
-    const vpc = new ec2.Vpc(this, 'DatabaseVPC');
+    const databaseVPC = new ec2.Vpc(this, 'DatabaseVPC');
 
     // Create a security group to control access to the database
-    const securityGroup = new ec2.SecurityGroup(this, 'DatabaseSecurityGroup', {
-        vpc,
+    const databaseSecurityGroup = new ec2.SecurityGroup(this, 'DatabaseSecurityGroup', {
+        vpc: databaseVPC,
     });
     
     // Create a secret to store the database credentials
@@ -67,8 +74,8 @@ export class DatabaseStack extends Stack {
         engine: rds.DatabaseClusterEngine.auroraMysql({
         version: rds.AuroraMysqlEngineVersion.VER_2_10_1,
         }),
-        vpc,
-        securityGroups: [securityGroup],
+        vpc: databaseVPC,
+        securityGroups: [databaseSecurityGroup],
         defaultDatabaseName: 'database',
         removalPolicy: cdk.RemovalPolicy.DESTROY,
         scaling: {
@@ -78,11 +85,11 @@ export class DatabaseStack extends Stack {
         },
         credentials: rds.Credentials.fromSecret(secret),
     });
-    
-    // Output the database endpoint for reference
-    new cdk.CfnOutput(this, 'DatabaseEndpoint', {
-        value: cluster.clusterEndpoint.socketAddress,
-    });
+
+    // Assign the VPC, security group, and cluster socket endpoitns to the public properties
+    this.vpc = databaseVPC;
+    this.securityGroup = databaseSecurityGroup;
+    this.clusterEndpointSocketAddress = cluster.clusterEndpoint.socketAddress;
 
   }
 }

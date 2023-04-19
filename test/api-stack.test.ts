@@ -1,10 +1,26 @@
-import { App } from 'aws-cdk-lib';
+import { App, Stack } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { ApiStack } from '../lib/api/api-stack';
+import { Vpc, SecurityGroup, Peer, Port } from 'aws-cdk-lib/aws-ec2';
+
 
 test('ApiStack creates API Gateway with a Lambda function', () => {
   // GIVEN
   const app = new App();
+  const tempStack = new Stack(app, 'TestStack');
+
+
+  // Mocking out the vpc and security group of the database that are passed into the api stack in the pipeline
+  const mockedDatabseVpc = Vpc.fromVpcAttributes(tempStack, 'TestVpc', {
+    vpcId: 'vpc-12345678',
+    availabilityZones: ['us-east-1a', 'us-east-1b'],
+    privateSubnetIds: ['subnet-12345678', 'subnet-abcdef01'],
+    isolatedSubnetIds: [],
+  });
+  
+  const mockedDatabaseSecurityGroup = SecurityGroup.fromSecurityGroupId(tempStack, 'TestSecurityGroup', 'sg-12345678');
+  
+
 
   // WHEN
   const stack = new ApiStack(app, 'TestApiStack', {
@@ -15,7 +31,9 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
     env: {
         account: '136559125535',
         region: 'us-east-1'
-    }
+    },
+    securityGroup: mockedDatabaseSecurityGroup,
+    vpc: mockedDatabseVpc,
   });
   const template = Template.fromStack(stack);
 
@@ -71,11 +89,11 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
   template.resourceCountIs('AWS::ApiGateway::Authorizer', 1);
 
   // Check if the API Gateway has a GET method using the authorizer
-  // template.hasResourceProperties('AWS::ApiGateway::Method', {
-  //   HttpMethod: 'GET',
-  //   AuthorizationType: 'COGNITO_USER_POOLS',
-  //   AuthorizerId: {
-  //     Ref: 'AWS::ApiGateway::Authorizer', // Replace this with the actual Authorizer Logical ID
-  //   },
-  // });
+  template.hasResourceProperties('AWS::ApiGateway::Method', {
+    HttpMethod: 'GET',
+    AuthorizationType: 'COGNITO_USER_POOLS',
+    AuthorizerId: {
+      Ref: 'CognitoAuthorizer', // Replace this with the actual Authorizer Logical ID
+    },
+  });
 });

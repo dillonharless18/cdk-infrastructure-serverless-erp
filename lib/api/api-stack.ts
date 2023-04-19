@@ -10,12 +10,15 @@ import path = require('path');
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
+import { ISecurityGroup, IVpc, Port, SecurityGroup, SubnetType } from 'aws-cdk-lib/aws-ec2';
 
 interface ApiStackProps extends StackProps {
     apiName: string,
-    certficateArn: string, // Use for custom domain for API Gateway
     branch: string;
+    certficateArn: string; // Use for custom domain for API Gateway
     domainName: string;
+    securityGroup: ISecurityGroup
+    vpc: IVpc
 }
 
 export class ApiStack extends Stack {
@@ -119,9 +122,18 @@ export class ApiStack extends Stack {
     const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
     console.log(`functionsPath: ${functionsPath}`)
 
-
     // Get the metadata for each Lambda function
     const functionMetadata = getFunctionMetadata(functionsPath);
+
+    // Lambda security group
+    const lambdaEndpointsSecurityGroup = new SecurityGroup(this, 'LambdaEndpointsSecurityGroup', {
+      vpc: props.vpc,
+      description: 'Security group for Lambda API Endpoints',
+      allowAllOutbound: true,
+    });
+
+    // Adds egress to the database security group, and ingress in the database security group from the lambdaEndpointSecurityGroup    
+    lambdaEndpointsSecurityGroup.connections.allowTo(props.securityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the database');
 
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
@@ -130,10 +142,13 @@ export class ApiStack extends Stack {
         code: lambda.Code.fromAsset(path.join(functionsPath, metadata.name)),
         handler: 'index.handler',
         runtime: lambda.Runtime.NODEJS_18_X,
-        functionName: `${metadata.name}` // TODO see if this will be problematic at all 
+        functionName: `${metadata.name}`, // TODO see if this will be problematic at all 
+        vpc: props.vpc,
+        vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+        securityGroups: [props.securityGroup],
       });
 
-      // Create the API Gateway integration for the Lambda function
+      // Create the API Gateway integration for the Lambda function - works even for Lambdas in a VPC
       const lambdaIntegration = new apigateway.LambdaIntegration(lambdaFunction);
 
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
