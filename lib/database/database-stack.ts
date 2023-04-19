@@ -69,24 +69,54 @@ export class DatabaseStack extends Stack {
         },
     });
     
-    // Create a cluster for the Aurora Serverless V2 database
-    const cluster = new rds.ServerlessCluster(this, 'DatabaseCluster', {
-        engine: rds.DatabaseClusterEngine.auroraMysql({
-        version: rds.AuroraMysqlEngineVersion.VER_2_10_1,
-        }),
-        vpc: databaseVPC,
-        securityGroups: [databaseSecurityGroup],
-        defaultDatabaseName: 'database',
-        // TODO Decide on what exactly to do here
-        // removalPolicy: branch === 'development' ? cdk.RemovalPolicy.SNAPSHOT : cdk.RemovalPolicy.RETAIN,
-        removalPolicy: cdk.RemovalPolicy.SNAPSHOT,
-        scaling: {
-        autoPause: cdk.Duration.minutes(10),
-        minCapacity: rds.AuroraCapacityUnit.ACU_1,
-        maxCapacity: rds.AuroraCapacityUnit.ACU_2,
-        },
-        credentials: rds.Credentials.fromSecret(secret),
-    });
+    // // Create a cluster for the Aurora Serverless V2 database
+    // const cluster = new rds.ServerlessCluster(this, 'DatabaseCluster', {
+    //     engine: rds.DatabaseClusterEngine.auroraMysql({
+    //         version: rds.AuroraMysqlEngineVersion.VER_2_10_1,
+    //     }),
+    //     vpc: databaseVPC,
+    //     securityGroups: [databaseSecurityGroup],
+    //     defaultDatabaseName: 'database',
+    //     // TODO Decide on what exactly to do here
+    //     // removalPolicy: branch === 'development' ? cdk.RemovalPolicy.SNAPSHOT : cdk.RemovalPolicy.RETAIN,
+    //     removalPolicy: cdk.RemovalPolicy.SNAPSHOT,
+    //     scaling: {
+    //     autoPause: cdk.Duration.minutes(10),
+    //     minCapacity: rds.AuroraCapacityUnit.ACU_1,
+    //     maxCapacity: rds.AuroraCapacityUnit.ACU_2,
+    //     },
+    //     credentials: rds.Credentials.fromSecret(secret),
+    // });
+
+        // Full spec https://github.com/aws/aws-cdk/issues/20197#issuecomment-1117555047
+        const cluster = new rds.DatabaseCluster(this, 'DbCluster', {
+            engine: rds.DatabaseClusterEngine.auroraPostgres({
+              version: rds.AuroraPostgresEngineVersion.VER_13_6,
+            }),
+            instances: 1,
+            instanceProps: {
+              vpc: databaseVPC,
+              instanceType: new ec2.InstanceType('serverless'),
+              autoMinorVersionUpgrade: true,
+              publiclyAccessible: true,
+              securityGroups: [databaseSecurityGroup],
+            //   vpcSubnets: vpc.selectSubnets({
+            //     subnetType: SubnetType.PUBLIC,
+            //   }),
+            },
+            port: 5432,
+          })
+
+          cdk.Aspects.of(cluster).add({
+            visit(node) {
+              if (node instanceof rds.CfnDBCluster) {
+                node.serverlessV2ScalingConfiguration = {
+                  minCapacity: 0.5,
+                  maxCapacity: 1,
+                }
+              }
+            },
+          })
 
     // Assign the VPC, security group, and cluster socket endpoitns to the public properties
     this.vpc = databaseVPC;
