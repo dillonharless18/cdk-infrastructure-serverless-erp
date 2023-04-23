@@ -21,10 +21,12 @@ interface DatabaseStackProps extends StackProps {
 export class DatabaseStack extends Stack {
   
   // Expose the VPC and security group as public properties
-  public readonly vpc: ec2.IVpc;
-  public readonly securityGroup: ec2.ISecurityGroup;
   public readonly clusterEndpointSocketAddress: string;
-
+  public readonly clusterEndpointHostname: string;
+  public readonly secret: secretsmanager.ISecret;
+  public readonly securityGroup: ec2.ISecurityGroup;
+  public readonly vpc: ec2.IVpc;
+  
 
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
@@ -62,39 +64,21 @@ export class DatabaseStack extends Stack {
     const secret = new secretsmanager.Secret(this, 'DatabaseSecret', {
         secretName: 'database-credentials',
         generateSecretString: {
-        secretStringTemplate: JSON.stringify({
-            username: 'admin',
-        }),
-        excludePunctuation: true,
-        includeSpace: false,
-        generateStringKey: 'password',
+          secretStringTemplate: JSON.stringify({
+              username: 'admin',
+          }),
+          excludePunctuation: true,
+          includeSpace: false,
+          generateStringKey: 'password',
         },
     });
-    
-    // // Create a cluster for the Aurora Serverless V2 database
-    // const cluster = new rds.ServerlessCluster(this, 'DatabaseCluster', {
-    //     engine: rds.DatabaseClusterEngine.auroraMysql({
-    //         version: rds.AuroraMysqlEngineVersion.VER_2_10_1,
-    //     }),
-    //     vpc: databaseVPC,
-    //     securityGroups: [databaseSecurityGroup],
-    //     defaultDatabaseName: 'database',
-    //     // TODO Decide on what exactly to do here
-    //     // removalPolicy: branch === 'development' ? cdk.RemovalPolicy.SNAPSHOT : cdk.RemovalPolicy.RETAIN,
-    //     removalPolicy: cdk.RemovalPolicy.SNAPSHOT,
-    //     scaling: {
-    //     autoPause: cdk.Duration.minutes(10),
-    //     minCapacity: rds.AuroraCapacityUnit.ACU_1,
-    //     maxCapacity: rds.AuroraCapacityUnit.ACU_2,
-    //     },
-    //     credentials: rds.Credentials.fromSecret(secret),
-    // });
 
     // Full spec https://github.com/aws/aws-cdk/issues/20197#issuecomment-1117555047
     const cluster = new rds.DatabaseCluster(this, 'DbCluster', {
         engine: rds.DatabaseClusterEngine.auroraPostgres({
           version: rds.AuroraPostgresEngineVersion.VER_13_6,
         }),
+        defaultDatabaseName: 'database',
         instances: 1,
         instanceProps: {
           vpc: databaseVPC,
@@ -122,9 +106,11 @@ export class DatabaseStack extends Stack {
       })
 
     // Assign the VPC, security group, and cluster socket endpoitns to the public properties
-    this.vpc = databaseVPC;
-    this.securityGroup = databaseSecurityGroup;
+    this.clusterEndpointHostname = cluster.clusterEndpoint.hostname;
     this.clusterEndpointSocketAddress = cluster.clusterEndpoint.socketAddress;
+    this.secret = secret;
+    this.securityGroup = databaseSecurityGroup;
+    this.vpc = databaseVPC;
 
   }
 }
