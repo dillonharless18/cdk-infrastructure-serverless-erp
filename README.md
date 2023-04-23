@@ -52,7 +52,7 @@ The repository is organized as follows:
 │   ├── database/
 │   │   └── database-stack.ts
 │   ├── iam/
-│   │   ├── iam-stack.ts
+│   │   ├── iam-stack.ts (Not currently in use)
 │   │   └── roles/
 │   │       ├── admin.json
 │   │       ├── basic_user.json

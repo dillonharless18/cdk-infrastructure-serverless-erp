@@ -145,7 +145,7 @@ export class ApiStack extends Stack {
         functionName: `${metadata.name}`, // TODO see if this will be problematic at all 
         vpc: props.vpc,
         vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
-        securityGroups: [props.securityGroup],
+        securityGroups: [lambdaEndpointsSecurityGroup],
       });
 
       // Create the API Gateway integration for the Lambda function - works even for Lambdas in a VPC

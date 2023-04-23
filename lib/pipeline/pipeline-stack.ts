@@ -1,11 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
 import { BuildSpec, LinuxBuildImage, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
-import { CodeBuildStep, CodePipeline, CodePipelineSource } from 'aws-cdk-lib/pipelines';
+import { CodeBuildStep, CodePipeline, CodePipelineSource, Step } from 'aws-cdk-lib/pipelines';
 import { Construct, Node } from 'constructs';
 import { ApiDeploymentStage } from './stages/deploy-api';
 import { IamDeploymentStage } from './stages/deploy-iam';
 import { CognitoDeploymentStage } from './stages/deploy-cognito';
 import { DatabaseDeploymentStage } from './stages/deploy-database';
+import { CodeBuildAction } from 'aws-cdk-lib/aws-codepipeline-actions';
 
 export function createResourceName(branch: string, resourceName: string) {
     return `${resourceName}-${branch}`;
@@ -49,15 +50,24 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                     "npm ci",
                     "npm run build",
                     "npx cdk synth"
-                ]
-            })      
+                ],
+                primaryOutputDirectory: 'cdk.out'
+            })
         });
+
+        
+        ////////////////////
+        // Start Database //
+        ////////////////////
 
         const databaseDeploymentStage = new DatabaseDeploymentStage(this, 'Deploy', {
             branch: props.branch,
             domainName: props.domainName
         });
         const deployDatabaseDeploymentStage = pipeline.addStage(databaseDeploymentStage);
+
+        
+       /** Migrations */
 
         // Get the database user and password
         const databaseUser = cdk.SecretValue.secretsManager(databaseDeploymentStage.secret.secretArn, {
@@ -67,45 +77,40 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             jsonField: 'password',
         });
         
-        // Codebuild project to run the database migrations
-        const runMigrationsProject = new PipelineProject(this, 'RunMigrationsProject', {
-            buildSpec: BuildSpec.fromObject({
-              version: '0.2',
-              phases: {
-                install: {
-                  commands: [
-                    'cd ../../lambdas',
-                    'npm ci'
-                  ]
-                },
-                build: {
-                  commands: [
+        
+        // Does not deploy stacks but only runs some post-production actions (CodeBuild/Lambdas)
+        const postDBCreationWave = pipeline.addWave('PostDBCreation');
+
+        // Run migrations
+        postDBCreationWave.addPost(
+            new CodeBuildStep('RunMigrations', {
+                securityGroups: [databaseDeploymentStage.securityGroup], // TODO potentially create a distinct security group here
+                input: props?.source,
+                vpc: databaseDeploymentStage.vpc,
+                installCommands: [
+                    'npm install'
+                ],
+                commands: [
                     'node run_migrations.js'
-                  ]
+                ],
+                buildEnvironment: {
+                    privileged: true,
+                    buildImage: LinuxBuildImage.STANDARD_5_0,
+                },
+                env: {
+                    'DB_HOST': databaseDeploymentStage.clusterEndpointHostname,
+                    'DB_USER': databaseUser.toString(),
+                    'DB_PASSWORD': databasePassword.toString(), // TODO See if this will work properly
+                    'DB_DATABASE': 'database',
+                    'NODE_ENV': props.branch ? props.branch : "development"
                 }
-              },
-              environmentVariables: {
-                // Pass the necessary environment variables for the database connection
-                'DB_HOST': databaseDeploymentStage.clusterEndpointHostname,
-                'DB_USER': databaseUser,
-                'DB_PASSWORD': databasePassword,
-                'DB_DATABASE': 'database',
-                'NODE_ENV': props.branch ? props.branch : "development"
-              }
-            }),
-            environment: {
-              buildImage: LinuxBuildImage.STANDARD_5_0,
-              privileged: true
-            }
-          });
+            })
+        );
 
-        // TODO - Determine if we even need an IAM stack for anything
 
-        // const iamDeploymentStage = new IamDeploymentStage(this, 'Deploy', {
-        //     branch: props.branch,
-        //     domainName: props.domainName
-        // });
-        // const deployIamDeploymentStage = pipeline.addStage(iamDeploymentStage);
+        ////////////////////
+        // Start Cognito  //
+        ////////////////////
 
         const cognitoDeploymentStage = new CognitoDeploymentStage(this, 'Deploy', {
             branch: props.branch,
@@ -114,6 +119,12 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         });
         const deployCognitoDeploymentStage = pipeline.addStage(cognitoDeploymentStage);
 
+
+        
+        ///////////////////
+        //   Start API   //
+        ///////////////////
+        
         const apiDeploymentStage = new ApiDeploymentStage(this, 'Deploy', {
             apiName: props.apiName,
             branch: props.branch,
@@ -123,5 +134,6 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             securityGroup: databaseDeploymentStage.securityGroup
         });
         const deployApiDeploymentStage = pipeline.addStage(apiDeploymentStage);
+
     }
 }
