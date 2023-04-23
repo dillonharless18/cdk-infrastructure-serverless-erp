@@ -2,6 +2,7 @@ import { App } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { CodePipelineSource } from 'aws-cdk-lib/pipelines';
 import { InfrastructurePipelineStack } from '../lib/pipeline/pipeline-stack';
+import { writeFileSync } from 'fs';
 
 test('InfrastructurePipelineStack creates a pipeline with the correct stages', () => {
   // GIVEN
@@ -19,6 +20,8 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
     pipelineName: 'test-pipeline',
   });
   const template = Template.fromStack(stack);
+
+  writeFileSync('pipeline-template-test-output.json', JSON.stringify(template, null, 2));
 
   // THEN
   // Check if the CodePipeline exists

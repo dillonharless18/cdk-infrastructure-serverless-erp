@@ -57,7 +57,7 @@ test('Aurora Serverless V2 Cluster should have the correct properties', () => {
     if (resource.Properties && resource.Properties.ServerlessV2ScalingConfiguration) {
       found += 1;
       console.log(`Correct resource found!`)
-      console.log(`${JSON.stringify(resource, null, 2)}`)
+      // console.log(`${JSON.stringify(resource, null, 2)}`)
       expect(resource.Properties).toHaveProperty('ServerlessV2ScalingConfiguration');
       expect(resource.Properties.ServerlessV2ScalingConfiguration).toMatchObject({
         MinCapacity: 0.5,
