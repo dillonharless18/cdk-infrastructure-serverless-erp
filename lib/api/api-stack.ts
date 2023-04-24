@@ -10,15 +10,17 @@ import path = require('path');
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
-import { ISecurityGroup, IVpc, Port, SecurityGroup, SubnetType } from 'aws-cdk-lib/aws-ec2';
+import { ISecurityGroup, IVpc, Port, SecurityGroup, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
 
 interface ApiStackProps extends StackProps {
     apiName: string,
     branch: string;
     certficateArn: string; // Use for custom domain for API Gateway
+    env: {
+      account: string
+      region:  string
+    }
     domainName: string;
-    securityGroup: ISecurityGroup
-    vpc: IVpc
 }
 
 export class ApiStack extends Stack {
@@ -53,6 +55,9 @@ export class ApiStack extends Stack {
     if ( !certficateArn ) throw new Error(`Error in API stack. certificateArn does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     
 
+    // Pull in CW exports
+    const databaseSecurityGroupId = Fn.importValue(`DatabaseSecurityGroupId`);
+    const databaseVPCId = Fn.importValue(`DatabaseVPCArn`);
 
     //////////////////////////
     /////      API       /////
@@ -125,16 +130,24 @@ export class ApiStack extends Stack {
     // Get the metadata for each Lambda function
     const functionMetadata = getFunctionMetadata(functionsPath);
 
+    // Pull in the databaseVPC
+    const databaseVpc = Vpc.fromLookup(this, 'ImportedDatabaseVPC', {
+      vpcId: databaseVPCId,
+    });
+
     // Lambda security group
     const lambdaEndpointsSecurityGroup = new SecurityGroup(this, 'LambdaEndpointsSecurityGroup', {
-      vpc: props.vpc,
+      vpc: databaseVpc,
       description: 'Security group for Lambda API Endpoints',
       allowAllOutbound: true,
     });
 
-    // Adds egress to the database security group, and ingress in the database security group from the lambdaEndpointSecurityGroup    
-    lambdaEndpointsSecurityGroup.connections.allowTo(props.securityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the database');
+    // Get the security group from ID
+    const databaseSecurityGroup = SecurityGroup.fromSecurityGroupId(this, 'ImportedDatabaseSecurityGroup', databaseSecurityGroupId);
 
+    // Adds egress to the database security group, and ingress in the database security group from the lambdaEndpointSecurityGroup    
+    lambdaEndpointsSecurityGroup.connections.allowTo(databaseSecurityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the database');
+    
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
       // Create the Lambda function
@@ -143,7 +156,7 @@ export class ApiStack extends Stack {
         handler: 'index.handler',
         runtime: lambda.Runtime.NODEJS_18_X,
         functionName: `${metadata.name}`, // TODO see if this will be problematic at all 
-        vpc: props.vpc,
+        vpc: databaseVpc,
         vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
         securityGroups: [lambdaEndpointsSecurityGroup],
       });

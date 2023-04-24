@@ -16,6 +16,10 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 interface DatabaseStackProps extends StackProps {
     branch: string;
     domainName: string;
+    env: {
+      account: string,
+      region:  string
+    }
 }
 
 export class DatabaseStack extends Stack {
@@ -105,12 +109,35 @@ export class DatabaseStack extends Stack {
         },
       })
 
+
     // Assign the VPC, security group, and cluster socket endpoitns to the public properties
-    this.clusterEndpointHostname = cluster.clusterEndpoint.hostname;
-    this.clusterEndpointSocketAddress = cluster.clusterEndpoint.socketAddress;
-    this.secret = secret;
-    this.securityGroup = databaseSecurityGroup;
-    this.vpc = databaseVPC;
+
+    new CfnOutput(this, 'ExportedDatabaseSecret', {
+      exportName: 'DatabaseSecretArn',
+      value: secret.secretArn,
+    });
+    new CfnOutput(this, 'ExportedClusterEndpointHostname', {
+      exportName: 'ClusterEndpointHostname',
+      value: cluster.clusterEndpoint.hostname,
+    });
+    new CfnOutput(this, 'ExportedClusterEndpointSocketAddress', {
+      exportName: 'ClusterEndpointSocketAddress',
+      value: cluster.clusterEndpoint.socketAddress,
+    });
+    new CfnOutput(this, 'ExportedDatabaseSecurityGroupId', {
+      exportName: 'DatabaseSecurityGroupId',
+      value: databaseSecurityGroup.securityGroupId,
+    });
+    new CfnOutput(this, 'ExportedDatabaseVPCId', {
+      exportName: 'DatabaseVPCId',
+      value: databaseVPC.vpcId,
+    });
+
+    // this.clusterEndpointHostname = cluster.clusterEndpoint.hostname;
+    // this.clusterEndpointSocketAddress = cluster.clusterEndpoint.socketAddress;
+    // this.secret = secret;
+    // this.securityGroup = databaseSecurityGroup;
+    // this.vpc = databaseVPC;
 
   }
 }

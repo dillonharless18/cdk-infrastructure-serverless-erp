@@ -23,7 +23,15 @@ test('Cognito stack is created correctly', () => {
 
     
     // WHEN
-    const stack = new CognitoStack(app, 'TestCognitoStack', {domainName, branch, applicationName});
+    const stack = new CognitoStack(app, 'TestCognitoStack', {
+        domainName, 
+        branch, 
+        applicationName,
+        env: {
+            account: '136559125535',
+            region: 'us-east-1'
+          },
+    });
     const template = Template.fromStack(stack);
     
     // console.log(JSON.stringify(template, null, 2))

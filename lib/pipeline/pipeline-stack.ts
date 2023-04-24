@@ -21,6 +21,10 @@ interface PipelineStackProps extends cdk.StackProps {
     pipelineSource: CodePipelineSource;
     branch: string;
     pipelineName: string;
+    env: {
+        account: string,
+        region:  string
+    }
 }
 
 export class InfrastructurePipelineStack extends cdk.Stack {
@@ -30,6 +34,8 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         if ( !props ) throw Error ("props is not defined")
         if ( !props.apiName ) throw Error ("apiName is not defined")
         if ( !props.branch ) throw Error("branch is not defined.")
+        if ( !props.env.account ) throw Error("account is not defined.")
+        if ( !props.env.region ) throw Error("region is not defined.")
         if ( !props.source ) throw Error("source is not defined.")
         if ( !props.pipelineName ) throw Error("pipelineName is not defined.")
         if ( !props.pipelineSource ) throw Error("pipelineSource is not defined.")
@@ -60,9 +66,10 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         // Start Database //
         ////////////////////
 
-        const databaseDeploymentStage = new DatabaseDeploymentStage(this, 'Deploy', {
+        const databaseDeploymentStage = new DatabaseDeploymentStage(this, 'DatabaseDeploymentStage', {
             branch: props.branch,
-            domainName: props.domainName
+            domainName: props.domainName,
+            env: props.env
         });
         const deployDatabaseDeploymentStage = pipeline.addStage(databaseDeploymentStage);
 
@@ -70,10 +77,12 @@ export class InfrastructurePipelineStack extends cdk.Stack {
        /** Migrations */
 
         // Get the database user and password
-        const databaseUser = cdk.SecretValue.secretsManager(databaseDeploymentStage.secret.secretArn, {
+        const databaseSecretArn = cdk.Fn.importValue(`DatabaseSecretArn`);
+
+        const databaseUser = cdk.SecretValue.secretsManager(databaseSecretArn, {
             jsonField: 'user',
         });
-        const databasePassword = cdk.SecretValue.secretsManager(databaseDeploymentStage.secret.secretArn, {
+        const databasePassword = cdk.SecretValue.secretsManager(databaseSecretArn, {
             jsonField: 'password',
         });
         
@@ -112,24 +121,26 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         // Start Cognito  //
         ////////////////////
 
-        const cognitoDeploymentStage = new CognitoDeploymentStage(this, 'Deploy', {
-            branch: props.branch,
+        const cognitoDeploymentStage = new CognitoDeploymentStage(this, 'CognitoDeploymentStage', {
             applicationName: props.applicationName,
-            domainName: props.domainName
+            branch: props.branch,
+            domainName: props.domainName,
+            env: props.env
         });
         const deployCognitoDeploymentStage = pipeline.addStage(cognitoDeploymentStage);
 
 
-        
+
         ///////////////////
         //   Start API   //
         ///////////////////
         
-        const apiDeploymentStage = new ApiDeploymentStage(this, 'Deploy', {
+        const apiDeploymentStage = new ApiDeploymentStage(this, 'ApiDeploymentStage', {
             apiName: props.apiName,
             branch: props.branch,
             certificateArn: props.certificateArn,
             domainName: props.domainName,
+            env: props.env,
             vpc: databaseDeploymentStage.vpc,
             securityGroup: databaseDeploymentStage.securityGroup
         });

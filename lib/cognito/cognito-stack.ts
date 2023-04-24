@@ -12,8 +12,12 @@ import * as fs from "fs";
 import path = require('path');
 
 interface CognitoStackProps extends StackProps {
-    branch: string;
     applicationName: string;
+    branch: string;
+    env: {
+        account: string,
+        region:  string
+    }
     domainName: string;
 }
 

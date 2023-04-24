@@ -9,6 +9,10 @@ interface CustomStageProps extends StageProps {
     branch: string;
     certificateArn: string;
     domainName: string;
+    env: {
+        account: string,
+        region:  string
+    }
     securityGroup: ISecurityGroup
     vpc: IVpc
 }
@@ -21,8 +25,7 @@ export class ApiDeploymentStage extends Stage {
             branch: props.branch,
             certficateArn: props.certificateArn,
             domainName: props.domainName,
-            securityGroup: props.securityGroup,
-            vpc: props.vpc
+            env: props.env
         });
     }
 }

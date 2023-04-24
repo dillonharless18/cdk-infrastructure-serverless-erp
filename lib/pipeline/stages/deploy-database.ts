@@ -8,6 +8,10 @@ import { ISecret } from 'aws-cdk-lib/aws-secretsmanager';
 interface CustomStageProps extends StageProps {
     branch: string;
     domainName: string;
+    env: {
+        account: string,
+        region:  string
+    }
 }
 
 export class DatabaseDeploymentStage extends Stage {
@@ -21,7 +25,8 @@ export class DatabaseDeploymentStage extends Stage {
         super(scope, id, props);
         const databaseStack = new DatabaseStack(this, 'DatabaseStack', {
             branch: props.branch,
-            domainName: props.domainName
+            domainName: props.domainName,
+            env: props.env
         });
         this.vpc = databaseStack.vpc;
         this.securityGroup = databaseStack.securityGroup;

@@ -12,6 +12,10 @@ test('DatabaseStack creates an Aurora Serverless V2 cluster, VPC, and security g
   const stack = new DatabaseStack(app, 'TestDatabaseStack', {
     branch: 'development',
     domainName: 'test.com',
+    env: {
+      account: '136559125535',
+      region: 'us-east-1'
+    },
   });
   const template = Template.fromStack(stack);
 
@@ -41,6 +45,10 @@ test('Aurora Serverless V2 Cluster should have the correct properties', () => {
   const stack = new DatabaseStack(app, 'TestDatabaseStack', {
     branch: 'development',
     domainName: 'test.com',
+    env: {
+      account: '136559125535',
+      region: 'us-east-1'
+    },
   });
   const template = Template.fromStack(stack);
 

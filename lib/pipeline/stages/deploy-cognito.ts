@@ -10,6 +10,10 @@ interface CustomStageProps extends StageProps {
     applicationName: string;
     branch: string;
     domainName: string;
+    env: {
+        account: string,
+        region:  string
+    }
 }
 
 export class CognitoDeploymentStage extends Stage {
@@ -18,7 +22,8 @@ export class CognitoDeploymentStage extends Stage {
         new CognitoStack(this, 'Infrastructure', {
             applicationName: props.applicationName,
             branch: props.branch,
-            domainName: props.domainName
+            domainName: props.domainName,
+            env: props.env
         });
     }
 }

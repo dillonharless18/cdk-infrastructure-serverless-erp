@@ -14,6 +14,10 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
     applicationName: 'test-app',
     certificateArn: 'arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012',
     domainName: 'test.com',
+    env: {
+      account: '136559125535',
+      region: 'us-east-1'
+    },
     source: CodePipelineSource.gitHub('owner/repo', 'main'),
     pipelineSource: CodePipelineSource.gitHub('owner/pipeline-repo', 'main'),
     branch: 'development',

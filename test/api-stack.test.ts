@@ -31,9 +31,7 @@ test('ApiStack creates API Gateway with a Lambda function', () => {
     env: {
         account: '136559125535',
         region: 'us-east-1'
-    },
-    securityGroup: mockedDatabaseSecurityGroup,
-    vpc: mockedDatabseVpc,
+    }
   });
   const template = Template.fromStack(stack);
 
