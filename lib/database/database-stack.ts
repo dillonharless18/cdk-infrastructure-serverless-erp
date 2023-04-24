@@ -12,6 +12,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 
 interface DatabaseStackProps extends StackProps {
     branch: string;
@@ -63,6 +64,12 @@ export class DatabaseStack extends Stack {
     const databaseSecurityGroup = new ec2.SecurityGroup(this, 'DatabaseSecurityGroup', {
         vpc: databaseVPC,
     });
+
+    // Storing VPC ID in SSM because using a CFN export inside vpc.fromLookUp in other stacks doesn't work due to tokenization of the CFN output.
+    new StringParameter(this, 'VPCID', {
+      parameterName: `DatabaseVPCId`,
+      stringValue: databaseVPC.vpcId
+    })
     
     // Create a secret to store the database credentials
     const secret = new secretsmanager.Secret(this, 'DatabaseSecret', {
@@ -135,7 +142,7 @@ export class DatabaseStack extends Stack {
 
     // this.clusterEndpointHostname = cluster.clusterEndpoint.hostname;
     // this.clusterEndpointSocketAddress = cluster.clusterEndpoint.socketAddress;
-    // this.secret = secret;
+    // this.secret = secret; // Passing this into migrations wave
     // this.securityGroup = databaseSecurityGroup;
     // this.vpc = databaseVPC;
 

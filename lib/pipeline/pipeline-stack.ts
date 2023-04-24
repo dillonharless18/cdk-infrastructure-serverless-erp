@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { BuildSpec, LinuxBuildImage, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
+import { BuildEnvironmentVariableType, BuildSpec, LinuxBuildImage, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
 import { CodeBuildStep, CodePipeline, CodePipelineSource, Step } from 'aws-cdk-lib/pipelines';
 import { Construct, Node } from 'constructs';
 import { ApiDeploymentStage } from './stages/deploy-api';
@@ -7,6 +7,9 @@ import { IamDeploymentStage } from './stages/deploy-iam';
 import { CognitoDeploymentStage } from './stages/deploy-cognito';
 import { DatabaseDeploymentStage } from './stages/deploy-database';
 import { CodeBuildAction } from 'aws-cdk-lib/aws-codepipeline-actions';
+import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 
 export function createResourceName(branch: string, resourceName: string) {
     return `${resourceName}-${branch}`;
@@ -76,26 +79,52 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         
        /** Migrations */
 
-        // Get the database user and password
+        // Get the database secret arn and cluster endpoint hostname, security group of db
         const databaseSecretArn = cdk.Fn.importValue(`DatabaseSecretArn`);
+        const clusterEndpointHostname = cdk.Fn.importValue(`ClusterEndpointHostname`);
+        const databaseSecurityGroupId = cdk.Fn.importValue(`DatabaseSecurityGroupId`);
 
-        const databaseUser = cdk.SecretValue.secretsManager(databaseSecretArn, {
-            jsonField: 'user',
-        });
-        const databasePassword = cdk.SecretValue.secretsManager(databaseSecretArn, {
-            jsonField: 'password',
-        });
-        
+        const databaseSecurityGroup = SecurityGroup.fromSecurityGroupId(this, 'ImportedSecurityGroup', databaseSecurityGroupId);
+
         
         // Does not deploy stacks but only runs some post-production actions (CodeBuild/Lambdas)
         const postDBCreationWave = pipeline.addWave('PostDBCreation');
 
+        // Grant CodeBuild permission to access the database secret
+        const codeBuildRole = new Role(this, 'CodeBuildRole', {
+            assumedBy: new ServicePrincipal('codebuild.amazonaws.com'),
+        });
+        
+        // TODO move this to IAM folder
+        codeBuildRole.addToPolicy(
+            new PolicyStatement({
+              effect: Effect.ALLOW,
+              actions: [
+                'secretsmanager:GetRandomPassword',
+                'secretsmanager:GetResourcePolicy',
+                'secretsmanager:GetSecretValue',
+                'secretsmanager:DescribeSecret',
+                'secretsmanager:ListSecretVersionIds',
+              ],
+              resources: [databaseSecretArn],
+            })
+          );
+
+        // TODO this is duplicated inside the api-stack
+        // Getting the vpcId that was stored in SSM during databaseStack synth - fromLookup doesn't work with a CfnOutput
+        const vpcId = StringParameter.valueFromLookup(this, '/VpcProvider/VPCID');
+        
+        // Pull in the databaseVPC
+        const databaseVpc = Vpc.fromLookup(this, 'ImportedDatabaseVPC', {
+            vpcId: vpcId,
+        });
+
         // Run migrations
         postDBCreationWave.addPost(
             new CodeBuildStep('RunMigrations', {
-                securityGroups: [databaseDeploymentStage.securityGroup], // TODO potentially create a distinct security group here
+                securityGroups: [databaseSecurityGroup], // TODO potentially create a distinct security group here
                 input: props?.source,
-                vpc: databaseDeploymentStage.vpc,
+                vpc: databaseVpc,
                 installCommands: [
                     'npm install'
                 ],
@@ -105,14 +134,13 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                 buildEnvironment: {
                     privileged: true,
                     buildImage: LinuxBuildImage.STANDARD_5_0,
+                    environmentVariables: {
+                        DB_HOST:     { value: clusterEndpointHostname },
+                        DB_CREDENTIALS: { value: 'database-credentials', type: BuildEnvironmentVariableType.SECRETS_MANAGER },
+                        DB_DATABASE: { value: 'database' },
+                        NODE_ENV:    { value: props.branch ? props.branch : "development" }
+                      },
                 },
-                env: {
-                    'DB_HOST': databaseDeploymentStage.clusterEndpointHostname,
-                    'DB_USER': databaseUser.toString(),
-                    'DB_PASSWORD': databasePassword.toString(), // TODO See if this will work properly
-                    'DB_DATABASE': 'database',
-                    'NODE_ENV': props.branch ? props.branch : "development"
-                }
             })
         );
 

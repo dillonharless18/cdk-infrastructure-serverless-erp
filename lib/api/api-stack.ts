@@ -11,6 +11,7 @@ import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
 import { ISecurityGroup, IVpc, Port, SecurityGroup, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 
 interface ApiStackProps extends StackProps {
     apiName: string,
@@ -130,9 +131,13 @@ export class ApiStack extends Stack {
     // Get the metadata for each Lambda function
     const functionMetadata = getFunctionMetadata(functionsPath);
 
+
+    // Getting the vpcId that was stored in SSM during databaseStack synth - fromLookup doesn't work with a CfnOutput
+    const vpcId = StringParameter.valueFromLookup(this, '/VpcProvider/VPCID');
+    
     // Pull in the databaseVPC
     const databaseVpc = Vpc.fromLookup(this, 'ImportedDatabaseVPC', {
-      vpcId: databaseVPCId,
+      vpcId: vpcId,
     });
 
     // Lambda security group

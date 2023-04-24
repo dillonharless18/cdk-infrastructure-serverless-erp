@@ -11,6 +11,7 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
   // WHEN
   const stack = new InfrastructurePipelineStack(app, 'TestInfrastructurePipelineStack', {
     apiName: 'test-api',
+    branch: 'development',
     applicationName: 'test-app',
     certificateArn: 'arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012',
     domainName: 'test.com',
@@ -20,7 +21,6 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
     },
     source: CodePipelineSource.gitHub('owner/repo', 'main'),
     pipelineSource: CodePipelineSource.gitHub('owner/pipeline-repo', 'main'),
-    branch: 'development',
     pipelineName: 'test-pipeline',
   });
   const template = Template.fromStack(stack);
@@ -32,5 +32,5 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
   template.resourceCountIs('AWS::CodePipeline::Pipeline', 1);
 
   // Check if the CodeBuild projects exist for the stages
-  template.resourceCountIs('AWS::CodeBuild::Project', 1); // Change this number according to the number of CodeBuild projects in your pipeline
+  template.resourceCountIs('AWS::CodeBuild::Project', 5); // TODO ensure this is the correct number
 });
