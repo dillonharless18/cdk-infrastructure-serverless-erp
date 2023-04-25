@@ -23,8 +23,8 @@ const LAMBDA_REPO         = "dillonCF/oneXerp-Lambdas"
 
 // environment variables set in the cdk-deploy-to script
 const envVariables = {
-    developmentAccount: 136559125535,
-    productionAccount: 743614460397,
+    developmentAccount: '136559125535',
+    productionAccount: '743614460397',
     region: 'us-east-1',
 }
 
