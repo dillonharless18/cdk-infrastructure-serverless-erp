@@ -1,5 +1,5 @@
 /* eslint-disable no-new */
-/* eslint-disable import/prefer-default-export */
+/* eslint-disable  /prefer-default-export */
 
 /* This page is inspired by this blog - https://awstip.com/aws-cdk-template-for-hosting-a-static-website-in-s3-served-via-cloudfront-e810ffcaff0c */
 
@@ -11,7 +11,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as fs from "fs";
 import path = require('path');
 
-interface CognitoStackProps extends StackProps {
+interface CognitoConstructProps {
     applicationName: string;
     branch: string;
     env: {
@@ -21,9 +21,12 @@ interface CognitoStackProps extends StackProps {
     domainName: string;
 }
 
-export class CognitoStack extends Stack {
-  constructor(scope: Construct, id: string, props: CognitoStackProps) {
-    super(scope, id, props);
+export class CognitoConstruct extends Construct {
+    
+  public readonly userPool: cognito.IUserPool;
+
+  constructor(scope: Construct, id: string, props: CognitoConstructProps) {
+    super(scope, id);
     
 
     type branchToSubdomainTypes = {
@@ -219,15 +222,17 @@ export class CognitoStack extends Stack {
     })
           
     // Output the domain name for the user pool
-    new cdk.CfnOutput(this, 'UserPoolDomainOutput', {
-        value: userPoolDomain.domainName,
-        exportName: 'UserPoolDomainOutput',
-    });
+    // new cdk.CfnOutput(this, 'UserPoolDomainOutput', {
+    //     value: userPoolDomain.domainName,
+    //     exportName: 'UserPoolDomainOutput',
+    // });
 
-    new cdk.CfnOutput(this, 'UserPoolArnOutput', {
-        value: userPool.userPoolArn,
-        exportName: 'UserPoolArn',
-    });
+    // new cdk.CfnOutput(this, 'UserPoolArnOutput', {
+    //     value: userPool.userPoolArn,
+    //     exportName: 'UserPoolArn',
+    // });
+
+    this.userPool = userPool;
 
   }
 }

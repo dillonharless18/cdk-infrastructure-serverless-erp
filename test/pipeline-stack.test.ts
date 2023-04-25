@@ -8,20 +8,28 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
   // GIVEN
   const app = new App();
 
+  // environment variables set in the cdk-deploy-to script
+  const envVariables = {
+    branch: 'TEST_BRANCH',
+    developmentAccount: '123456789012',
+    productionAccount: '234567890123',
+    region: 'us-east-1',
+    repositoryName: 'TEST_REPO'
+  }
+
   // WHEN
-  const stack = new InfrastructurePipelineStack(app, 'TestInfrastructurePipelineStack', {
-    apiName: 'test-api',
-    branch: 'development',
-    applicationName: 'test-app',
-    certificateArn: 'arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012',
-    domainName: 'test.com',
+  const stack = new InfrastructurePipelineStack(app, 'TestInfrastructurePipelineStack', envVariables, {
+    apiName: "TEST_API_NAME",
+    applicationName: "TEST_APPLICATION_NAME",
+    branch: envVariables.branch, // TODO change to stage most likely
+    domainName: "TEST_DOMAIN_NAME",
+    pipelineName: "TEST_PIPELINE_NAME",
     env: {
-      account: '136559125535',
-      region: 'us-east-1'
+        account: envVariables.developmentAccount, // Not how it's accessed in the actual stack
+        region: envVariables.region
     },
     source: CodePipelineSource.gitHub('owner/repo', 'main'),
     pipelineSource: CodePipelineSource.gitHub('owner/pipeline-repo', 'main'),
-    pipelineName: 'test-pipeline',
   });
   const template = Template.fromStack(stack);
 

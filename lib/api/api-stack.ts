@@ -12,8 +12,9 @@ import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
 import { ISecurityGroup, IVpc, Port, SecurityGroup, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { IUserPool } from 'aws-cdk-lib/aws-cognito';
 
-interface ApiStackProps extends StackProps {
+interface ApiConstructProps {
     apiName: string,
     branch: string;
     certficateArn: string; // Use for custom domain for API Gateway
@@ -22,11 +23,14 @@ interface ApiStackProps extends StackProps {
       region:  string
     }
     domainName: string;
+    databaseSecurityGroup: ISecurityGroup;
+    userPool: IUserPool;
+    vpc: IVpc
 }
 
-export class ApiStack extends Stack {
-  constructor(scope: Construct, id: string, props: ApiStackProps) {
-    super(scope, id, props);
+export class ApiConstruct extends Construct {
+  constructor(scope: Construct, id: string, props: ApiConstructProps) {
+    super(scope, id);
     
     type branchToSubdomainTypes = {
         [key: string]: string
@@ -57,8 +61,8 @@ export class ApiStack extends Stack {
     
 
     // Pull in CW exports
-    const databaseSecurityGroupId = Fn.importValue(`DatabaseSecurityGroupId`);
-    const databaseVPCId = Fn.importValue(`DatabaseVPCArn`);
+    // const databaseSecurityGroupId = Fn.importValue(`DatabaseSecurityGroupId`);
+    // const databaseVPCId = Fn.importValue(`DatabaseVPCArn`);
 
     //////////////////////////
     /////      API       /////
@@ -76,12 +80,13 @@ export class ApiStack extends Stack {
     });
 
     // Add Cognito Authorizer to the API Gateway
-    const userPoolArn = Fn.importValue('UserPoolArn');
+    // const userPoolArn = Fn.importValue('UserPoolArn');
     const authorizer = new apigateway.CfnAuthorizer(this, 'CognitoAuthorizer', {
       name: 'CognitoAuthorizer',
       type: 'COGNITO_USER_POOLS',
       identitySource: 'method.request.header.Authorization',
-      providerArns: [userPoolArn],
+      // providerArns: [userPoolArn],
+      providerArns: [props.userPool.userPoolArn],
       restApiId: api.restApiId,
     });
 
@@ -133,22 +138,23 @@ export class ApiStack extends Stack {
 
 
     // Getting the vpcId that was stored in SSM during databaseStack synth - fromLookup doesn't work with a CfnOutput
-    const vpcId = StringParameter.valueFromLookup(this, '/VpcProvider/VPCID');
+    // const vpcId = StringParameter.valueFromLookup(this, 'DatabaseVPCId');
     
     // Pull in the databaseVPC
-    const databaseVpc = Vpc.fromLookup(this, 'ImportedDatabaseVPC', {
-      vpcId: vpcId,
-    });
+    // const databaseVpc = Vpc.fromLookup(this, 'ImportedDatabaseVPC', {
+    //   vpcId: vpcId,
+    // });
 
     // Lambda security group
     const lambdaEndpointsSecurityGroup = new SecurityGroup(this, 'LambdaEndpointsSecurityGroup', {
-      vpc: databaseVpc,
+      // vpc: databaseVpc,
+      vpc: props.vpc,
       description: 'Security group for Lambda API Endpoints',
       allowAllOutbound: true,
     });
 
     // Get the security group from ID
-    const databaseSecurityGroup = SecurityGroup.fromSecurityGroupId(this, 'ImportedDatabaseSecurityGroup', databaseSecurityGroupId);
+    const databaseSecurityGroup = SecurityGroup.fromSecurityGroupId(this, 'ImportedDatabaseSecurityGroup', props.databaseSecurityGroup.securityGroupId);
 
     // Adds egress to the database security group, and ingress in the database security group from the lambdaEndpointSecurityGroup    
     lambdaEndpointsSecurityGroup.connections.allowTo(databaseSecurityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the database');
@@ -161,7 +167,8 @@ export class ApiStack extends Stack {
         handler: 'index.handler',
         runtime: lambda.Runtime.NODEJS_18_X,
         functionName: `${metadata.name}`, // TODO see if this will be problematic at all 
-        vpc: databaseVpc,
+        // vpc: databaseVpc,
+        vpc: props.vpc,
         vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
         securityGroups: [lambdaEndpointsSecurityGroup],
       });

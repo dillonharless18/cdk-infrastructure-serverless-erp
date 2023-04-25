@@ -1,15 +1,9 @@
 import * as cdk from 'aws-cdk-lib';
 import { BuildEnvironmentVariableType, BuildSpec, LinuxBuildImage, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
-import { CodeBuildStep, CodePipeline, CodePipelineSource, Step } from 'aws-cdk-lib/pipelines';
+import { CodeBuildStep, CodePipeline, CodePipelineSource, ManualApprovalStep, Step } from 'aws-cdk-lib/pipelines';
 import { Construct, Node } from 'constructs';
-import { ApiDeploymentStage } from './stages/deploy-api';
-import { IamDeploymentStage } from './stages/deploy-iam';
-import { CognitoDeploymentStage } from './stages/deploy-cognito';
-import { DatabaseDeploymentStage } from './stages/deploy-database';
-import { CodeBuildAction } from 'aws-cdk-lib/aws-codepipeline-actions';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import { StringParameter } from 'aws-cdk-lib/aws-ssm';
-import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { DeployInfrastructureStage } from './stages/deploy-infrastructure-stage';
 
 export function createResourceName(branch: string, resourceName: string) {
     return `${resourceName}-${branch}`;
@@ -18,25 +12,32 @@ export function createResourceName(branch: string, resourceName: string) {
 interface PipelineStackProps extends cdk.StackProps {
     apiName: string;
     applicationName: string;
-    certificateArn: string;
     domainName: string;
     source: CodePipelineSource;
     pipelineSource: CodePipelineSource;
     branch: string;
     pipelineName: string;
-    env: {
-        account: string,
-        region:  string
-    }
+}
+
+interface Environment {
+    branch: string,
+    developmentAccount: string,
+    productionAccount: string,
+    region: string,
+    repositoryName: string
 }
 
 export class InfrastructurePipelineStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, props: PipelineStackProps) {
+    private readonly devStageName: string = 'development';
+    private readonly prodStageName: string = 'production';
+
+    constructor(scope: Construct, id: string, envVariables: Environment, props: PipelineStackProps) {
         super(scope, id, props);
 
         if ( !props ) throw Error ("props is not defined")
         if ( !props.apiName ) throw Error ("apiName is not defined")
         if ( !props.branch ) throw Error("branch is not defined.")
+        if ( !props.env) throw Error("props.env is not defined")
         if ( !props.env.account ) throw Error("account is not defined.")
         if ( !props.env.region ) throw Error("region is not defined.")
         if ( !props.source ) throw Error("source is not defined.")
@@ -45,134 +46,126 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         
         const pipeline = new CodePipeline(this, createResourceName(props?.branch, "Pipeline"), {
             pipelineName: createResourceName(props?.branch, props.pipelineName),
+            crossAccountKeys: true,
             synth: new CodeBuildStep("Synth", {
                 input: props?.pipelineSource,
                 additionalInputs: {
-                    // '../website-code': props?.source
                     '../../lambdas': props?.source
                 },
                 commands: [
-                    // "cd ../website-code", // step out and into the website code and build it
-                    // "npm ci",
-                    // "npm run build",
-                    // "cd -",
                     "npm ci",
                     "npm run build",
+                    "cd ../../lambdas/migrationLambda",
+                    "npm install",
+                    "cd -",
                     "npx cdk synth"
                 ],
-                primaryOutputDirectory: 'cdk.out'
-            })
-        });
-
-        
-        ////////////////////
-        // Start Database //
-        ////////////////////
-
-        const databaseDeploymentStage = new DatabaseDeploymentStage(this, 'DatabaseDeploymentStage', {
-            branch: props.branch,
-            domainName: props.domainName,
-            env: props.env
-        });
-        const deployDatabaseDeploymentStage = pipeline.addStage(databaseDeploymentStage);
-
-        
-       /** Migrations */
-
-        // Get the database secret arn and cluster endpoint hostname, security group of db
-        const databaseSecretArn = cdk.Fn.importValue(`DatabaseSecretArn`);
-        const clusterEndpointHostname = cdk.Fn.importValue(`ClusterEndpointHostname`);
-        const databaseSecurityGroupId = cdk.Fn.importValue(`DatabaseSecurityGroupId`);
-
-        const databaseSecurityGroup = SecurityGroup.fromSecurityGroupId(this, 'ImportedSecurityGroup', databaseSecurityGroupId);
-
-        
-        // Does not deploy stacks but only runs some post-production actions (CodeBuild/Lambdas)
-        const postDBCreationWave = pipeline.addWave('PostDBCreation');
-
-        // Grant CodeBuild permission to access the database secret
-        const codeBuildRole = new Role(this, 'CodeBuildRole', {
-            assumedBy: new ServicePrincipal('codebuild.amazonaws.com'),
-        });
-        
-        // TODO move this to IAM folder
-        codeBuildRole.addToPolicy(
-            new PolicyStatement({
-              effect: Effect.ALLOW,
-              actions: [
-                'secretsmanager:GetRandomPassword',
-                'secretsmanager:GetResourcePolicy',
-                'secretsmanager:GetSecretValue',
-                'secretsmanager:DescribeSecret',
-                'secretsmanager:ListSecretVersionIds',
-              ],
-              resources: [databaseSecretArn],
-            })
-          );
-
-        // TODO this is duplicated inside the api-stack
-        // Getting the vpcId that was stored in SSM during databaseStack synth - fromLookup doesn't work with a CfnOutput
-        const vpcId = StringParameter.valueFromLookup(this, '/VpcProvider/VPCID');
-        
-        // Pull in the databaseVPC
-        const databaseVpc = Vpc.fromLookup(this, 'ImportedDatabaseVPC', {
-            vpcId: vpcId,
-        });
-
-        // Run migrations
-        postDBCreationWave.addPost(
-            new CodeBuildStep('RunMigrations', {
-                securityGroups: [databaseSecurityGroup], // TODO potentially create a distinct security group here
-                input: props?.source,
-                vpc: databaseVpc,
-                installCommands: [
-                    'npm install'
-                ],
-                commands: [
-                    'node run_migrations.js'
-                ],
-                buildEnvironment: {
-                    privileged: true,
-                    buildImage: LinuxBuildImage.STANDARD_5_0,
-                    environmentVariables: {
-                        DB_HOST:     { value: clusterEndpointHostname },
-                        DB_CREDENTIALS: { value: 'database-credentials', type: BuildEnvironmentVariableType.SECRETS_MANAGER },
-                        DB_DATABASE: { value: 'database' },
-                        NODE_ENV:    { value: props.branch ? props.branch : "development" }
-                      },
+                env: {
+                    // TODO Determine what I need in here
                 },
+                primaryOutputDirectory: 'cdk.out',
+                buildEnvironment: {
+                    privileged: true
+                }
             })
-        );
+        });
 
 
-        ////////////////////
-        // Start Cognito  //
-        ////////////////////
-
-        const cognitoDeploymentStage = new CognitoDeploymentStage(this, 'CognitoDeploymentStage', {
+        /////////////////////
+        //    Dev Stage    //
+        /////////////////////
+        const devStage = new DeployInfrastructureStage(this, `DeployStage-${this.devStageName}`, {
+            env: { 
+                account: envVariables.developmentAccount,
+                region: this.region
+            },
             applicationName: props.applicationName,
             branch: props.branch,
             domainName: props.domainName,
-            env: props.env
-        });
-        const deployCognitoDeploymentStage = pipeline.addStage(cognitoDeploymentStage);
-
-
-
-        ///////////////////
-        //   Start API   //
-        ///////////////////
-        
-        const apiDeploymentStage = new ApiDeploymentStage(this, 'ApiDeploymentStage', {
             apiName: props.apiName,
-            branch: props.branch,
-            certificateArn: props.certificateArn,
-            domainName: props.domainName,
-            env: props.env,
-            vpc: databaseDeploymentStage.vpc,
-            securityGroup: databaseDeploymentStage.securityGroup
+            certificateArn: "arn:aws:acm:us-east-1:136559125535:certificate/4fb61b1f-0934-4b3f-9070-a8f1036e7430",
+            crossAccount: false, // TODO look into this
+            stageName: this.devStageName,
+            devAccountId: envVariables.developmentAccount,
         });
-        const deployApiDeploymentStage = pipeline.addStage(apiDeploymentStage);
+        
+        pipeline.addStage(devStage, {
+            post: [this.generateDatabaseSchemaMigration(devStage, this.region, this.account)]
+        });
 
+
+        ////////////////////////////
+        //    Production Stage    //
+        ////////////////////////////
+        const prodStage = new DeployInfrastructureStage(this, `DeployStage-${this.prodStageName}`, {
+            env: { 
+                account: envVariables.productionAccount,
+                region: this.region
+            },
+            applicationName: props.applicationName,
+            branch: props.branch,
+            domainName: props.domainName,
+            apiName: props.apiName,
+            certificateArn: "arn:aws:acm:us-east-1:743614460397:certificate/57206c73-27f6-4fee-bf04-3297fa3a0703",
+            crossAccount: true, // TODO look into this
+            stageName: this.prodStageName,
+            devAccountId: envVariables.developmentAccount,
+        });
+        pipeline.addStage(prodStage, {
+            pre: [
+            new ManualApprovalStep('ManualApproval', {
+                comment: "Approve deployment to production"
+            })
+            ],
+            post: [this.generateDatabaseSchemaMigration(prodStage, this.region, envVariables.productionAccount)]
+        });
+    }
+    
+    
+    /////////////////////////////
+    // Migrations Helper Logic //
+    /////////////////////////////
+    private generateDatabaseSchemaMigration(stage: DeployInfrastructureStage, region: string, account: string) {
+        const buildCommands: string[] = [];
+    
+        const rolePolicyStatements = [
+            new PolicyStatement({
+                effect: Effect.ALLOW,
+                actions: ['lambda:InvokeFunction'],
+                resources: [`arn:aws:lambda:${region}:${account}:function:${stage.lambdaFunctionName}`],
+            })
+        ]
+    
+        if (stage.stageName === this.prodStageName) {
+            // Assume cross account role if production environment
+            buildCommands.push(
+                `aws sts assume-role --role-arn arn:aws:iam::${account}:role/${stage.crossAccountLambdaInvokeRoleName} --role-session-name "CrossAccountSession" > credentials.json`,
+                'export AWS_ACCESS_KEY_ID=$(cat credentials.json | jq -r ".Credentials.AccessKeyId")',
+                'export AWS_SECRET_ACCESS_KEY=$(cat credentials.json | jq -r ".Credentials.SecretAccessKey")',
+                'export AWS_SESSION_TOKEN=$(cat credentials.json | jq -r ".Credentials.SessionToken")'
+            )
+    
+            // Allow to assume role if production environment
+            rolePolicyStatements.push(new PolicyStatement({
+                effect: Effect.ALLOW,
+                actions: ['sts:AssumeRole'],
+                resources: [`arn:aws:iam::${account}:role/${stage.crossAccountLambdaInvokeRoleName}`]
+            }))
+        }
+    
+        // Invoke lambda in all environments
+        buildCommands.push(
+            'aws lambda invoke --function-name $DB_MIGRATE_FUNCTION_NAME out.json --log-type Tail --query LogResult --output text |  base64 -d',
+            'lambdaStatus=$(cat out.json | jq ".StatusCode")',
+            'if [ $lambdaStatus = 500 ]; then exit 1; else exit 0; fi'
+        )
+    
+        return new CodeBuildStep(`RDSSchemaUpdate-${stage.stageName}`, {
+            env: {
+                DB_MIGRATE_FUNCTION_NAME: stage.lambdaFunctionName,
+            },
+            commands: buildCommands,
+            rolePolicyStatements: rolePolicyStatements
+        })
     }
 }

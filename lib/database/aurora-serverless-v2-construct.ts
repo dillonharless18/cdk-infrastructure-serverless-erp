@@ -14,27 +14,24 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 
-interface DatabaseStackProps extends StackProps {
-    branch: string;
-    domainName: string;
-    env: {
-      account: string,
-      region:  string
-    }
+interface AuroraServerlessV2ConstructProps {
+    stageName: string;
 }
 
-export class DatabaseStack extends Stack {
+export class AuroraServerlessV2Construct extends Construct {
   
   // Expose the VPC and security group as public properties
   public readonly clusterEndpointSocketAddress: string;
   public readonly clusterEndpointHostname: string;
-  public readonly secret: secretsmanager.ISecret;
-  public readonly securityGroup: ec2.ISecurityGroup;
-  public readonly vpc: ec2.IVpc;
+  public readonly secretArn: CfnOutput;
+  public readonly secretName: CfnOutput;
+  public readonly securityGroup: ec2.SecurityGroup;
+  public readonly vpc: ec2.Vpc;
+  public readonly defaultDatabaseName: string = "database";
   
 
-  constructor(scope: Construct, id: string, props: DatabaseStackProps) {
-    super(scope, id, props);
+  constructor(scope: Construct, id: string, props: AuroraServerlessV2ConstructProps) {
+    super(scope, id);
     
     type branchToSubdomainTypes = {
         [key: string]: string
@@ -47,28 +44,19 @@ export class DatabaseStack extends Stack {
         main:        ''
     }
 
-    const { branch, domainName } = props
-
-    if ( !domainName ) throw new Error(`Error in database stack. domainName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
-    const DOMAIN_NAME = domainName;
-    
-    if ( !branch ) throw new Error(`Error in database stack. branch does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
-    const DOMAIN_WITH_SUBDOMAIN = `${BRANCH_TO_SUBDOMAIN_MAP[branch]}${domainName}`
-
-    const WWW_DOMAIN_WITH_SUBDOMAIN = `www.${DOMAIN_WITH_SUBDOMAIN}`;
-
     // Create a VPC for the database
-    const databaseVPC = new ec2.Vpc(this, 'DatabaseVPC');
+    const databaseVpc = new ec2.Vpc(this, 'DatabaseVPC');
+    cdk.Aspects.of(databaseVpc).add(new cdk.Tag('rds-lambda-vpc', 'true'))
 
     // Create a security group to control access to the database
     const databaseSecurityGroup = new ec2.SecurityGroup(this, 'DatabaseSecurityGroup', {
-        vpc: databaseVPC,
+        vpc: databaseVpc,
     });
 
     // Storing VPC ID in SSM because using a CFN export inside vpc.fromLookUp in other stacks doesn't work due to tokenization of the CFN output.
     new StringParameter(this, 'VPCID', {
       parameterName: `DatabaseVPCId`,
-      stringValue: databaseVPC.vpcId
+      stringValue: databaseVpc.vpcId
     })
     
     // Create a secret to store the database credentials
@@ -92,7 +80,7 @@ export class DatabaseStack extends Stack {
         defaultDatabaseName: 'database',
         instances: 1,
         instanceProps: {
-          vpc: databaseVPC,
+          vpc: databaseVpc,
           instanceType: new ec2.InstanceType('serverless'),
           autoMinorVersionUpgrade: true,
           publiclyAccessible: true,
@@ -117,34 +105,20 @@ export class DatabaseStack extends Stack {
       })
 
 
-    // Assign the VPC, security group, and cluster socket endpoitns to the public properties
-
-    new CfnOutput(this, 'ExportedDatabaseSecret', {
-      exportName: 'DatabaseSecretArn',
-      value: secret.secretArn,
-    });
-    new CfnOutput(this, 'ExportedClusterEndpointHostname', {
-      exportName: 'ClusterEndpointHostname',
-      value: cluster.clusterEndpoint.hostname,
-    });
-    new CfnOutput(this, 'ExportedClusterEndpointSocketAddress', {
-      exportName: 'ClusterEndpointSocketAddress',
-      value: cluster.clusterEndpoint.socketAddress,
-    });
-    new CfnOutput(this, 'ExportedDatabaseSecurityGroupId', {
-      exportName: 'DatabaseSecurityGroupId',
-      value: databaseSecurityGroup.securityGroupId,
-    });
-    new CfnOutput(this, 'ExportedDatabaseVPCId', {
-      exportName: 'DatabaseVPCId',
-      value: databaseVPC.vpcId,
+    // Outputs
+    this.secretName = new CfnOutput(this, 'secretName', {
+      value: cluster.secret?.secretName || '',
     });
 
-    // this.clusterEndpointHostname = cluster.clusterEndpoint.hostname;
-    // this.clusterEndpointSocketAddress = cluster.clusterEndpoint.socketAddress;
-    // this.secret = secret; // Passing this into migrations wave
-    // this.securityGroup = databaseSecurityGroup;
-    // this.vpc = databaseVPC;
+    this.secretArn = new CfnOutput(this, 'secretArn', {
+      value: cluster.secret?.secretArn || '',
+    });
+    
+    this.securityGroup = databaseSecurityGroup;
+
+    this.clusterEndpointHostname = cluster.clusterEndpoint.hostname;
+    this.clusterEndpointSocketAddress = cluster.clusterEndpoint.socketAddress;
+    this.vpc = databaseVpc;
 
   }
 }

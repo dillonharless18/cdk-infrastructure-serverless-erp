@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/one_xerp-infrastructure.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/entry-point-pipeline-infrastructure.ts",
   "watch": {
     "include": [
       "**"
