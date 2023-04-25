@@ -23,9 +23,9 @@ const LAMBDA_REPO         = "dillonCF/oneXerp-Lambdas"
 
 // environment variables set in the cdk-deploy-to script
 const envVariables = {
-    developmentAccount: safelyRetrieveEnvVariable('CDK_DEVELOPMENT_ACCOUNT'),
-    productionAccount: safelyRetrieveEnvVariable('CDK_PRODUCTION_ACCOUNT'),
-    region: safelyRetrieveEnvVariable('REGION'),
+    developmentAccount: 136559125535,
+    productionAccount: 743614460397,
+    region: 'us-east-1',
 }
 
 new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
