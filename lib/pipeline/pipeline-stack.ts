@@ -164,6 +164,9 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             env: {
                 DB_MIGRATE_FUNCTION_NAME: stage.lambdaFunctionName,
             },
+            buildEnvironment: {
+                privileged: true
+            },
             commands: buildCommands,
             rolePolicyStatements: rolePolicyStatements
         })
