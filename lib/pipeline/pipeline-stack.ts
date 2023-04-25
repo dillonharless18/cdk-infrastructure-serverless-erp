@@ -45,7 +45,6 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                     '../../lambdas': props?.source
                 },
                 commands: [
-                    "nvm use $NODE_VERSION",
                     "npm ci",
                     "npm run build",
                     "cd lib/database/lambda",
