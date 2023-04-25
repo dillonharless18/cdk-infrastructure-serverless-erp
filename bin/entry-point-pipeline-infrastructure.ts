@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+/** This article discussess cross-account deployments: https://garbe.io/blog/2022/08/01/hey-cdk-how-to-cross-account-deployments/ */
+/** This one too: https://taimos.de/blog/create-a-cicd-pipeline-for-your-cdk-app */
+
 import * as cdk from 'aws-cdk-lib';
 import { CodePipelineSource } from 'aws-cdk-lib/pipelines';
 import { InfrastructurePipelineStack } from '../lib/pipeline/pipeline-stack';
