@@ -89,28 +89,28 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         ////////////////////////////
         //    Production Stage    //
         ////////////////////////////
-        // const prodStage = new DeployInfrastructureStage(this, `DeployStage-${this.prodStageName}`, {
-        //     env: { 
-        //         account: envVariables.productionAccount,
-        //         region: this.region
-        //     },
-        //     applicationName: props.applicationName,
-        //     stage: 'prod',
-        //     domainName: props.domainName,
-        //     apiName: props.apiName,
-        //     certificateArn: "arn:aws:acm:us-east-1:743614460397:certificate/57206c73-27f6-4fee-bf04-3297fa3a0703",
-        //     crossAccount: true, // TODO look into this
-        //     stageName: this.prodStageName,
-        //     devAccountId: envVariables.developmentAccount,
-        // });
-        // pipeline.addStage(prodStage, {
-        //     pre: [
-        //     new ManualApprovalStep('ManualApproval', {
-        //         comment: "Approve deployment to production"
-        //     })
-        //     ],
-        //     post: [this.generateDatabaseSchemaMigration(prodStage, this.region, envVariables.productionAccount)]
-        // });
+        const prodStage = new DeployInfrastructureStage(this, `DeployStage-${this.prodStageName}`, {
+            env: { 
+                account: envVariables.productionAccount,
+                region: this.region
+            },
+            applicationName: props.applicationName,
+            stage: 'prod',
+            domainName: props.domainName,
+            apiName: props.apiName,
+            certificateArn: "arn:aws:acm:us-east-1:743614460397:certificate/57206c73-27f6-4fee-bf04-3297fa3a0703",
+            crossAccount: true, // TODO look into this
+            stageName: this.prodStageName,
+            devAccountId: envVariables.developmentAccount,
+        });
+        pipeline.addStage(prodStage, {
+            pre: [
+            new ManualApprovalStep('ManualApproval', {
+                comment: "Approve deployment to production"
+            })
+            ],
+            post: [this.generateDatabaseSchemaMigration(prodStage, this.region, envVariables.productionAccount)]
+        });
     }
     
     
