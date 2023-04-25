@@ -34,8 +34,8 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
     domainName: DOMAIN_NAME,
     pipelineName: PIPELINE_NAME,
     env: {
-        account: process.env.CDK_DEVELOPMENT_ACCOUNT,
-        region: process.env.REGION
+        account: process.env.CDK_DEVELOPMENT_ACCOUNT || process.env.CDK_DEFAULT_ACCOUNT,
+        region: process.env.REGION || process.env.CDK_DEFAULT_REGION
     },
     pipelineSource: CodePipelineSource.connection(INFRA_REPO, 'main', {
         connectionArn: CODESTAR_ARN
