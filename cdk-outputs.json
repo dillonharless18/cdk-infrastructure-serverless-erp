@@ -1,0 +1,7 @@
+{
+  "UIInfrastructureStack": {
+    "CfDistId": "E94C872DLBJ3E",
+    "CfDomainName": "d2kyrflzkc3ydw.cloudfront.net",
+    "S3BucketName": "s3://uiinfrastructurestack-websitebucket75c24d94-l5autrtc7igq/production"
+  }
+}
