@@ -1,0 +1,6 @@
+{
+    "apiPath"    :  "users",
+    "httpMethod" :  "GET",
+    "name"       :  "getUsers",
+    "allowedGroups": ["logistics", "project_manager", "admin"]
+}
