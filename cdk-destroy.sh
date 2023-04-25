@@ -4,7 +4,7 @@ if [[ $# -ge 3 ]]; then
     export CDK_DEVELOPMENT_ACCOUNT=$1
     export CDK_PRODUCTION_ACCOUNT=$2
     export REGION=$3
-    shift; shift; shift; shift
+    shift; shift; shift;
 
     npx cdk destroy "$@"
     exit $?

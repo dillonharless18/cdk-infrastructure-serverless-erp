@@ -6,7 +6,7 @@ if [[ $# -ge 5 ]]; then
     export REGION=$3
     export PROD_PROFILE=$4
     export DEV_PROFILE=$5
-    shift; shift; shift; shift; shift; shift
+    shift; shift; shift; shift; shift;
 
     export AWS_REGION=$REGION
 

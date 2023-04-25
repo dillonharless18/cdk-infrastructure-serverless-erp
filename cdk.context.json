@@ -10,5 +10,17 @@
   "hosted-zone:account=136559125535:domainName=dev.onexerp.com:region=us-east-1": {
     "Id": "/hostedzone/Z092900630G4YARIPAT17",
     "Name": "dev.onexerp.com."
+  },
+  "availability-zones:account=743614460397:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1e",
+    "us-east-1f"
+  ],
+  "hosted-zone:account=743614460397:domainName=onexerp.com:region=us-east-1": {
+    "Id": "/hostedzone/Z00968761D6CYC7TRZWO1",
+    "Name": "onexerp.com."
   }
 }
