@@ -45,6 +45,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                     '../../lambdas': props?.source
                 },
                 commands: [
+                    "nvm use $NODE_VERSION",
                     "npm ci",
                     "npm run build",
                     "cd lib/database/lambda",
@@ -57,10 +58,20 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                 },
                 primaryOutputDirectory: 'cdk.out',
                 buildEnvironment: {
-                    privileged: true
-                }
+                    buildImage: LinuxBuildImage.AMAZON_LINUX_2_4,
+                    privileged: true,
+                    environmentVariables: {
+                        'NODE_VERSION': {
+                          value: '18.x',
+                          type: BuildEnvironmentVariableType.PLAINTEXT
+                        },
+                      },
+                },
+                
             })
         });
+
+        
 
 
         /////////////////////
@@ -157,7 +168,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                 DB_MIGRATE_FUNCTION_NAME: stage.lambdaFunctionName,
             },
             buildEnvironment: {
-                privileged: true
+                privileged: true,
             },
             commands: buildCommands,
             rolePolicyStatements: rolePolicyStatements
