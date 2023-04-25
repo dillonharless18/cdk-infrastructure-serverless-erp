@@ -10,7 +10,6 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
 
   // environment variables set in the cdk-deploy-to script
   const envVariables = {
-    branch: 'TEST_BRANCH',
     developmentAccount: '123456789012',
     productionAccount: '234567890123',
     region: 'us-east-1',
@@ -21,7 +20,6 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
   const stack = new InfrastructurePipelineStack(app, 'TestInfrastructurePipelineStack', envVariables, {
     apiName: "TEST_API_NAME",
     applicationName: "TEST_APPLICATION_NAME",
-    branch: envVariables.branch, // TODO change to stage most likely
     domainName: "testdomain",
     pipelineName: "TEST_PIPELINE_NAME",
     env: {

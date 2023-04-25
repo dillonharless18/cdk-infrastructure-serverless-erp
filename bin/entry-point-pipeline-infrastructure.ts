@@ -3,6 +3,8 @@ import * as cdk from 'aws-cdk-lib';
 import { CodePipelineSource } from 'aws-cdk-lib/pipelines';
 import { InfrastructurePipelineStack } from '../lib/pipeline/pipeline-stack';
 
+require('dotenv').config({path:__dirname+'/./../../.env'})
+
 const app = new cdk.App();
 
 const APPLICATION_NAME    = "oneXerp"
@@ -18,27 +20,24 @@ const LAMBDA_REPO         = "dillonCF/oneXerp-Lambdas"
 
 // environment variables set in the cdk-deploy-to script
 const envVariables = {
-    branch: process.env.BRANCH || 'main',
     developmentAccount: safelyRetrieveEnvVariable('CDK_DEVELOPMENT_ACCOUNT'),
     productionAccount: safelyRetrieveEnvVariable('CDK_PRODUCTION_ACCOUNT'),
     region: safelyRetrieveEnvVariable('REGION'),
-    repositoryName: safelyRetrieveEnvVariable('REPOSITORY_NAME')
 }
 
 new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
     apiName: API_NAME,
     applicationName: APPLICATION_NAME,
-    branch: envVariables.branch, // TODO change to stage most likely
     domainName: DOMAIN_NAME,
     pipelineName: PIPELINE_NAME,
     env: {
         account: process.env.CDK_DEVELOPMENT_ACCOUNT,
         region: process.env.REGION
     },
-    pipelineSource: CodePipelineSource.connection(INFRA_REPO, envVariables.branch, {
+    pipelineSource: CodePipelineSource.connection(INFRA_REPO, 'main', {
         connectionArn: CODESTAR_ARN
     }),
-    source: CodePipelineSource.connection(LAMBDA_REPO, envVariables.branch, {
+    source: CodePipelineSource.connection(LAMBDA_REPO, 'main', {
         connectionArn: CODESTAR_ARN
     })
 });

@@ -5,26 +5,19 @@ import { Construct, Node } from 'constructs';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { DeployInfrastructureStage } from './stages/deploy-infrastructure-stage';
 
-export function createResourceName(branch: string, resourceName: string) {
-    return `${resourceName}-${branch}`;
-}
-
 interface PipelineStackProps extends cdk.StackProps {
     apiName: string;
     applicationName: string;
     domainName: string;
     source: CodePipelineSource;
     pipelineSource: CodePipelineSource;
-    branch: string;
     pipelineName: string;
 }
 
 interface Environment {
-    branch: string,
     developmentAccount: string,
     productionAccount: string,
     region: string,
-    repositoryName: string
 }
 
 export class InfrastructurePipelineStack extends cdk.Stack {
@@ -36,7 +29,6 @@ export class InfrastructurePipelineStack extends cdk.Stack {
 
         if ( !props ) throw Error ("props is not defined")
         if ( !props.apiName ) throw Error ("apiName is not defined")
-        if ( !props.branch ) throw Error("branch is not defined.")
         if ( !props.env) throw Error("props.env is not defined")
         if ( !props.env.account ) throw Error("account is not defined.")
         if ( !props.env.region ) throw Error("region is not defined.")
@@ -44,8 +36,8 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         if ( !props.pipelineName ) throw Error("pipelineName is not defined.")
         if ( !props.pipelineSource ) throw Error("pipelineSource is not defined.")
         
-        const pipeline = new CodePipeline(this, createResourceName(props?.branch, "Pipeline"), {
-            pipelineName: createResourceName(props?.branch, props.pipelineName),
+        const pipeline = new CodePipeline(this, "CICDPipeline", {
+            pipelineName: "CICDPipeline",
             crossAccountKeys: true,
             synth: new CodeBuildStep("Synth", {
                 input: props?.pipelineSource,
@@ -55,7 +47,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                 commands: [
                     "npm ci",
                     "npm run build",
-                    "cd ../../lambdas/migrationLambda",
+                    "cd lib/database/lambda",
                     "npm install",
                     "cd -",
                     "npx cdk synth"
@@ -80,7 +72,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                 region: this.region
             },
             applicationName: props.applicationName,
-            branch: props.branch,
+            stage: 'development',
             domainName: props.domainName,
             apiName: props.apiName,
             certificateArn: "arn:aws:acm:us-east-1:136559125535:certificate/4fb61b1f-0934-4b3f-9070-a8f1036e7430",
@@ -103,7 +95,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                 region: this.region
             },
             applicationName: props.applicationName,
-            branch: props.branch,
+            stage: 'prod',
             domainName: props.domainName,
             apiName: props.apiName,
             certificateArn: "arn:aws:acm:us-east-1:743614460397:certificate/57206c73-27f6-4fee-bf04-3297fa3a0703",

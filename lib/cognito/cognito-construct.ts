@@ -13,7 +13,7 @@ import path = require('path');
 
 interface CognitoConstructProps {
     applicationName: string;
-    branch: string;
+    stage: string;
     env: {
         account: string,
         region:  string
@@ -29,18 +29,18 @@ export class CognitoConstruct extends Construct {
     super(scope, id);
     
 
-    type branchToSubdomainTypes = {
+    type stageToSubdomainTypes = {
         [key: string]: string
     }
 
     // Use to create cognito user pools domain names
-    const BRANCH_TO_AUTH_PREFIX: branchToSubdomainTypes = {
+    const STAGE_TO_AUTH_PREFIX: stageToSubdomainTypes = {
         development: `dev-${props.applicationName.toLowerCase()}`,
         test:        `test-${props.applicationName.toLowerCase()}`,
-        main:        `${props.applicationName.toLowerCase()}`
+        prod:        `${props.applicationName.toLowerCase()}`
     }
 
-    const { branch, domainName } = props
+    const { stage, domainName } = props
 
     if ( !domainName ) throw new Error(`Error in cognito stack. domainName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
 
@@ -127,7 +127,7 @@ export class CognitoConstruct extends Construct {
     const userPoolDomain = new cognito.UserPoolDomain(this, 'UserPoolDomain', {
         userPool,
         cognitoDomain: {
-            domainPrefix: `${BRANCH_TO_AUTH_PREFIX[branch]}`,
+            domainPrefix: `${STAGE_TO_AUTH_PREFIX[stage]}`,
         },
     });
   

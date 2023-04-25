@@ -6,8 +6,16 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+.idea
+knexfile.ts
+build
+
+cdk.context.json
 
 localNotes*
 
 # Test output files
 pipeline-template-test-output.json
+
+.env
+

@@ -7,7 +7,7 @@ import { InfrastructureStack } from '../../infrastructure-stack';
 
 interface CustomStageProps extends StageProps {
     applicationName: string;
-    branch: string;
+    stage: string;
     domainName: string;
     env: {
         account: string;

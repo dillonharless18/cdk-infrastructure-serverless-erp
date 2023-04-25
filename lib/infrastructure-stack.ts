@@ -7,7 +7,7 @@ import { ApiConstruct } from './api/api-construct';
 
 interface InfrastructureStackProps extends StackProps {
     applicationName: string;
-    branch: string;
+    stage: string;
     domainName: string;
     env: {
         account: string;
@@ -51,17 +51,17 @@ export class InfrastructureStack extends Stack {
     
     const cognito = new CognitoConstruct(this, 'CognitoConstruct', {
         applicationName: props.applicationName,
-        branch: props.branch,
         domainName: props.domainName,
-        env: props.env
+        env: props.env,
+        stage: props.stage,
     })
 
     const api = new ApiConstruct(this, 'ApiStack', {
         apiName: props.apiName,
-        branch: props.branch,
         certficateArn: props.certificateArn,
         domainName: props.domainName,
         env: props.env,
+        stage: props.stage,
         userPool: cognito.userPool,
         databaseSecurityGroup: database.securityGroup,
         vpc: database.vpc

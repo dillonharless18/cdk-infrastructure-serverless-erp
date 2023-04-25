@@ -16,7 +16,6 @@ import { IUserPool } from 'aws-cdk-lib/aws-cognito';
 
 interface ApiConstructProps {
     apiName: string,
-    branch: string;
     certficateArn: string; // Use for custom domain for API Gateway
     env: {
       account: string
@@ -24,6 +23,7 @@ interface ApiConstructProps {
     }
     domainName: string;
     databaseSecurityGroup: ISecurityGroup;
+    stage: string;
     userPool: IUserPool;
     vpc: IVpc
 }
@@ -32,30 +32,30 @@ export class ApiConstruct extends Construct {
   constructor(scope: Construct, id: string, props: ApiConstructProps) {
     super(scope, id);
     
-    type branchToSubdomainTypes = {
+    type stageToSubdomainTypes = {
         [key: string]: string
     }
 
     // Use to create api names
-    const BRANCH_TO_STAGE_MAP: branchToSubdomainTypes = {
+    const STAGE_WITH_HYPHEN_MAP: stageToSubdomainTypes = {
         development: 'development-',
         test:        'test-',
-        main:        ''
+        prod:        ''
     }
 
     // Use to create subdomains programmatically like dev.example.com, test.example.com, example.com
-    const BRANCH_TO_SUBDOMAIN_MAP: branchToSubdomainTypes = {
+    const STAGE_TO_SUBDOMAIN_MAP: stageToSubdomainTypes = {
         development: 'dev.',
         test:        'test.',
-        main:        ''
+        prod:        ''
     }
 
-    const { apiName, branch, certficateArn, domainName } = props
+    const { apiName, stage, certficateArn, domainName } = props
 
     if ( !domainName ) throw new Error(`Error in API stack. domainName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     const DOMAIN_NAME = domainName;
     
-    if ( !branch ) throw new Error(`Error in API stack. branch does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
+    if ( !stage ) throw new Error(`Error in API stack. stage does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     
     if ( !certficateArn ) throw new Error(`Error in API stack. certificateArn does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     
@@ -68,13 +68,13 @@ export class ApiConstruct extends Construct {
     /////      API       /////
     //////////////////////////
 
-    const subdomain = `${BRANCH_TO_SUBDOMAIN_MAP[branch]}${domainName}`
+    const subdomain = `${STAGE_TO_SUBDOMAIN_MAP[stage]}${domainName}`
 
     // API Subdomain
     const apiSubdomain = `api.${subdomain}`
 
     // Create the API Gateway REST API
-    let restApiName = `${BRANCH_TO_STAGE_MAP[branch]}${apiName}`
+    let restApiName = `${STAGE_WITH_HYPHEN_MAP[stage]}${apiName}`
     const api = new apigateway.RestApi(this, restApiName, {
       restApiName: restApiName,
     });
@@ -92,7 +92,7 @@ export class ApiConstruct extends Construct {
 
     // Pull in the hosted zone
     const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
-        domainName: `${BRANCH_TO_SUBDOMAIN_MAP[branch]}${domainName}`,
+        domainName: `${STAGE_TO_SUBDOMAIN_MAP[stage]}${domainName}`,
     });
   
     // Look up the certficate

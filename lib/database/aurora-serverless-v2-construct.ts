@@ -33,17 +33,6 @@ export class AuroraServerlessV2Construct extends Construct {
   constructor(scope: Construct, id: string, props: AuroraServerlessV2ConstructProps) {
     super(scope, id);
     
-    type branchToSubdomainTypes = {
-        [key: string]: string
-    }
-
-    // Use to create subdomains programmatically like dev.example.com, test.example.com, example.com
-    const BRANCH_TO_SUBDOMAIN_MAP: branchToSubdomainTypes = {
-        development: 'dev.',
-        test:        'test.',
-        main:        ''
-    }
-
     // Create a VPC for the database
     const databaseVpc = new ec2.Vpc(this, 'DatabaseVPC');
     cdk.Aspects.of(databaseVpc).add(new cdk.Tag('rds-lambda-vpc', 'true'))

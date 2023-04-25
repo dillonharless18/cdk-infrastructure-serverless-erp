@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Construct } from 'constructs';
 import { CfnOutput, Duration } from 'aws-cdk-lib';
 import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { LogLevel, NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { AccountPrincipal, Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { existsSync } from 'fs';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -59,59 +59,75 @@ export class MigrationsLambdaConstruct extends Construct {
         })
       }
     })
+
+    // TODO TS bundling wasn't working, so I converted to a normal Function (no bundling here)
     
     // Create the Lambda function with necessary configuration
-    const lambdaFunction = new NodejsFunction(this, 'Lambda', {
-      functionName: this.lambdaFunctionName,
-      handler: 'handler',
-      entry: path.resolve(__dirname, 'lambda/handler.ts'),
-      timeout: Duration.minutes(10),
-      bundling: {
-        // forceDockerBundling: true,
-        externalModules: [
-          'aws-sdk'
-        ],
-        nodeModules: [
-          'knex',
-          'pg'
-        ],
-        commandHooks: {
-          afterBundling(inputDir: string, outputDir: string): string[] {
-            return [`cp -r ${inputDir}/migrations ${outputDir}`, `find ${outputDir}/migrations -type f ! -name '*.js' -delete`];
-          },
-          beforeBundling() {
-            return [];
-          },
-          beforeInstall() {
-            return [];
-          }
-        },
-        target: 'es2020'
-      },
-      // runtime: Runtime.NODEJS_16_X,
-      depsLockFilePath: path.resolve(__dirname, 'lambda', 'package-lock.json'),
-      projectRoot: path.resolve(__dirname, 'lambda'),
-      environment: {
-        RDS_DB_PASS_SECRET_ID: dbCredentialsSecretName.value,
-        RDS_DB_NAME: defaultDBName
-      },
-      vpc: vpc,
-      role: lambdaRole,
-      securityGroups: [
-        securityGroup
-      ]
-    })
-    
-    // const lambdaFunction = new lambda.Function(this, `MigrationsLambda`, {
-    //   code: lambda.Code.fromAsset(path.join('lambda')),
-    //   handler: 'handler.handler',
-    //   runtime: lambda.Runtime.NODEJS_18_X,
-    //   functionName: `MigrationsLambda`, // TODO see if this will be problematic at all 
-    //   // vpc: databaseVpc,
+    // const lambdaFunction = new NodejsFunction(this, 'Lambda', {
+    //   functionName: this.lambdaFunctionName,
+    //   handler: 'handler',
+    //   entry: path.resolve(__dirname, 'lambda/handler.ts'),
+    //   timeout: Duration.minutes(10),
+    //   bundling: {
+    //     minify: false,
+    //     environment: {
+    //       NODE_ENV: "production"
+    //     },
+    //     logLevel: LogLevel.INFO,
+    //     forceDockerBundling: true,
+    //     externalModules: [
+    //       'aws-sdk'
+    //     ],
+    //     nodeModules: [
+    //       'knex',
+    //       'pg'
+    //     ],
+    //     commandHooks: {
+    //       afterBundling(inputDir: string, outputDir: string): string[] {
+    //         console.log('Input directory:', inputDir);
+    //         console.log('Output directory:', outputDir);
+    //         // return [`cp -r ${inputDir}/migrations ${outputDir}`, `find ${outputDir}/migrations -type f ! -name '*.js' -delete`];
+    //         return [`cp -r ${inputDir}/migrations ${outputDir}`];
+    //       },
+    //       beforeBundling(inputDir: string, outputDir: string) {
+    //         console.log('Input directory:', inputDir);
+    //         console.log('Output directory:', outputDir);
+    //         return [];
+    //       },
+    //       beforeInstall(inputDir: string, outputDir: string) {
+    //         console.log('Input directory:', inputDir);
+    //         console.log('Output directory:', outputDir);
+    //         return [];
+    //       }
+    //     },
+    //     target: 'es2020'
+    //   },
+    //   // runtime: Runtime.NODEJS_16_X,
+    //   depsLockFilePath: path.resolve(__dirname, 'lambda', 'package-lock.json'),
+    //   // depsLockFilePath: path.join(__dirname, "lambda/package-lock.json"),
+    //   projectRoot: path.resolve(__dirname, 'lambda'),
+    //   environment: {
+    //     RDS_DB_PASS_SECRET_ID: dbCredentialsSecretName.value,
+    //     RDS_DB_NAME: defaultDBName
+    //   },
     //   vpc: vpc,
-    //   // vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
-    //   securityGroups: [securityGroup],
-    // });
+    //   role: lambdaRole,
+    //   securityGroups: [
+    //     securityGroup
+    //   ]
+    // })
+
+    const lambdaFunction = new lambda.Function(this, 'MyLambdaFunction', {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      handler: 'handler.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, 'lambda')),
+      timeout: Duration.minutes(10),
+      vpc: vpc,
+      securityGroups: [securityGroup],
+      role: lambdaRole,
+    });
+
+
 
     // If crossAccount is set to true, create a role for invoking the Lambda function from another account
     if (crossAccount) {
