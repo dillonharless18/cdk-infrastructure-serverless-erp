@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 
-if [[ $# -ge 4 ]]; then
+if [[ $# -ge 3 ]]; then
     export CDK_DEVELOPMENT_ACCOUNT=$1
     export CDK_PRODUCTION_ACCOUNT=$2
     export REGION=$3
-    export REPOSITORY_NAME=$4
     shift; shift; shift; shift
-
-    # retrieve default branch
-    export BRANCH=$(aws codecommit get-repository --repository-name ${REPOSITORY_NAME} --region ${REGION} --output json | jq -r '.repositoryMetadata.defaultBranch')
 
     npx cdk destroy "$@"
     exit $?
