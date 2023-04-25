@@ -6,6 +6,8 @@ import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { AccountPrincipal, Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { existsSync } from 'fs';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import * as lambda from "aws-cdk-lib/aws-lambda";
 
 /**
  * A stack for our simple Lambda-powered web service
@@ -59,56 +61,71 @@ export class MigrationsLambdaConstruct extends Construct {
     })
     
     // Set the path to the migrations lambda directory
-    const migrationsLambdaFolder = path.resolve(__dirname, '../../lambdas/migrationsLambda');
-    const testMigrationsLambdaFolder = path.resolve(__dirname, '../../test_lambdas/migrationsLambda/');
-    const migrationsFunctionFolder = existsSync(migrationsLambdaFolder) ? migrationsLambdaFolder : testMigrationsLambdaFolder;
-    console.log(`functionsPath: ${migrationsFunctionFolder}`)
-
-    // Set the path to the migrations lambda handler
-    const migrationsLambdaPath = path.resolve(__dirname, '../../lambdas/migrationsLambda/handler.js');
-    const testMigrationsLambdaPath = path.resolve(__dirname, '../../test_lambdas/migrationsLambda/handler.js');
-    const migrationsFunctionPath = existsSync(migrationsLambdaPath) ? migrationsLambdaPath : testMigrationsLambdaPath;
-    console.log(`migrationsFunctionPath: ${migrationsFunctionPath}`)
+    const realMigrationsLambdaFolderPath = path.resolve(__dirname, '../../lambdas/migrationsLambda');
+    const testMigrationsLambdaFolderPath = path.resolve(__dirname, '../../test_lambdas/migrationsLambda');
+    const migrationsLambdaFolderPath = existsSync(realMigrationsLambdaFolderPath) ? realMigrationsLambdaFolderPath : testMigrationsLambdaFolderPath;
+    console.log(`functionsPath: ${migrationsLambdaFolderPath}`)
 
 
     // Create the Lambda function with necessary configuration
-    const func = new NodejsFunction(this, 'Lambda', {
-      functionName: this.lambdaFunctionName,
-      handler: 'handler',
-      entry: path.resolve(__dirname, migrationsFunctionPath),
-      timeout: Duration.minutes(10),
-      bundling: {
-        externalModules: [
-          'aws-sdk'
-        ],
-        nodeModules: [
-          'knex',
-          'pg'
-        ],
-        commandHooks: {
-          afterBundling(inputDir: string, outputDir: string): string[] {
-            return [`cp -r ${inputDir}/migrations ${outputDir}`, `find ${outputDir}/migrations -type f ! -name '*.js' -delete`];
-          },
-          beforeBundling() {
-            return [];
-          },
-          beforeInstall() {
-            return [];
-          }
-        }
-      },
-      depsLockFilePath: path.resolve(__dirname, migrationsFunctionFolder, 'package-lock.json'),
-      projectRoot: path.resolve(__dirname, migrationsFunctionFolder),
-      environment: {
-        RDS_DB_PASS_SECRET_ID: dbCredentialsSecretName.value,
-        RDS_DB_NAME: defaultDBName
-      },
+    // const func = new NodejsFunction(this, 'Lambda', {
+    //   functionName: this.lambdaFunctionName,
+    //   handler: 'handler',
+    //   // entry: path.resolve(__dirname, `${migrationsLambdaFolderPath}/handler.ts`),
+    //   entry: path.resolve(`${migrationsLambdaFolderPath}/handler.ts`),
+    //   timeout: Duration.minutes(10),
+    //   bundling: {
+    //     externalModules: [
+    //       'aws-sdk'
+    //     ],
+    //     nodeModules: [
+    //       'knex',
+    //       'pg'
+    //     ],
+    //     commandHooks: {
+    //       afterBundling(inputDir: string, outputDir: string): string[] {
+    //         return [
+    //           `cp -r ${inputDir}/migrations ${outputDir}`,
+    //           `find ${outputDir}/migrations -type f ! -name '*.js' -delete`,
+    //           // `ls -la ${outputDir} > ${outputDir}/output.log`, // Keep this line
+    //           // `cp ${outputDir}/output.log ${testMigrationsLambdaFolderPath}/output.log`, // Add this line
+    //         ];
+    //       },
+          
+    //       beforeBundling() {
+    //         return [];
+    //       },
+    //       beforeInstall() {
+    //         return [];
+    //       }
+    //     }
+    //   },
+    //   // runtime: Runtime.NODEJS_18_X,
+    //   // depsLockFilePath: path.resolve(__dirname, migrationsLambdaFolderPath, 'package-lock.json'),
+    //   // projectRoot: path.resolve(__dirname, migrationsLambdaFolderPath),
+    //   depsLockFilePath: path.resolve(migrationsLambdaFolderPath, 'package-lock.json'),
+    //   projectRoot: path.resolve(migrationsLambdaFolderPath),
+    //   environment: {
+    //     RDS_DB_PASS_SECRET_ID: dbCredentialsSecretName.value,
+    //     RDS_DB_NAME: defaultDBName
+    //   },
+    //   vpc: vpc,
+    //   role: lambdaRole,
+    //   securityGroups: [
+    //     securityGroup
+    //   ]
+    // })
+    
+    const lambdaFunction = new lambda.Function(this, `MigrationsLambda`, {
+      code: lambda.Code.fromAsset(path.join(migrationsLambdaFolderPath)),
+      handler: 'index.handler',
+      runtime: lambda.Runtime.NODEJS_18_X,
+      functionName: `MigrationsLambda`, // TODO see if this will be problematic at all 
+      // vpc: databaseVpc,
       vpc: vpc,
-      role: lambdaRole,
-      securityGroups: [
-        securityGroup
-      ]
-    })
+      // vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+      securityGroups: [securityGroup],
+    });
 
     // If crossAccount is set to true, create a role for invoking the Lambda function from another account
     if (crossAccount) {
@@ -128,7 +145,8 @@ export class MigrationsLambdaConstruct extends Construct {
               new PolicyStatement({
                 effect: Effect.ALLOW,
                 actions: ['lambda:InvokeFunction'],
-                resources: [func.functionArn],
+                // resources: [func.functionArn],
+                resources: [lambdaFunction.functionArn],
               }),
             ]
           })

@@ -22,7 +22,7 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
     apiName: "TEST_API_NAME",
     applicationName: "TEST_APPLICATION_NAME",
     branch: envVariables.branch, // TODO change to stage most likely
-    domainName: "TEST_DOMAIN_NAME",
+    domainName: "testdomain",
     pipelineName: "TEST_PIPELINE_NAME",
     env: {
         account: envVariables.developmentAccount, // Not how it's accessed in the actual stack
@@ -40,5 +40,5 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
   template.resourceCountIs('AWS::CodePipeline::Pipeline', 1);
 
   // Check if the CodeBuild projects exist for the stages
-  template.resourceCountIs('AWS::CodeBuild::Project', 5); // TODO ensure this is the correct number
+  template.resourceCountIs('AWS::CodeBuild::Project', 7); // TODO ensure this is the correct number
 });

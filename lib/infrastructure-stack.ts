@@ -3,7 +3,7 @@ import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { MigrationsLambdaConstruct } from './database/migrations-lambda-construct';
 import { CognitoConstruct } from './cognito/cognito-construct';
-import { ApiConstruct } from './api/api-stack';
+import { ApiConstruct } from './api/api-construct';
 
 interface InfrastructureStackProps extends StackProps {
     applicationName: string;
@@ -32,7 +32,7 @@ export class InfrastructureStack extends Stack {
 
     if ( !props ) throw Error ("props is not defined")
 
-    const database = new AuroraServerlessV2Construct(this, 'DatabaseConstruct', { stageName: 'STAGE_NAME_PLACEHOLDER' })
+    const database = new AuroraServerlessV2Construct(this, 'DatabaseConstruct', { stageName: props.stageName })
     
     const migrationsLambda = new MigrationsLambdaConstruct(
       this, 
