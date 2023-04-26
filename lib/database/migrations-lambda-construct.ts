@@ -128,7 +128,7 @@ export class MigrationsLambdaConstruct extends Construct {
       role: lambdaRole,
       environment: {
         RDS_DB_PASS_SECRET_ID: dbCredentialsSecretName.value,
-        RDS_DB_NAME: defaultDBName
+        RDS_DB_NAME: defaultDBName,
       },
     });
 
