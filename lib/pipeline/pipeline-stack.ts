@@ -157,6 +157,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
     
         // Invoke lambda in all environments
         buildCommands.push(
+            "npm install aws-sdk",
             'aws lambda invoke --function-name $DB_MIGRATE_FUNCTION_NAME out.json --log-type Tail --query LogResult --output text |  base64 -d',
             'lambdaStatus=$(cat out.json | jq ".StatusCode")',
             'if [ $lambdaStatus = 500 ]; then exit 1; else exit 0; fi'
