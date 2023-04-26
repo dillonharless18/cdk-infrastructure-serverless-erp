@@ -119,13 +119,17 @@ export class MigrationsLambdaConstruct extends Construct {
 
     const lambdaFunction = new lambda.Function(this, 'MigrationLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
-      functionName: 'MigrationLambda',
+      functionName: this.lambdaFunctionName,
       handler: 'handler.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, 'lambda')),
       timeout: Duration.minutes(10),
       vpc: vpc,
       securityGroups: [securityGroup],
       role: lambdaRole,
+      environment: {
+        RDS_DB_PASS_SECRET_ID: dbCredentialsSecretName.value,
+        RDS_DB_NAME: defaultDBName
+      },
     });
 
 
