@@ -85,7 +85,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             stage: 'development',
             domainName: props.domainName,
             apiName: props.apiName,
-            certificateArn: "arn:aws:acm:us-east-1:136559125535:certificate/4fb61b1f-0934-4b3f-9070-a8f1036e7430",
+            certificateArn: "arn:aws:acm:us-east-1:136559125535:certificate/dfd3aaa6-d14e-4ac9-b33a-fcbe51f54989",
             crossAccount: false, // TODO look into this
             stageName: this.devStageName,
             devAccountId: envVariables.developmentAccount,
