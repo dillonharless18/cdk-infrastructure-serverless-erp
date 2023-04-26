@@ -77,7 +77,7 @@ export class AuroraServerlessV2Construct extends Construct {
           vpc: databaseVpc,
           instanceType: new ec2.InstanceType('serverless'),
           autoMinorVersionUpgrade: true,
-          publiclyAccessible: true,
+          publiclyAccessible: false,
           securityGroups: [databaseSecurityGroup],
           vpcSubnets:{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }
         },
@@ -95,6 +95,8 @@ export class AuroraServerlessV2Construct extends Construct {
           }
         },
       })
+
+    // TODO For prod see if we need more: https://github.com/aws/aws-cdk/issues/20197#issuecomment-1117555047
 
 
     // Outputs
