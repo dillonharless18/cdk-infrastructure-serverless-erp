@@ -6,6 +6,8 @@
 // https://github.com/aws/aws-cdk/issues/20197
 // https://github.com/Compulsed/serverless-aurora-lambda/blob/main/lib/serverless-aurora-lambda.ts
 
+// Used some of the knowledge for migrations from here: https://github.com/aws-samples/rds-db-schema-migrations-cicd
+
 import { CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
@@ -40,7 +42,10 @@ export class AuroraServerlessV2Construct extends Construct {
     // Create a security group to control access to the database
     const databaseSecurityGroup = new ec2.SecurityGroup(this, 'DatabaseSecurityGroup', {
         vpc: databaseVpc,
+        allowAllOutbound: true,
+        description: "Lambda security group to connect to Postgres db."
     });
+    databaseSecurityGroup.addIngressRule(ec2.Peer.ipv4(this.vpc.vpcCidrBlock), ec2.Port.tcp(5432), 'Allow Postgres Communication')
 
     // Storing VPC ID in SSM because using a CFN export inside vpc.fromLookUp in other stacks doesn't work due to tokenization of the CFN output.
     new StringParameter(this, 'VPCID', {
@@ -74,13 +79,9 @@ export class AuroraServerlessV2Construct extends Construct {
           autoMinorVersionUpgrade: true,
           publiclyAccessible: true,
           securityGroups: [databaseSecurityGroup],
-          // TODO Determine if I need to specify the private subnets here
-        //   vpcSubnets: vpc.selectSubnets({
-        //     subnetType: SubnetType.PUBLIC,
-        //   }),
+          vpcSubnets:{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }
         },
         port: 5432,
-        // credentials: rds.Credentials.fromGeneratedSecret('syscdk'),
         credentials: rds.Credentials.fromSecret(secret)
       })
 
