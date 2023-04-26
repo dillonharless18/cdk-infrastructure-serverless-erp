@@ -80,14 +80,16 @@ export class AuroraServerlessV2Construct extends Construct {
         //   }),
         },
         port: 5432,
+        // credentials: rds.Credentials.fromGeneratedSecret('syscdk'),
+        credentials: rds.Credentials.fromSecret(secret)
       })
 
       cdk.Aspects.of(cluster).add({
         visit(node) {
           if (node instanceof rds.CfnDBCluster) {
             node.serverlessV2ScalingConfiguration = {
-              minCapacity: 0.5,
-              maxCapacity: 1,
+              minCapacity: 2,
+              maxCapacity: 4,
             }
           }
         },
