@@ -167,59 +167,62 @@ export class CognitoConstruct extends Construct {
         roleArn: driverRole.roleArn
     });
 
-    const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
-        allowUnauthenticatedIdentities: false,
-        cognitoIdentityProviders: [
-          {
-            clientId: userPoolClient.userPoolClientId,
-            providerName: userPool.userPoolProviderName,
-          },
-        ]
-    });
+    
+    // Uncomment for federation
+
+    // const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
+    //     allowUnauthenticatedIdentities: false,
+    //     cognitoIdentityProviders: [
+    //       {
+    //         clientId: userPoolClient.userPoolClientId,
+    //         providerName: userPool.userPoolProviderName,
+    //       },
+    //     ]
+    // });
 
     
-    new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
-        identityPoolId: identityPool.ref,
-        roleMappings: {
-            'cognito:preferred_role': {
-            type: 'Token',
-            ambiguousRoleResolution: 'Deny',
-            rulesConfiguration: {
-                rules: [
-                    {
-                        claim: 'cognito:preferred_role',
-                        matchType: 'Equals',
-                        roleArn: adminRole.roleArn,
-                        value: adminGroup.groupName ?? '',
-                    },
-                    {
-                        claim: 'cognito:preferred_role',
-                        matchType: 'Equals',
-                        roleArn: basicUserRole.roleArn,
-                        value: basicUserGroup.groupName ?? '',
-                    },
-                    {
-                        claim: 'cognito:preferred_role',
-                        matchType: 'Equals',
-                        roleArn: logisticsRole.roleArn,
-                        value: logisticsGroup.groupName ?? '',
-                    },
-                    {
-                        claim: 'cognito:preferred_role',
-                        matchType: 'Equals',
-                        roleArn: projectManagerRole.roleArn,
-                        value: projectManagerGroup.groupName ?? '',
-                    },
-                    {
-                        claim: 'cognito:preferred_role',
-                        matchType: 'Equals',
-                        roleArn: driverRole.roleArn,
-                        value: driverGroup.groupName ?? '',
-                    },
-                ]
-            },
-        }}
-    })
+    // new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
+    //     identityPoolId: identityPool.ref,
+    //     roleMappings: {
+    //         'cognito:preferred_role': {
+    //         type: 'Token',
+    //         ambiguousRoleResolution: 'Deny',
+    //         rulesConfiguration: {
+    //             rules: [
+    //                 {
+    //                     claim: 'cognito:preferred_role',
+    //                     matchType: 'Equals',
+    //                     roleArn: adminRole.roleArn,
+    //                     value: adminGroup.groupName ?? '',
+    //                 },
+    //                 {
+    //                     claim: 'cognito:preferred_role',
+    //                     matchType: 'Equals',
+    //                     roleArn: basicUserRole.roleArn,
+    //                     value: basicUserGroup.groupName ?? '',
+    //                 },
+    //                 {
+    //                     claim: 'cognito:preferred_role',
+    //                     matchType: 'Equals',
+    //                     roleArn: logisticsRole.roleArn,
+    //                     value: logisticsGroup.groupName ?? '',
+    //                 },
+    //                 {
+    //                     claim: 'cognito:preferred_role',
+    //                     matchType: 'Equals',
+    //                     roleArn: projectManagerRole.roleArn,
+    //                     value: projectManagerGroup.groupName ?? '',
+    //                 },
+    //                 {
+    //                     claim: 'cognito:preferred_role',
+    //                     matchType: 'Equals',
+    //                     roleArn: driverRole.roleArn,
+    //                     value: driverGroup.groupName ?? '',
+    //                 },
+    //             ]
+    //         },
+    //     }}
+    // })
           
     // Output the domain name for the user pool
     // new cdk.CfnOutput(this, 'UserPoolDomainOutput', {
