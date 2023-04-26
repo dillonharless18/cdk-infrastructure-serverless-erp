@@ -27,7 +27,7 @@ export class AuroraServerlessV2Construct extends Construct {
   public readonly secretName: CfnOutput;
   public readonly securityGroup: ec2.SecurityGroup;
   public readonly vpc: ec2.Vpc;
-  public readonly defaultDatabaseName: string = "database";
+  public readonly defaultDatabaseName: string = "applicationDatabase";
   
 
   constructor(scope: Construct, id: string, props: AuroraServerlessV2ConstructProps) {
@@ -66,7 +66,7 @@ export class AuroraServerlessV2Construct extends Construct {
         engine: rds.DatabaseClusterEngine.auroraPostgres({
           version: rds.AuroraPostgresEngineVersion.VER_13_6,
         }),
-        defaultDatabaseName: 'database',
+        defaultDatabaseName: this.defaultDatabaseName,
         instances: 1,
         instanceProps: {
           vpc: databaseVpc,
