@@ -45,7 +45,7 @@ export class AuroraServerlessV2Construct extends Construct {
         allowAllOutbound: true,
         description: "Lambda security group to connect to Postgres db."
     });
-    databaseSecurityGroup.addIngressRule(ec2.Peer.ipv4(this.vpc.vpcCidrBlock), ec2.Port.tcp(5432), 'Allow Postgres Communication')
+    databaseSecurityGroup.addIngressRule(ec2.Peer.ipv4(databaseVpc.vpcCidrBlock), ec2.Port.tcp(5432), 'Allow Postgres Communication')
 
     // Storing VPC ID in SSM because using a CFN export inside vpc.fromLookUp in other stacks doesn't work due to tokenization of the CFN output.
     new StringParameter(this, 'VPCID', {
@@ -79,7 +79,9 @@ export class AuroraServerlessV2Construct extends Construct {
           autoMinorVersionUpgrade: true,
           publiclyAccessible: false,
           securityGroups: [databaseSecurityGroup],
-          vpcSubnets:{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }
+            vpcSubnets: databaseVpc.selectSubnets({
+            subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+          }),
         },
         port: 5432,
         credentials: rds.Credentials.fromSecret(secret)
