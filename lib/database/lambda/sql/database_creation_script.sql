@@ -431,8 +431,6 @@ CONSTRAINT `FK_140` FOREIGN KEY `FK_3` (`created_by`) REFERENCES `user` (`user_i
  
 
  
--------------------------------------
- 
 
  
 
@@ -892,7 +890,7 @@ CONSTRAINT `FK_166` FOREIGN KEY `FK_6` (`last_updated_by`) REFERENCES `user` (`u
  
 
  
---------------------------------------------------------------------
+
  
 
  
