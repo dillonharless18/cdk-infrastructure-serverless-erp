@@ -566,11 +566,7 @@ KEY `FK_7_3` (`urgent_order_status_id`),
 
 CONSTRAINT `FK_24` FOREIGN KEY `FK_7_3` (`urgent_order_status_id`) REFERENCES `urgent_order_status` (`urgent_order_status_id`) 
 
-) COMMENT='PK = 32 Byte character UUID 
-
- 
-
-vendor_id needs to be associated with a default value'; 
+) COMMENT='PK = 32 Byte character UUID vendor_id needs to be associated with a default value'; 
 
  
 
@@ -694,11 +690,7 @@ KEY `FK_5` (`vendor_id`),
 
 CONSTRAINT `FK_162_1` FOREIGN KEY `FK_5` (`vendor_id`) REFERENCES `vendor` (`vendor_id`) 
 
-) COMMENT='PK = 32 Byte character UUID 
-
- 
-
-credit_card_last_four_digits and credit_card_name and vendor_id need a default value'; 
+) COMMENT='PK = 32 Byte character UUID credit_card_last_four_digits and credit_card_name and vendor_id need a default value'; 
 
  
 
