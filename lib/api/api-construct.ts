@@ -130,25 +130,26 @@ export class ApiConstruct extends Construct {
     //////////////////////////////////
     // TODO Remove this
     function findLambdasFolder(startPath: string): string | undefined {
-        const searchFolder = (folder: string): string | undefined => {
-            const entries = fs.readdirSync(folder, { withFileTypes: true });
+      const searchFolder = (folder: string): string | undefined => {
+          const entries = fs.readdirSync(folder, { withFileTypes: true });
 
-            for (const entry of entries) {
-                const entryPath = path.join(folder, entry.name);
-                if (entry.isDirectory()) {
-                    if (entry.name === 'lambdas') {
-                        return entryPath;
-                    }
-                    const result = searchFolder(entryPath);
-                    if (result) {
-                        return result;
-                    }
-                }
-            }
-            return undefined
-        };
+          for (const entry of entries) {
+              const entryPath = path.join(folder, entry.name);
+              if (entry.isDirectory()) {
+                  if (entry.name === 'lambdas' && fs.existsSync(path.join(entryPath, 'endpoints'))) {
+                      return entryPath;
+                  }
+                  const result = searchFolder(entryPath);
+                  if (result) {
+                      return result;
+                  }
+              }
+          }
 
-        return searchFolder(startPath);
+          return undefined;
+      };
+
+      return searchFolder(startPath);
     }
 
     const startPath = ('/'); // Adjust this path to set the starting directory
