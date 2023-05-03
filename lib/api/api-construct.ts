@@ -129,47 +129,57 @@ export class ApiConstruct extends Construct {
 
     //////////////////////////////////
     // TODO Remove this
-    console.log(`CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source: ${process.env.CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source}`);
+    // console.log(`CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source: ${process.env.CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source}`);
 
-    function findLambdasFolder(startPath: string): string | undefined {
-      const searchFolder = (folder: string): string | undefined => {
-          const entries = fs.readdirSync(folder, { withFileTypes: true });
+    // function findLambdasFolder(startPath: string): string | undefined {
+    //   const searchFolder = (folder: string): string | undefined => {
+    //       const entries = fs.readdirSync(folder, { withFileTypes: true });
 
-          for (const entry of entries) {
-              const entryPath = path.join(folder, entry.name);
-              if (entry.isDirectory()) {
-                  if (entry.name === 'lambdas' && fs.existsSync(path.join(entryPath, 'endpoints'))) {
-                      return entryPath;
-                  }
-                  const result = searchFolder(entryPath);
-                  if (result) {
-                      return result;
-                  }
-              }
-          }
+    //       for (const entry of entries) {
+    //           const entryPath = path.join(folder, entry.name);
+    //           if (entry.isDirectory()) {
+    //               if (entry.name === 'lambdas' && fs.existsSync(path.join(entryPath, 'endpoints'))) {
+    //                   return entryPath;
+    //               }
+    //               const result = searchFolder(entryPath);
+    //               if (result) {
+    //                   return result;
+    //               }
+    //           }
+    //       }
 
-          return undefined;
-      };
+    //       return undefined;
+    //   };
 
-      return searchFolder(startPath);
+    //   return searchFolder(startPath);
+    // }
+
+    // const startPath = path.join(__dirname, '../../../'); // Adjust this path to set the starting directory
+    // const lambdasFolder = findLambdasFolder(startPath);
+
+    // if (lambdasFolder) {
+    //     console.log(`lambdas folder found at: ${lambdasFolder}`);
+
+    //     // Read the contents of the lambdas folder
+    //     const lambdasContent = fs.readdirSync(lambdasFolder);
+
+    //     // Print the contents of the lambdas folder
+    //     console.log('lambdas folder content:');
+    //     console.log(lambdasContent);
+    // } else {
+    //     console.log('lambdas folder not found');
+    // }
+
+    // Get the path to the lambdas folder
+    const lambdasPathEnv = process.env.CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source;
+    if (!lambdasPathEnv) {
+      console.log('Error: CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source environment variable is not set.');
+      process.exit(1);
     }
-
-    const startPath = path.join(__dirname, '../../../'); // Adjust this path to set the starting directory
-    const lambdasFolder = findLambdasFolder(startPath);
-
-    if (lambdasFolder) {
-        console.log(`lambdas folder found at: ${lambdasFolder}`);
-
-        // Read the contents of the lambdas folder
-        const lambdasContent = fs.readdirSync(lambdasFolder);
-
-        // Print the contents of the lambdas folder
-        console.log('lambdas folder content:');
-        console.log(lambdasContent);
-    } else {
-        console.log('lambdas folder not found');
-    }
-
+    // List the contents of the lambdas folder
+    const contents = fs.readdirSync(lambdasPathEnv);
+    console.log('Contents of lambdas folder:');
+    console.log(contents);
   // TODO: remove the above
   //////////////////////////////////
 
