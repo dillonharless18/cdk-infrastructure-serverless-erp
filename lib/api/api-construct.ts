@@ -127,8 +127,8 @@ export class ApiConstruct extends Construct {
     ///      Lambdas       ///
     //////////////////////////
 
-    //////////////////////////////////
-    // TODO Remove some of this
+    // This environment variable is set by the codebuild project when it pulls in the lambdas repository
+    // The symlink ('../lambdas') wasn't working properly for some reason, so just using the env variable
     const lambdasPathFromEnv = process.env.CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source;
     if (!lambdasPathFromEnv) {
       console.log('Error: CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source environment variable is not set.');
@@ -138,13 +138,20 @@ export class ApiConstruct extends Construct {
     const contents = fs.readdirSync(lambdasPathFromEnv);
     console.log('Contents of lambdas folder:');
     console.log(contents);
-    //////////////////////////////////
 
     // Set the path to the Lambda functions directory
-    // const lambdasPath = path.resolve(__dirname, '../../lambdas/endpoints');
+    // const lambdasPath = path.resolve(__dirname, '../lambdas/endpoints');
     const lambdasPath = path.join(lambdasPathFromEnv, '/endpoints')
     const testLambdasPath = path.resolve(__dirname, '../../test_lambdas/endpoints');
-    const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
+
+    // If there are no lambda functions present in the endpoints folder of the Lambdas repository, we'll get this error: The REST API doesn't contain any methods
+    // So we'll check if it's empty and if so, revert back to the testLambdasPath. We also revert if the lambdasPath was undefined
+    const functionsPath = ( fs.existsSync(lambdasPath) && fs.readdirSync(lambdasPath).length < 1 )
+                          ? lambdasPath 
+                          : testLambdasPath;
+
+  
+
     console.log(`functionsPath: ${functionsPath}`)
 
     
