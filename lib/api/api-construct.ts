@@ -127,11 +127,56 @@ export class ApiConstruct extends Construct {
     ///      Lambdas       ///
     //////////////////////////
 
+    //////////////////////////////////
+    // TODO Remove this
+    function findLambdasFolder(startPath: string): string | undefined {
+        const searchFolder = (folder: string): string | undefined => {
+            const entries = fs.readdirSync(folder, { withFileTypes: true });
+
+            for (const entry of entries) {
+                const entryPath = path.join(folder, entry.name);
+                if (entry.isDirectory()) {
+                    if (entry.name === 'lambdas') {
+                        return entryPath;
+                    }
+                    const result = searchFolder(entryPath);
+                    if (result) {
+                        return result;
+                    }
+                }
+            }
+            return undefined
+        };
+
+        return searchFolder(startPath);
+    }
+
+    const startPath = ('/'); // Adjust this path to set the starting directory
+    const lambdasFolder = findLambdasFolder(startPath);
+
+    if (lambdasFolder) {
+        console.log(`lambdas folder found at: ${lambdasFolder}`);
+
+        // Read the contents of the lambdas folder
+        const lambdasContent = fs.readdirSync(lambdasFolder);
+
+        // Print the contents of the lambdas folder
+        console.log('lambdas folder content:');
+        console.log(lambdasContent);
+    } else {
+        console.log('lambdas folder not found');
+    }
+
+  // TODO: remove the above
+  //////////////////////////////////
+
     // Set the path to the Lambda functions directory
     const lambdasPath = path.resolve(__dirname, '../../lambdas/endpoints');
     const testLambdasPath = path.resolve(__dirname, '../../test_lambdas/endpoints');
     const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
     console.log(`functionsPath: ${functionsPath}`)
+
+    
 
     // Get the metadata for each Lambda function
     const functionMetadata = getFunctionMetadata(functionsPath);
