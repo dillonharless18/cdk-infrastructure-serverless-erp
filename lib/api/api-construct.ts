@@ -255,7 +255,12 @@ const createNestedResource = (parentResource: apigateway.Resource, path: string)
   let currentResource = parentResource;
 
   for (const part of pathParts) {
-    currentResource = currentResource.addResource(part); // TODO decide whether the long resource names this is making is okay
+    let existingResource = currentResource.getResource(part);
+    if (existingResource) {
+      currentResource = existingResource as apigateway.Resource;
+    } else {
+      currentResource = currentResource.addResource(part);
+    }
   }
 
   return currentResource;
