@@ -143,12 +143,13 @@ export class ApiConstruct extends Construct {
     // const lambdasPath = path.resolve(__dirname, '../lambdas/endpoints');
     const lambdasPath = path.join(lambdasPathFromEnv, '/endpoints')
     const testLambdasPath = path.resolve(__dirname, '../../test_lambdas/endpoints');
+    const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
 
     // If there are no lambda functions present in the endpoints folder of the Lambdas repository, we'll get this error: The REST API doesn't contain any methods
     // So we'll check if it's empty and if so, revert back to the testLambdasPath. We also revert if the lambdasPath was undefined
-    const functionsPath = ( fs.existsSync(lambdasPath) && fs.readdirSync(lambdasPath).length < 1 )
-                          ? lambdasPath 
-                          : testLambdasPath;
+    // const functionsPath = ( fs.existsSync(lambdasPath) && fs.readdirSync(lambdasPath).length < 1 )
+    //                       ? lambdasPath 
+    //                       : testLambdasPath;
 
   
 
