@@ -142,15 +142,14 @@ export class ApiConstruct extends Construct {
 
     // Set the path to the Lambda functions directory
     // const lambdasPath = path.resolve(__dirname, '../../lambdas/endpoints');
-    const lambdasPath = lambdasPathFromEnv
+    const lambdasPath = path.join(lambdasPathFromEnv, '/endpoints')
     const testLambdasPath = path.resolve(__dirname, '../../test_lambdas/endpoints');
     const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
     console.log(`functionsPath: ${functionsPath}`)
 
     
 
-    // Get the metadata for each Lambda function
-    const functionMetadata = getFunctionMetadata(functionsPath);
+    
 
 
     // Getting the vpcId that was stored in SSM during databaseStack synth - fromLookup doesn't work with a CfnOutput
@@ -174,6 +173,10 @@ export class ApiConstruct extends Construct {
 
     // Adds egress to the database security group, and ingress in the database security group from the lambdaEndpointSecurityGroup    
     lambdaEndpointsSecurityGroup.connections.allowTo(databaseSecurityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the database');
+
+
+    // Get the metadata for each Lambda function
+    const functionMetadata = getFunctionMetadata(functionsPath);
     
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
