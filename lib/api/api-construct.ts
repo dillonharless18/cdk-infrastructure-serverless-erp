@@ -128,63 +128,21 @@ export class ApiConstruct extends Construct {
     //////////////////////////
 
     //////////////////////////////////
-    // TODO Remove this
-    // console.log(`CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source: ${process.env.CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source}`);
-
-    // function findLambdasFolder(startPath: string): string | undefined {
-    //   const searchFolder = (folder: string): string | undefined => {
-    //       const entries = fs.readdirSync(folder, { withFileTypes: true });
-
-    //       for (const entry of entries) {
-    //           const entryPath = path.join(folder, entry.name);
-    //           if (entry.isDirectory()) {
-    //               if (entry.name === 'lambdas' && fs.existsSync(path.join(entryPath, 'endpoints'))) {
-    //                   return entryPath;
-    //               }
-    //               const result = searchFolder(entryPath);
-    //               if (result) {
-    //                   return result;
-    //               }
-    //           }
-    //       }
-
-    //       return undefined;
-    //   };
-
-    //   return searchFolder(startPath);
-    // }
-
-    // const startPath = path.join(__dirname, '../../../'); // Adjust this path to set the starting directory
-    // const lambdasFolder = findLambdasFolder(startPath);
-
-    // if (lambdasFolder) {
-    //     console.log(`lambdas folder found at: ${lambdasFolder}`);
-
-    //     // Read the contents of the lambdas folder
-    //     const lambdasContent = fs.readdirSync(lambdasFolder);
-
-    //     // Print the contents of the lambdas folder
-    //     console.log('lambdas folder content:');
-    //     console.log(lambdasContent);
-    // } else {
-    //     console.log('lambdas folder not found');
-    // }
-
-    // Get the path to the lambdas folder
-    const lambdasPathEnv = process.env.CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source;
-    if (!lambdasPathEnv) {
+    // TODO Remove some of this
+    const lambdasPathFromEnv = process.env.CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source;
+    if (!lambdasPathFromEnv) {
       console.log('Error: CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source environment variable is not set.');
       process.exit(1);
     }
     // List the contents of the lambdas folder
-    const contents = fs.readdirSync(lambdasPathEnv);
+    const contents = fs.readdirSync(lambdasPathFromEnv);
     console.log('Contents of lambdas folder:');
     console.log(contents);
-  // TODO: remove the above
-  //////////////////////////////////
+    //////////////////////////////////
 
     // Set the path to the Lambda functions directory
-    const lambdasPath = path.resolve(__dirname, '../../lambdas/endpoints');
+    // const lambdasPath = path.resolve(__dirname, '../../lambdas/endpoints');
+    const lambdasPath = lambdasPathFromEnv
     const testLambdasPath = path.resolve(__dirname, '../../test_lambdas/endpoints');
     const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
     console.log(`functionsPath: ${functionsPath}`)
