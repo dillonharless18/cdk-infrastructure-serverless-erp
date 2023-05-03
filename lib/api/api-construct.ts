@@ -129,6 +129,8 @@ export class ApiConstruct extends Construct {
 
     //////////////////////////////////
     // TODO Remove this
+    console.log(`CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source: ${process.env.CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source}`);
+
     function findLambdasFolder(startPath: string): string | undefined {
       const searchFolder = (folder: string): string | undefined => {
           const entries = fs.readdirSync(folder, { withFileTypes: true });
