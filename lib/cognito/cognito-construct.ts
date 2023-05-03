@@ -120,6 +120,7 @@ export class CognitoConstruct extends Construct {
         generateSecret: false, // Disable generation of client secret
         authFlows: { // Enable username/password-based authentication
           userPassword: true,
+          userSrp: true
         },
     });
   
@@ -136,7 +137,7 @@ export class CognitoConstruct extends Construct {
         groupName: 'admin',
         userPoolId: userPool.userPoolId,
         precedence: 0,
-        roleArn: adminRole.roleArn
+        roleArn: adminRole.roleArn,
     });
 
     const basicUserGroup = new cognito.CfnUserPoolGroup(this, 'BasicUserGroup', {

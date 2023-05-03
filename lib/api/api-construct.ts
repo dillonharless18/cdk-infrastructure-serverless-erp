@@ -201,14 +201,16 @@ export class ApiConstruct extends Construct {
       });
 
       // Create the API Gateway integration for the Lambda function - works even for Lambdas in a VPC
-      const lambdaIntegration = new apigateway.LambdaIntegration(lambdaFunction);
+      const lambdaIntegration = new apigateway.LambdaIntegration(lambdaFunction, {
+        
+      });
 
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
       const nestedResource = createNestedResource(apiV1, metadata.apiPath);
       nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
         authorizationType: apigateway.AuthorizationType.COGNITO,
         authorizer: {
-          authorizerId: authorizer.ref
+          authorizerId: authorizer.ref,
         },
         authorizationScopes: metadata.allowedGroups.map((group: string) => `cognito-idp:${group}`),
       });
@@ -255,6 +257,7 @@ const createNestedResource = (parentResource: apigateway.Resource, path: string)
   let currentResource = parentResource;
 
   for (const part of pathParts) {
+    // Avoid synthing a duplicate API gateway resource to avoid error 
     let existingResource = currentResource.getResource(part);
     if (existingResource) {
       currentResource = existingResource as apigateway.Resource;
