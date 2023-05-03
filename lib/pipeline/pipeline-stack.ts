@@ -42,7 +42,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             synth: new CodeBuildStep("Synth", {
                 input: props?.pipelineSource,
                 additionalInputs: {
-                    '../../lambdas': props?.source
+                    '../lambdas': props?.source
                 },
                 commands: [
                     "npm ci",
@@ -66,7 +66,6 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                         },
                       },
                 },
-                
             })
         });
 
