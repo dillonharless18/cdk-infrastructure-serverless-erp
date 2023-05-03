@@ -152,7 +152,7 @@ export class ApiConstruct extends Construct {
       return searchFolder(startPath);
     }
 
-    const startPath = ('/'); // Adjust this path to set the starting directory
+    const startPath = path.join(__dirname, '../../../'); // Adjust this path to set the starting directory
     const lambdasFolder = findLambdasFolder(startPath);
 
     if (lambdasFolder) {
