@@ -77,7 +77,13 @@ export class ApiConstruct extends Construct {
     let restApiName = `${STAGE_WITH_HYPHEN_MAP[stage]}${apiName}`
     const api = new apigateway.RestApi(this, restApiName, {
       restApiName: restApiName,
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'X-Amz-User-Agent'],
+      },
     });
+    
 
     // Add Cognito Authorizer to the API Gateway
     // const userPoolArn = Fn.importValue('UserPoolArn');
@@ -198,6 +204,7 @@ export class ApiConstruct extends Construct {
         vpc: props.vpc,
         vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
         securityGroups: [lambdaEndpointsSecurityGroup],
+        // TODO incorporate the env variables from metadata.json
       });
 
       // Create the API Gateway integration for the Lambda function - works even for Lambdas in a VPC
