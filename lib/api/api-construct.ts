@@ -208,11 +208,12 @@ export class ApiConstruct extends Construct {
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
       const nestedResource = createNestedResource(apiV1, metadata.apiPath);
       nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
-        authorizationType: apigateway.AuthorizationType.COGNITO,
-        authorizer: {
-          authorizerId: authorizer.ref,
-        },
-        authorizationScopes: metadata.allowedGroups.map((group: string) => `cognito-idp:${group}`),
+        // authorizationType: apigateway.AuthorizationType.COGNITO,
+        // authorizer: {
+        //   authorizerId: authorizer.ref,
+        // },
+        // authorizationScopes: metadata.allowedGroups.map((group: string) => `cognito-idp:${group}`),
+        authorizationType: apigateway.AuthorizationType.NONE
       });
     });
 
