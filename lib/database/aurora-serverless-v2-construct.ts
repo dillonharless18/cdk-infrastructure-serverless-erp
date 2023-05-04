@@ -15,6 +15,7 @@ import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
 interface AuroraServerlessV2ConstructProps {
     stageName: string;
@@ -30,6 +31,7 @@ export class AuroraServerlessV2Construct extends Construct {
   public readonly securityGroup: ec2.SecurityGroup;
   public readonly vpc: ec2.Vpc;
   public readonly defaultDatabaseName: string = "applicationDatabase";
+  public readonly lambdaIamRoleForDbAccess: Role;
   
 
   constructor(scope: Construct, id: string, props: AuroraServerlessV2ConstructProps) {
@@ -83,6 +85,7 @@ export class AuroraServerlessV2Construct extends Construct {
             subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
           }),
         },
+        iamAuthentication: true,
         port: 5432,
         credentials: rds.Credentials.fromSecret(secret)
       })
@@ -100,6 +103,34 @@ export class AuroraServerlessV2Construct extends Construct {
 
     // TODO For prod see if we need more: https://github.com/aws/aws-cdk/issues/20197#issuecomment-1117555047
 
+
+    // TODO uncomment and edit this to get IAM auth working
+    // Create lambdaRole for db access
+    // const lambdaRole = new Role(this, 'LambdaRole', {
+    //   assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+    // });
+    
+    // // Add permissions to access the RDS secret in Secrets Manager
+    // const secretArn = auroraServerlessV2Construct.secretArn.value;
+    // lambdaRole.addToPolicy(new PolicyStatement({
+    //   effect: Effect.ALLOW,
+    //   resources: [secretArn],
+    //   actions: [
+    //     'secretsmanager:GetSecretValue',
+    //     'secretsmanager:DescribeSecret'
+    //   ],
+    // }));
+    
+    // // Add permissions to access the VPC resources
+    // lambdaRole.addToPolicy(new PolicyStatement({
+    //   effect: Effect.ALLOW,
+    //   resources: ['*'],
+    //   actions: [
+    //     'ec2:CreateNetworkInterface',
+    //     'ec2:DescribeNetworkInterfaces',
+    //     'ec2:DeleteNetworkInterface'
+    //   ],
+    // }));
 
     // Outputs
     this.secretName = new CfnOutput(this, 'secretName', {
