@@ -224,6 +224,55 @@ export class ApiConstruct extends Construct {
       });
     });
 
+
+
+
+    // TODO - Custom Authorizer
+
+    // Create the custom authorizer Lambda function
+    // const customAuthorizerFunction = new lambda.Function(this, 'CustomAuthorizerFunction', {
+    //   runtime: lambda.Runtime.NODEJS_14_X,
+    //   code: lambda.Code.fromAsset('path/to/custom-authorizer/folder'),
+    //   handler: 'custom-authorizer.handler',
+    // });
+
+    // // Add the custom authorizer to your API Gateway
+    // const customAuthorizerFunction = new lambda.Function(this, 'CustomAuthorizerFunction', {
+    //   runtime: lambda.Runtime.NODEJS_14_X,
+    //   handler: 'index.handler',
+    //   code: lambda.Code.fromAsset('path/to/custom-authorizer'),
+    //   environment: {
+    //     METADATA_BUCKET_NAME: metadataBucket.bucketName,
+    //   },
+    // });
+
+    // This code should be added to the resource to make them use the custom authorizer
+    // const apiResource = api.root.addResource('endpoint-1');
+    // const protectedRoute = apiResource.addMethod('GET', yourLambdaIntegration, {
+    //   authorizationType: apigw.AuthorizationType.CUSTOM,
+    //   authorizer: customAuthorizer,
+    // });
+
+    // Grant the custom authorizer Lambda function permission to read objects from the S3 bucket
+    // const metadataBucket = s3.Bucket.fromBucketName(this, 'MetadataBucket', 'your-metadata-bucket-name');
+    // metadataBucket.grantRead(customAuthorizerFunction);
+
+
+    // S3 metadata bucket
+    // const metadataBucket = new s3.Bucket(this, 'MetadataBucket', {
+    //   removalPolicy: cdk.RemovalPolicy.DESTROY,
+    //   autoDeleteObjects: true,
+    //   versioned: false,
+    //   blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+    // });
+
+    // TODO - update this to upload the metadata to the appropriate key (probably as the api path)
+    // new s3deploy.BucketDeployment(this, 'DeployMetadata', {
+    //   sources: [s3deploy.Source.asset('./metadata')],
+    //   destinationBucket: metadataBucket,
+    // });
+    // metadataBucket.grantRead(customAuthorizerFunction);
+
     ///////////////////////////
     ///     End Lambdas     ///
     ///////////////////////////
