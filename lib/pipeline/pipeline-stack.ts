@@ -47,9 +47,13 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                 commands: [
                     "npm ci",
                     "npm run build",
+                    "ln -s . BUILD_PROJECT_ROOT_SYMLINK",
                     "cd lib/database/lambda",
                     "npm install",
                     "cd -",
+                    "cd $CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source",
+                    "for d in ./*/ ; do (cd \"$d\" && [ -f package.json ] && npm install); done",
+                    "cd $BUILD_PROJECT_ROOT_SYMLINK",
                     "npx cdk synth"
                 ],
                 env: {

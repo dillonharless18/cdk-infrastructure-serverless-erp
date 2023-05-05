@@ -204,7 +204,9 @@ export class ApiConstruct extends Construct {
         vpc: props.vpc,
         vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
         securityGroups: [lambdaEndpointsSecurityGroup],
-        environment: metadata.environment ? { ...metadata.environment } : {}
+        environment: metadata.environment ? { 
+          ...metadata.environment
+        } : {}
       });
 
       // Create the API Gateway integration for the Lambda function - works even for Lambdas in a VPC
