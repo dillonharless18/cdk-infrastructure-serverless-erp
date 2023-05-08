@@ -32,10 +32,11 @@ export class AuroraServerlessV2Construct extends Construct {
   public readonly vpc: ec2.Vpc;
   public readonly defaultDatabaseName: string = "applicationDatabase";
   public readonly lambdaIamRoleForDbAccess: Role;
-  
+  public readonly databaseProxy: rds.DatabaseProxy;
 
   constructor(scope: Construct, id: string, props: AuroraServerlessV2ConstructProps) {
     super(scope, id);
+    
     
     // Create a VPC for the database
     const databaseVpc = new ec2.Vpc(this, 'DatabaseVPC');
@@ -101,6 +102,15 @@ export class AuroraServerlessV2Construct extends Construct {
         },
       })
 
+      // RDS proxy
+      const rdsProxy = new rds.DatabaseProxy(this, 'RdsProxy', {
+        vpc: databaseVpc,
+        dbProxyName: 'application-database-proxy',
+        secrets: [secret],
+        securityGroups: [databaseSecurityGroup],
+        proxyTarget: rds.ProxyTarget.fromCluster(cluster)
+      });
+
     // TODO For prod see if we need more: https://github.com/aws/aws-cdk/issues/20197#issuecomment-1117555047
 
 
@@ -140,9 +150,9 @@ export class AuroraServerlessV2Construct extends Construct {
     this.secretArn = new CfnOutput(this, 'secretArn', {
       value: cluster.secret?.secretArn || '',
     });
-    
-    this.securityGroup = databaseSecurityGroup;
 
+    this.databaseProxy =  rdsProxy;
+    this.securityGroup = databaseSecurityGroup;
     this.clusterEndpointHostname = cluster.clusterEndpoint.hostname;
     this.clusterEndpointSocketAddress = cluster.clusterEndpoint.socketAddress;
     this.vpc = databaseVpc;
