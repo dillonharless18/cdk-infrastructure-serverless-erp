@@ -1,7 +1,7 @@
 /* eslint-disable no-new */
 /* eslint-disable import/prefer-default-export */
 
-import { CfnOutput, Fn, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Duration, Fn, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -209,7 +209,8 @@ export class ApiConstruct extends Construct {
         securityGroups: [lambdaEndpointsSecurityGroup],
         environment: metadata.environment ? { 
           ...metadata.environment
-        } : {}
+        } : {},
+        timeout: Duration.seconds(15)
       });
 
       // Give the lambdas access to secrets
