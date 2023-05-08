@@ -13,6 +13,7 @@ import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
 import { ISecurityGroup, IVpc, Port, SecurityGroup, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { IUserPool } from 'aws-cdk-lib/aws-cognito';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
 interface ApiConstructProps {
     apiName: string,
@@ -189,6 +190,8 @@ export class ApiConstruct extends Construct {
     lambdaEndpointsSecurityGroup.connections.allowTo(databaseSecurityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the database');
 
 
+
+
     // Get the metadata for each Lambda function
     const functionMetadata = getFunctionMetadata(functionsPath);
     
@@ -209,10 +212,15 @@ export class ApiConstruct extends Construct {
         } : {}
       });
 
-      // Create the API Gateway integration for the Lambda function - works even for Lambdas in a VPC
-      const lambdaIntegration = new apigateway.LambdaIntegration(lambdaFunction, {
-        
+      // Give the lambdas access to secrets
+      const secretsManagerAccessPolicy = new PolicyStatement({
+        actions: ['secretsmanager:GetSecretValue'],
+        resources: [`*`],
       });
+      lambdaFunction.addToRolePolicy(secretsManagerAccessPolicy);
+
+      // Create the API Gateway integration for the Lambda function - works even for Lambdas in a VPC
+      const lambdaIntegration = new apigateway.LambdaIntegration(lambdaFunction, {});
 
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
       const nestedResource = createNestedResource(apiV1, metadata.apiPath);
