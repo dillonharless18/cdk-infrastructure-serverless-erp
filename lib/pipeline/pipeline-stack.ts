@@ -72,6 +72,34 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             })
         });
 
+
+        // Introducing a workaround for the size of the synth output as described here: https://github.com/aws/aws-cdk/issues/9917
+        let strip = new CodeBuildStep("StripAssetsFromAssembly", {
+            input: pipeline.cloudAssemblyFileSet,
+            commands: [
+              'S3_PATH=${CODEBUILD_SOURCE_VERSION#"arn:aws:s3:::"}',
+              "ZIP_ARCHIVE=$(basename $S3_PATH)",
+              "echo $S3_PATH",
+              "echo $ZIP_ARCHIVE",
+              "ls",
+              "rm -rfv asset.*",
+              "zip -r -q -A $ZIP_ARCHIVE *",
+              "ls",
+              "aws s3 cp $ZIP_ARCHIVE s3://$S3_PATH",
+            ],
+            rolePolicyStatements:[ new PolicyStatement({
+              effect: Effect.ALLOW,
+              resources: ["*"],
+              actions: ["s3:*"],
+            }),
+            new PolicyStatement({
+              effect: Effect.ALLOW,
+              resources: ["*"],
+              actions: ["kms:GenerateDataKey"],
+            })]
+         
+          });
+
         
 
 
