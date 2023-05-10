@@ -100,6 +100,10 @@ export class InfrastructurePipelineStack extends cdk.Stack {
          
           });
 
+          pipeline.addWave("BeforeStageDeploy", {
+            pre: [strip],
+          });
+
         
 
 
