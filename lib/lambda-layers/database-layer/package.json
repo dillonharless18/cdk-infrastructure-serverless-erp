@@ -1,0 +1,21 @@
+{
+    "name": "database-layer",
+    "version": "1.0.0",
+    "description": "The layer that will be provided to all api supporting lambdas",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "aws-sdk": "^2.1372.0",
+        "knex": "^2.4.2",
+        "pg": "^8.10.0"
+    },
+    "devDependencies": {
+        "serverless": "^3.30.1",
+        "serverless-offline": "^12.0.4"
+    }
+}
