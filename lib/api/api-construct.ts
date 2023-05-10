@@ -51,6 +51,13 @@ export class ApiConstruct extends Construct {
         prod:        ''
     }
 
+    // Use to create subdomains programmatically like dev.example.com, test.example.com, example.com
+    const STAGE_TO_API_STAGE_MAP: stageToSubdomainTypes = {
+        development: 'dev',
+        test:        'test',
+        prod:        'prod'
+    }
+
     const { apiName, stage, certficateArn, domainName } = props
 
     if ( !domainName ) throw new Error(`Error in API stack. domainName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
@@ -83,6 +90,9 @@ export class ApiConstruct extends Construct {
         allowMethods: apigateway.Cors.ALL_METHODS,
         allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'X-Amz-User-Agent'],
       },
+      deployOptions: {
+        stageName: STAGE_TO_API_STAGE_MAP[stage]
+      }
     });
     
 
