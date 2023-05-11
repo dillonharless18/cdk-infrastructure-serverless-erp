@@ -143,7 +143,7 @@ export class ApiConstruct extends Construct {
     //    Lambda Layers     //
     //////////////////////////
     const databaseLayer = new lambda.LayerVersion(this, 'DatabaseLayer', {
-      code: lambda.Code.fromAsset('lambda-layers/database-layer'),
+      code: lambda.Code.fromAsset('../lambda-layers/database-layer'),
       compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
       description: 'This layer contains the dependencies that will be needed for all api supporting lambdas to integrate with the oneXerp database',
     });
