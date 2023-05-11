@@ -53,7 +53,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                     "cd $CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source",
                     "find . -type f -name 'package.json' -execdir npm install \\;",
                     "cd -",
-                    "cd $CODEBUILD_SRC_DIR/lib/lambda-layers/database-layer",
+                    "cd $CODEBUILD_SRC_DIR/lib/lambda-layers/database-layer/nodejs",
                     "npm install",
                     "cd -",
                     "npx cdk synth"
