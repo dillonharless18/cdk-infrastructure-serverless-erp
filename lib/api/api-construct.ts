@@ -137,7 +137,21 @@ export class ApiConstruct extends Construct {
     //////////////////////////
     /////    End API     /////
     //////////////////////////
-    
+
+
+    //////////////////////////
+    //    Lambda Layers     //
+    //////////////////////////
+    const databaseLayer = new lambda.LayerVersion(this, 'DatabaseLayer', {
+      code: lambda.Code.fromAsset('lambda-layers/database-layer'),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
+      description: 'This layer contains the dependencies that will be needed for all api supporting lambdas to integrate with the oneXerp database',
+    });
+
+
+    //////////////////////////
+    //    End Lambda Layers //
+    //////////////////////////
 
 
     //////////////////////////
@@ -220,7 +234,8 @@ export class ApiConstruct extends Construct {
         environment: metadata.environment ? { 
           ...metadata.environment
         } : {},
-        timeout: Duration.seconds(15)
+        timeout: Duration.seconds(15),
+        layers: [databaseLayer]
       });
 
       // Give the lambdas access to secrets
