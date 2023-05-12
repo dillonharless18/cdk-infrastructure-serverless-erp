@@ -4,6 +4,7 @@ import { Construct } from 'constructs';
 import { MigrationsLambdaConstruct } from './database/migrations-lambda-construct';
 import { CognitoConstruct } from './cognito/cognito-construct';
 import { ApiConstruct } from './api/api-construct';
+import { SeedLambdaConstruct } from './database/seed-database-lambda-construct';
 
 interface InfrastructureStackProps extends StackProps {
     applicationName: string;
@@ -48,6 +49,17 @@ export class InfrastructureStack extends Stack {
     );
     this.lambdaFunctionName = migrationsLambda.lambdaFunctionName;
     this.crossAccountLambdaInvokeRoleName = migrationsLambda.crossAccountLambdaInvokeRoleName;
+
+    const seedLambda = new SeedLambdaConstruct(
+      this, 
+      'SeedLambda', 
+      database.secretName, 
+      database.secretArn, 
+      database.vpc, 
+      database.securityGroup,
+      database.defaultDatabaseName,
+      props.stageName,
+    );
     
     const cognito = new CognitoConstruct(this, 'CognitoConstruct', {
         applicationName: props.applicationName,
