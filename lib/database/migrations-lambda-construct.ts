@@ -24,9 +24,10 @@ export class MigrationsLambdaConstruct extends Construct {
     vpc: Vpc, 
     securityGroup: SecurityGroup, 
     defaultDBName: string, 
+    lambdaLayers: lambda.LayerVersion[],
     crossAccount: boolean, 
     stageName: string, 
-    devAccountId?: string
+    devAccountId?: string,
   ) {
     super(scope, id);
 
@@ -53,7 +54,7 @@ export class MigrationsLambdaConstruct extends Construct {
               ],
               resources: [
                 dbCredentialsSecretArn.value
-              ]
+              ],
             }),
           ]
         })
@@ -130,6 +131,7 @@ export class MigrationsLambdaConstruct extends Construct {
         RDS_DB_PASS_SECRET_ID: dbCredentialsSecretName.value,
         RDS_DB_NAME: defaultDBName,
       },
+      layers: [...lambdaLayers]
     });
 
 

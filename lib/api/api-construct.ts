@@ -30,6 +30,8 @@ interface ApiConstructProps {
 }
 
 export class ApiConstruct extends Construct {
+  public readonly databaseLambdaLayer: lambda.LayerVersion
+
   constructor(scope: Construct, id: string, props: ApiConstructProps) {
     super(scope, id);
     
@@ -145,10 +147,10 @@ export class ApiConstruct extends Construct {
     const databaseLayer = new lambda.LayerVersion(this, 'DatabaseLayer', {
       code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/lambda-layers/database-layer`),
       compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
-      description: 'This layer contains the dependencies that will be needed for all api supporting lambdas to integrate with the oneXerp database',
+      description: 'Exposes packages for db operations: knex, pg, and uuid. TODO is to expose the reusable connection function itself.',
     });
 
-
+    this.databaseLambdaLayer = databaseLayer
     //////////////////////////
     //    End Lambda Layers //
     //////////////////////////
@@ -251,6 +253,7 @@ export class ApiConstruct extends Construct {
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
       const nestedResource = createNestedResource(apiV1, metadata.apiPath);
       nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
+        // TODO remove this or add it back based on how we authenticate
         // authorizationType: apigateway.AuthorizationType.COGNITO,
         // authorizer: {
         //   authorizerId: authorizer.ref,
