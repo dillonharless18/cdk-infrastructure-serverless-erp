@@ -21,7 +21,8 @@ export class SeedLambdaConstruct extends Construct {
     vpc: Vpc, 
     securityGroup: SecurityGroup, 
     defaultDBName: string, 
-    stageName: string, 
+    lambdaLayers: lambda.LayerVersion[],
+    stageName: string,
   ) {
     super(scope, id);
 
@@ -68,6 +69,7 @@ export class SeedLambdaConstruct extends Construct {
         RDS_DB_PASS_SECRET_ID: dbCredentialsSecretName.value,
         RDS_DB_NAME: defaultDBName,
       },
+      layers: [...lambdaLayers]
     });
   }
 }

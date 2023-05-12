@@ -35,32 +35,6 @@ export class InfrastructureStack extends Stack {
 
     const database = new AuroraServerlessV2Construct(this, 'DatabaseConstruct', { stageName: props.stageName })
     
-    const migrationsLambda = new MigrationsLambdaConstruct(
-      this, 
-      'MigrationsLambda', 
-      database.secretName, 
-      database.secretArn, 
-      database.vpc, 
-      database.securityGroup,
-      database.defaultDatabaseName,
-      props.crossAccount,
-      props.stageName,
-      props.devAccountId,
-    );
-    this.lambdaFunctionName = migrationsLambda.lambdaFunctionName;
-    this.crossAccountLambdaInvokeRoleName = migrationsLambda.crossAccountLambdaInvokeRoleName;
-
-    const seedLambda = new SeedLambdaConstruct(
-      this, 
-      'SeedLambda', 
-      database.secretName, 
-      database.secretArn, 
-      database.vpc, 
-      database.securityGroup,
-      database.defaultDatabaseName,
-      props.stageName,
-    );
-    
     const cognito = new CognitoConstruct(this, 'CognitoConstruct', {
         applicationName: props.applicationName,
         domainName: props.domainName,
@@ -78,6 +52,34 @@ export class InfrastructureStack extends Stack {
         databaseSecurityGroup: database.securityGroup,
         vpc: database.vpc
     });
+
+    const migrationsLambda = new MigrationsLambdaConstruct(
+      this, 
+      'MigrationsLambda', 
+      database.secretName, 
+      database.secretArn, 
+      database.vpc, 
+      database.securityGroup,
+      database.defaultDatabaseName,
+      [api.databaseLambdaLayer],
+      props.crossAccount,
+      props.stageName,
+      props.devAccountId,
+    );
+    this.lambdaFunctionName = migrationsLambda.lambdaFunctionName;
+    this.crossAccountLambdaInvokeRoleName = migrationsLambda.crossAccountLambdaInvokeRoleName;
+
+    const seedLambda = new SeedLambdaConstruct(
+      this, 
+      'SeedLambda', 
+      database.secretName, 
+      database.secretArn, 
+      database.vpc, 
+      database.securityGroup,
+      database.defaultDatabaseName,
+      [api.databaseLambdaLayer],
+      props.stageName,
+    );
     
   }
 }
