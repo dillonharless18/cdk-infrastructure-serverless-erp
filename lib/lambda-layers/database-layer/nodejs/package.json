@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "The layer that will be provided to all api supporting lambdas",
     "main": "index.js",
+    "type": "module",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
