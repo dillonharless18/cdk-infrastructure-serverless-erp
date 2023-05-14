@@ -62,7 +62,7 @@ export class MigrationsLambdaConstruct extends Construct {
     const lambdaFunction = new lambda.Function(this, 'MigrationLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
       functionName: this.lambdaFunctionName,
-      handler: 'handler.handler',
+      handler: 'index.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, 'lambda')),
       timeout: Duration.minutes(10),
       vpc: vpc,
