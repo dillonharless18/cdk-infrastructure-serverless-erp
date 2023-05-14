@@ -1,8 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
-import { BuildEnvironmentVariableType, BuildSpec, LinuxBuildImage, PipelineProject } from 'aws-cdk-lib/aws-codebuild';
-import { CodeBuildStep, CodePipeline, CodePipelineSource, ManualApprovalStep, Step } from 'aws-cdk-lib/pipelines';
-import { Construct, Node } from 'constructs';
-import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { BuildEnvironmentVariableType, LinuxBuildImage } from 'aws-cdk-lib/aws-codebuild';
+import { CodeBuildStep, CodePipeline, CodePipelineSource, ManualApprovalStep } from 'aws-cdk-lib/pipelines';
+import { Construct } from 'constructs';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { DeployInfrastructureStage } from './stages/deploy-infrastructure-stage';
 
 interface PipelineStackProps extends cdk.StackProps {

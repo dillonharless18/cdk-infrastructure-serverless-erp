@@ -6,9 +6,6 @@ import { SecurityGroup, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
-/**
- * A stack for our simple Lambda-powered web service
- */
 export class SeedLambdaConstruct extends Construct {
   public readonly lambdaFunctionName: string;
   public readonly crossAccountLambdaInvokeRoleName: string = 'CrossAccountLambdaInvokeRole';

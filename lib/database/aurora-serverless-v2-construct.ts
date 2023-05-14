@@ -2,20 +2,25 @@
 /* eslint-disable no-new */
 /* eslint-disable import/prefer-default-export */
 
-// Using a workaround for Aurora Serverless V2:
-// https://github.com/aws/aws-cdk/issues/20197
-// https://github.com/Compulsed/serverless-aurora-lambda/blob/main/lib/serverless-aurora-lambda.ts
+/****************************************************************************************************************************
+ * NOTES
+ * 
+ * Using a workaround for Aurora Serverless V2:
+ *  - https://github.com/aws/aws-cdk/issues/20197
+ *  - https://github.com/Compulsed/serverless-aurora-lambda/blob/main/lib/serverless-aurora-lambda.ts
+ * 
+ * Used some of the knowledge for migrations from here: https://github.com/aws-samples/rds-db-schema-migrations-cicd
+ *****************************************************************************************************************************/
 
-// Used some of the knowledge for migrations from here: https://github.com/aws-samples/rds-db-schema-migrations-cicd
 
-import { CfnOutput, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
-import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Role } from 'aws-cdk-lib/aws-iam';
 
 interface AuroraServerlessV2ConstructProps {
     stageName: string;
@@ -113,8 +118,10 @@ export class AuroraServerlessV2Construct extends Construct {
 
     // TODO For prod see if we need more: https://github.com/aws/aws-cdk/issues/20197#issuecomment-1117555047
 
+    //////////////////////////////////////////////////////////
+    // TODO uncomment and edit this to get IAM auth working //
+    //////////////////////////////////////////////////////////
 
-    // TODO uncomment and edit this to get IAM auth working
     // Create lambdaRole for db access
     // const lambdaRole = new Role(this, 'LambdaRole', {
     //   assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
@@ -141,6 +148,10 @@ export class AuroraServerlessV2Construct extends Construct {
     //     'ec2:DeleteNetworkInterface'
     //   ],
     // }));
+
+    ///////////////////////
+    // TODO END IAM RBAC //
+    ///////////////////////
 
     // Outputs
     this.secretName = new CfnOutput(this, 'secretName', {

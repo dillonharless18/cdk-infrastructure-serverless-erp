@@ -9,9 +9,7 @@ import { existsSync } from 'fs';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as lambda from "aws-cdk-lib/aws-lambda";
 
-/**
- * A stack for our simple Lambda-powered web service
- */
+
 export class MigrationsLambdaConstruct extends Construct {
   public readonly lambdaFunctionName: string;
   public readonly crossAccountLambdaInvokeRoleName: string = 'CrossAccountLambdaInvokeRole';
@@ -60,63 +58,6 @@ export class MigrationsLambdaConstruct extends Construct {
         })
       }
     })
-
-    // TODO TS bundling wasn't working, so I converted to a normal Function (no bundling here)
-    
-    // Create the Lambda function with necessary configuration
-    // const lambdaFunction = new NodejsFunction(this, 'Lambda', {
-    //   functionName: this.lambdaFunctionName,
-    //   handler: 'handler',
-    //   entry: path.resolve(__dirname, 'lambda/handler.ts'),
-    //   timeout: Duration.minutes(10),
-    //   bundling: {
-    //     minify: false,
-    //     environment: {
-    //       NODE_ENV: "production"
-    //     },
-    //     logLevel: LogLevel.INFO,
-    //     forceDockerBundling: true,
-    //     externalModules: [
-    //       'aws-sdk'
-    //     ],
-    //     nodeModules: [
-    //       'knex',
-    //       'pg'
-    //     ],
-    //     commandHooks: {
-    //       afterBundling(inputDir: string, outputDir: string): string[] {
-    //         console.log('Input directory:', inputDir);
-    //         console.log('Output directory:', outputDir);
-    //         // return [`cp -r ${inputDir}/migrations ${outputDir}`, `find ${outputDir}/migrations -type f ! -name '*.js' -delete`];
-    //         return [`cp -r ${inputDir}/migrations ${outputDir}`];
-    //       },
-    //       beforeBundling(inputDir: string, outputDir: string) {
-    //         console.log('Input directory:', inputDir);
-    //         console.log('Output directory:', outputDir);
-    //         return [];
-    //       },
-    //       beforeInstall(inputDir: string, outputDir: string) {
-    //         console.log('Input directory:', inputDir);
-    //         console.log('Output directory:', outputDir);
-    //         return [];
-    //       }
-    //     },
-    //     target: 'es2020'
-    //   },
-    //   // runtime: Runtime.NODEJS_16_X,
-    //   depsLockFilePath: path.resolve(__dirname, 'lambda', 'package-lock.json'),
-    //   // depsLockFilePath: path.join(__dirname, "lambda/package-lock.json"),
-    //   projectRoot: path.resolve(__dirname, 'lambda'),
-    //   environment: {
-    //     RDS_DB_PASS_SECRET_ID: dbCredentialsSecretName.value,
-    //     RDS_DB_NAME: defaultDBName
-    //   },
-    //   vpc: vpc,
-    //   role: lambdaRole,
-    //   securityGroups: [
-    //     securityGroup
-    //   ]
-    // })
 
     const lambdaFunction = new lambda.Function(this, 'MigrationLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,

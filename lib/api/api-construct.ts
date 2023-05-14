@@ -1,19 +1,28 @@
 /* eslint-disable no-new */
 /* eslint-disable import/prefer-default-export */
 
-import { CfnOutput, Duration, Fn, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
+import { Duration }    from 'aws-cdk-lib';
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as fs from "fs";
-import path = require('path');
-import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import * as lambda     from "aws-cdk-lib/aws-lambda";
+import { Construct }   from 'constructs';
+import { 
+  ARecord, 
+  HostedZone, 
+  RecordTarget 
+} from 'aws-cdk-lib/aws-route53';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { ApiGatewayDomain } from 'aws-cdk-lib/aws-route53-targets';
-import { ISecurityGroup, IVpc, Port, SecurityGroup, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
-import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { 
+  ISecurityGroup, 
+  IVpc, 
+  Port, 
+  SecurityGroup, 
+  SubnetType 
+} from 'aws-cdk-lib/aws-ec2';
 import { IUserPool } from 'aws-cdk-lib/aws-cognito';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import * as fs from "fs";
+import path = require('path');
 
 interface ApiConstructProps {
     apiName: string,
