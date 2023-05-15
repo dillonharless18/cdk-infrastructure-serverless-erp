@@ -250,7 +250,10 @@ export class ApiConstruct extends Construct {
           ...metadata.environment,
           RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
           RDS_DB_NAME: props.defaultDBName,
-        } : {},
+        } : {
+          RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
+          RDS_DB_NAME: props.defaultDBName,
+        },
         timeout: Duration.seconds(15),
         layers: [databaseLayer]
       });
