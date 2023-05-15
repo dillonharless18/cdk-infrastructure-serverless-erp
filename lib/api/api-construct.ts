@@ -1,3 +1,4 @@
+import { CfnOutput } from 'aws-cdk-lib';
 /* eslint-disable no-new */
 /* eslint-disable import/prefer-default-export */
 
@@ -35,7 +36,10 @@ interface ApiConstructProps {
     databaseSecurityGroup: ISecurityGroup;
     stage: string;
     userPool: IUserPool;
-    vpc: IVpc
+    vpc: IVpc,
+    dbCredentialsSecretName: CfnOutput, 
+    dbCredentialsSecretArn: CfnOutput, 
+    defaultDBName: string, 
 }
 
 export class ApiConstruct extends Construct {
@@ -243,7 +247,9 @@ export class ApiConstruct extends Construct {
         vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
         securityGroups: [lambdaEndpointsSecurityGroup],
         environment: metadata.environment ? { 
-          ...metadata.environment
+          ...metadata.environment,
+          RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
+          RDS_DB_NAME: props.defaultDBName,
         } : {},
         timeout: Duration.seconds(15),
         layers: [databaseLayer]
