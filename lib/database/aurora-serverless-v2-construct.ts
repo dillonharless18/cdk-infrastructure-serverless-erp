@@ -85,10 +85,12 @@ export class AuroraServerlessV2Construct extends Construct {
           vpc: databaseVpc,
           instanceType: new ec2.InstanceType('serverless'),
           autoMinorVersionUpgrade: true,
-          publiclyAccessible: false,
+          publiclyAccessible: props.stageName === 'development',
           securityGroups: [databaseSecurityGroup],
             vpcSubnets: databaseVpc.selectSubnets({
-            subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+            subnetType: props.stageName === 'development' // TODO change this back eventually to private everywheres
+                        ? ec2.SubnetType.PUBLIC
+                        : ec2.SubnetType.PRIVATE_WITH_EGRESS
           }),
         },
         iamAuthentication: true,

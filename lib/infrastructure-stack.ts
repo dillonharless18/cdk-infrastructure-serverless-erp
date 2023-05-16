@@ -33,7 +33,9 @@ export class InfrastructureStack extends Stack {
 
     if ( !props ) throw Error ("props is not defined")
 
-    const database = new AuroraServerlessV2Construct(this, 'DatabaseConstruct', { stageName: props.stageName })
+    const database = new AuroraServerlessV2Construct(this, 'DatabaseConstruct', { 
+      stageName: props.stageName 
+    })
     
     const cognito = new CognitoConstruct(this, 'CognitoConstruct', {
         applicationName: props.applicationName,

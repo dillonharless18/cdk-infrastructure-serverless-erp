@@ -241,10 +241,14 @@ export class ApiConstruct extends Construct {
         code: lambda.Code.fromAsset(path.join(functionsPath, metadata.name)),
         handler: 'index.handler',
         runtime: lambda.Runtime.NODEJS_18_X,
-        functionName: `${metadata.name}`, // TODO see if this will be problematic at all 
+        functionName: `${metadata.name}`,
         // vpc: databaseVpc,
         vpc: props.vpc,
-        vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS },
+        vpcSubnets: { 
+          subnetType: props.stage === 'development' // TODO change this back eventually to private everywheres
+                      ? SubnetType.PUBLIC
+                      : SubnetType.PRIVATE_WITH_EGRESS 
+          },
         securityGroups: [lambdaEndpointsSecurityGroup],
         environment: metadata.environment ? { 
           ...metadata.environment,
@@ -257,6 +261,8 @@ export class ApiConstruct extends Construct {
         timeout: Duration.seconds(15),
         layers: [databaseLayer]
       });
+
+      
 
       // Give the lambdas access to secrets
       const secretsManagerAccessPolicy = new PolicyStatement({
