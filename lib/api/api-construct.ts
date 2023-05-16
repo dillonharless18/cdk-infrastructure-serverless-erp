@@ -245,10 +245,8 @@ export class ApiConstruct extends Construct {
         // vpc: databaseVpc,
         vpc: props.vpc,
         vpcSubnets: { 
-          subnetType: props.stage === 'development' // TODO change this back eventually to private everywheres
-                      ? SubnetType.PUBLIC
-                      : SubnetType.PRIVATE_WITH_EGRESS 
-          },
+          subnetType: SubnetType.PRIVATE_WITH_EGRESS  
+        },
         securityGroups: [lambdaEndpointsSecurityGroup],
         environment: metadata.environment ? { 
           ...metadata.environment,
