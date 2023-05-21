@@ -20,6 +20,7 @@ interface CognitoConstructProps {
     domainName: string;
     stageName: string;
     customOauthCallbackURLsList: string[];
+    customOauthLogoutURLsList: string[];
 }
 
 export class CognitoConstruct extends Construct {
@@ -129,7 +130,8 @@ export class CognitoConstruct extends Construct {
             implicitCodeGrant: false,
             clientCredentials: false,
           },
-          callbackUrls: [...props.customOauthCallbackURLsList]
+          callbackUrls: [...props.customOauthCallbackURLsList],
+          logoutUrls:   [...props.customOauthLogoutURLsList]
         }
     });
   

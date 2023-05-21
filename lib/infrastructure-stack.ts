@@ -19,6 +19,7 @@ interface InfrastructureStackProps extends StackProps {
     stageName: string;
     devAccountId: string;
     customOauthCallbackURLsList: string[];
+    customOauthLogoutURLsList: string[];
 }
 
 /**
@@ -42,7 +43,8 @@ export class InfrastructureStack extends Stack {
         domainName: props.domainName,
         env: props.env,
         stageName: props.stageName,
-        customOauthCallbackURLsList: [...props.customOauthCallbackURLsList]
+        customOauthCallbackURLsList: [...props.customOauthCallbackURLsList],
+        customOauthLogoutURLsList: [...props.customOauthLogoutURLsList],
     })
 
     const api = new ApiConstruct(this, 'ApiStack', {

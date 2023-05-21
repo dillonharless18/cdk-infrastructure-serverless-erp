@@ -23,7 +23,11 @@ const INFRA_REPO                  = "dillonCF/oneXerp-Infrastructure"
 const LAMBDA_REPO                 = "dillonCF/oneXerp-Lambdas"
 const CUSTOM_OAUTH_CALLBACK_URLS  = {
     development: ['https://dev.onexerp.com'],
-    prod: ['https://dev.onexerp.com']
+    prod: ['https://onexerp.com']
+}
+const CUSTOM_OAUTH_LOGOUT_URLS  = {
+    development: ['https://dev.onexerp.com/logout'],
+    prod: ['https://onexerp.com/logout']
 }
 
 
@@ -45,6 +49,7 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
         region: "us-east-1"
     },
     customOauthCallbackURLsMap: CUSTOM_OAUTH_CALLBACK_URLS,
+    customOauthLogoutURLsMap: CUSTOM_OAUTH_LOGOUT_URLS,
     pipelineSource: CodePipelineSource.connection(INFRA_REPO, 'main', {
         connectionArn: CODESTAR_ARN
     }),

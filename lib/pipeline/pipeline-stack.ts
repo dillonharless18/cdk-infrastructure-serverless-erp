@@ -11,6 +11,7 @@ interface PipelineStackProps extends cdk.StackProps {
     apiName: string;
     applicationName: string;
     customOauthCallbackURLsMap: Record<StageNameOption, string[]>
+    customOauthLogoutURLsMap: Record<StageNameOption, string[]>
     domainName: string;
     source: CodePipelineSource;
     pipelineSource: CodePipelineSource;
@@ -131,7 +132,8 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             crossAccount: false, // TODO look into this
             stageName: this.devStageName,
             devAccountId: envVariables.developmentAccount,
-            customOauthCallbackURLsList: props.customOauthCallbackURLsMap[this.devStageName]
+            customOauthCallbackURLsList: props.customOauthCallbackURLsMap[this.devStageName],
+            customOauthLogoutURLsList: props.customOauthLogoutURLsMap[this.devStageName]
         });
         
         pipeline.addStage(devStage, {
@@ -154,7 +156,8 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             crossAccount: true, // TODO look into this
             stageName: this.prodStageName,
             devAccountId: envVariables.developmentAccount,
-            customOauthCallbackURLsList: props.customOauthCallbackURLsMap[this.prodStageName]
+            customOauthCallbackURLsList: props.customOauthCallbackURLsMap[this.prodStageName],
+            customOauthLogoutURLsList: props.customOauthLogoutURLsMap[this.prodStageName]
         });
         pipeline.addStage(prodStage, {
             pre: [

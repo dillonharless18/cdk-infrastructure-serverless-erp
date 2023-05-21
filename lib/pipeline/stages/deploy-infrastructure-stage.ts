@@ -18,6 +18,7 @@ interface CustomStageProps extends StageProps {
     stageName: string;
     devAccountId: string;
     customOauthCallbackURLsList: string[];
+    customOauthLogoutURLsList: string[];
 }
 
 export class DeployInfrastructureStage extends Stage {
