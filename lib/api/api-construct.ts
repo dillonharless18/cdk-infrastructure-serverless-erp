@@ -1,4 +1,4 @@
-import { CfnOutput } from 'aws-cdk-lib';
+import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
 /* eslint-disable no-new */
 /* eslint-disable import/prefer-default-export */
 
@@ -24,6 +24,8 @@ import { IUserPool, IUserPoolClient } from 'aws-cdk-lib/aws-cognito';
 import { PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
 import * as fs from "fs";
 import path = require('path');
+import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 
 // NOTE These are intentionally lower-case in order to strip and lower case all the roles sent in the metadata to look for the match here
 type APIRoleOptions = 'admin' | 'basicuser' | 'driver' | 'logistics' | 'projectmanager'
@@ -175,6 +177,12 @@ export class ApiConstruct extends Construct {
     ///      Lambdas       ///
     //////////////////////////
 
+    // Create an S3 bucket to store the authorization config - happens after we aggregate lambda endpoint metadata
+    // TODO Revisit this idea. If the total size of the authorizationConfig object won't pass 4K then we could just store it in the environment variables
+    const configBucket = new Bucket(this, 'ConfigBucket', {
+      removalPolicy: RemovalPolicy.DESTROY,
+    });    
+
     // Custom Authorizer Lambda Function
     const customAuthorizerLambda = new lambda.Function(this, 'MigrationLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -186,10 +194,18 @@ export class ApiConstruct extends Construct {
       // role: lambdaRole,
       environment: {
         USER_POOL_ID: props.userPool.userPoolId,
-        APP_CLIENT_ID: props.appClient.userPoolClientId
+        APP_CLIENT_ID: props.appClient.userPoolClientId,
+        CONFIG_BUCKET_NAME: configBucket.bucketName,
       },
       layers: [authorizerLayer]
     });
+
+    // Add a policy to the authorizer function's execution role to allow it to access the S3 bucket
+    const bucketReadPolicy = new PolicyStatement({
+      actions: ['s3:GetObject'],
+      resources: [configBucket.bucketArn + '/*'],
+    });
+    customAuthorizerLambda.addToRolePolicy(bucketReadPolicy);
 
 
     // This environment variable is set by the codebuild project when it pulls in the lambdas repository
@@ -237,6 +253,20 @@ export class ApiConstruct extends Construct {
 
     // Get the metadata for each Lambda function
     const functionMetadata = getFunctionMetadata(functionsPath);
+
+    // Save the authorization config as determined by the functions' metadata files.
+    const authorizationConfigFilePath = './authorizationConfig.json';
+    fs.writeFileSync(authorizationConfigFilePath, JSON.stringify(functionMetadata));
+
+
+    // Upload the config file to the S3 bucket
+    new BucketDeployment(this, 'DeployConfig', {
+      sources: [ Source.asset( path.dirname(authorizationConfigFilePath) ) ],
+      destinationBucket: configBucket,
+      destinationKeyPrefix: 'authorizationConfig', // Optional prefix in destination bucket
+    });
+
+
     
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
