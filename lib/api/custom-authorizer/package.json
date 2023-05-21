@@ -1,0 +1,10 @@
+{
+    "name": "custom-authorizer",
+    "version": "1.0.0",
+    "type": "module",
+    "dependencies": {
+    },
+    "devDependencies": {
+      "jsonwebtoken": "9.0.0"
+    }
+}
