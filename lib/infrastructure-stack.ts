@@ -8,7 +8,6 @@ import { SeedLambdaConstruct } from './database/seed-database-lambda-construct';
 
 interface InfrastructureStackProps extends StackProps {
     applicationName: string;
-    stage: string;
     domainName: string;
     env: {
         account: string;
@@ -19,6 +18,7 @@ interface InfrastructureStackProps extends StackProps {
     crossAccount: boolean;
     stageName: string;
     devAccountId: string;
+    customOauthCallbackURLsList: string[];
 }
 
 /**
@@ -41,7 +41,8 @@ export class InfrastructureStack extends Stack {
         applicationName: props.applicationName,
         domainName: props.domainName,
         env: props.env,
-        stage: props.stage,
+        stageName: props.stageName,
+        customOauthCallbackURLsList: [...props.customOauthCallbackURLsList]
     })
 
     const api = new ApiConstruct(this, 'ApiStack', {
@@ -49,7 +50,7 @@ export class InfrastructureStack extends Stack {
         certficateArn: props.certificateArn,
         domainName: props.domainName,
         env: props.env,
-        stage: props.stage,
+        stageName: props.stageName,
         userPool: cognito.userPool,
         databaseSecurityGroup: database.securityGroup,
         vpc: database.vpc,

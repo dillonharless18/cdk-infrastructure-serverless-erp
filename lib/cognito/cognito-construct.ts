@@ -13,12 +13,13 @@ import path = require('path');
 
 interface CognitoConstructProps {
     applicationName: string;
-    stage: string;
     env: {
         account: string,
         region:  string
     }
     domainName: string;
+    stageName: string;
+    customOauthCallbackURLsList: string[];
 }
 
 export class CognitoConstruct extends Construct {
@@ -29,18 +30,18 @@ export class CognitoConstruct extends Construct {
     super(scope, id);
     
 
-    type stageToSubdomainTypes = {
+    type stageNameToSubdomainTypes = {
         [key: string]: string
     }
 
     // Use to create cognito user pools domain names
-    const STAGE_TO_AUTH_PREFIX: stageToSubdomainTypes = {
+    const STAGE_NAME_TO_AUTH_PREFIX: stageNameToSubdomainTypes = {
         development: `dev-${props.applicationName.toLowerCase()}`,
         test:        `test-${props.applicationName.toLowerCase()}`,
         prod:        `${props.applicationName.toLowerCase()}`
     }
 
-    const { stage, domainName } = props
+    const { stageName, domainName } = props
 
     if ( !domainName ) throw new Error(`Error in cognito stack. domainName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
 
@@ -120,15 +121,23 @@ export class CognitoConstruct extends Construct {
         generateSecret: false, // Disable generation of client secret
         authFlows: { // Enable username/password-based authentication
           userPassword: true,
-          userSrp: true
+          userSrp: true,
         },
+        oAuth: {
+          flows: {
+            authorizationCodeGrant: true,
+            implicitCodeGrant: false,
+            clientCredentials: false,
+          },
+          callbackUrls: [...props.customOauthCallbackURLsList]
+        }
     });
   
     // Define a domain for the user pool (e.g., my-domain.auth.us-west-2.amazoncognito.com)
     const userPoolDomain = new cognito.UserPoolDomain(this, 'UserPoolDomain', {
         userPool,
         cognitoDomain: {
-            domainPrefix: `${STAGE_TO_AUTH_PREFIX[stage]}`,
+            domainPrefix: `${STAGE_NAME_TO_AUTH_PREFIX[stageName]}`,
         },
     });
   

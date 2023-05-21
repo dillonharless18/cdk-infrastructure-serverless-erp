@@ -5,9 +5,12 @@ import { Construct } from 'constructs';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { DeployInfrastructureStage } from './stages/deploy-infrastructure-stage';
 
+type StageNameOption = 'development' | 'prod'
+
 interface PipelineStackProps extends cdk.StackProps {
     apiName: string;
     applicationName: string;
+    customOauthCallbackURLsMap: Record<StageNameOption, string[]>
     domainName: string;
     source: CodePipelineSource;
     pipelineSource: CodePipelineSource;
@@ -21,14 +24,17 @@ interface Environment {
 }
 
 export class InfrastructurePipelineStack extends cdk.Stack {
-    private readonly devStageName: string = 'development';
-    private readonly prodStageName: string = 'production';
+    private readonly devStageName: StageNameOption  = 'development';
+    private readonly prodStageName: StageNameOption = 'prod';
 
     constructor(scope: Construct, id: string, envVariables: Environment, props: PipelineStackProps) {
         super(scope, id, props);
 
         if ( !props ) throw Error ("props is not defined")
         if ( !props.apiName ) throw Error ("apiName is not defined")
+        if ( !props.customOauthCallbackURLsMap ) throw Error ("customOauthCallbackURLsMap is not defined")
+        if ( !props.customOauthCallbackURLsMap.development ) throw Error ("customOauthCallbackURLsMap.development is not defined")
+        if ( !props.customOauthCallbackURLsMap.prod ) throw Error ("customOauthCallbackURLsMap.prod is not defined")
         if ( !props.env) throw Error("props.env is not defined")
         if ( !props.env.account ) throw Error("account is not defined.")
         if ( !props.env.region ) throw Error("region is not defined.")
@@ -119,13 +125,13 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                 region: this.region
             },
             applicationName: props.applicationName,
-            stage: 'development',
             domainName: props.domainName,
             apiName: props.apiName,
             certificateArn: "arn:aws:acm:us-east-1:136559125535:certificate/dfd3aaa6-d14e-4ac9-b33a-fcbe51f54989",
             crossAccount: false, // TODO look into this
             stageName: this.devStageName,
             devAccountId: envVariables.developmentAccount,
+            customOauthCallbackURLsList: props.customOauthCallbackURLsMap[this.devStageName]
         });
         
         pipeline.addStage(devStage, {
@@ -142,13 +148,13 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                 region: this.region
             },
             applicationName: props.applicationName,
-            stage: 'prod',
             domainName: props.domainName,
             apiName: props.apiName,
             certificateArn: "arn:aws:acm:us-east-1:743614460397:certificate/57206c73-27f6-4fee-bf04-3297fa3a0703",
             crossAccount: true, // TODO look into this
             stageName: this.prodStageName,
             devAccountId: envVariables.developmentAccount,
+            customOauthCallbackURLsList: props.customOauthCallbackURLsMap[this.prodStageName]
         });
         pipeline.addStage(prodStage, {
             pre: [

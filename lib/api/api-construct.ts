@@ -34,7 +34,7 @@ interface ApiConstructProps {
     }
     domainName: string;
     databaseSecurityGroup: ISecurityGroup;
-    stage: string;
+    stageName: string;
     userPool: IUserPool;
     vpc: IVpc,
     dbCredentialsSecretName: CfnOutput, 
@@ -53,32 +53,31 @@ export class ApiConstruct extends Construct {
     }
 
     // Use to create api names
-    const STAGE_WITH_HYPHEN_MAP: stageToSubdomainTypes = {
+    const STAGE_NAME_WITH_HYPHEN_MAP: stageToSubdomainTypes = {
         development: 'development-',
         test:        'test-',
         prod:        ''
     }
 
     // Use to create subdomains programmatically like dev.example.com, test.example.com, example.com
-    const STAGE_TO_SUBDOMAIN_MAP: stageToSubdomainTypes = {
+    const STAGE_NAME_TO_SUBDOMAIN_MAP: stageToSubdomainTypes = {
         development: 'dev.',
         test:        'test.',
         prod:        ''
     }
 
     // Use to create subdomains programmatically like dev.example.com, test.example.com, example.com
-    const STAGE_TO_API_STAGE_MAP: stageToSubdomainTypes = {
+    const STAGE_NAME_TO_API_STAGE_MAP: stageToSubdomainTypes = {
         development: 'dev',
         test:        'test',
         prod:        'prod'
     }
 
-    const { apiName, stage, certficateArn, domainName } = props
+    const { apiName, stageName, certficateArn, domainName } = props
 
     if ( !domainName ) throw new Error(`Error in API stack. domainName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
-    const DOMAIN_NAME = domainName;
     
-    if ( !stage ) throw new Error(`Error in API stack. stage does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
+    if ( !stageName ) throw new Error(`Error in API stack. stageName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     
     if ( !certficateArn ) throw new Error(`Error in API stack. certificateArn does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
     
@@ -91,13 +90,13 @@ export class ApiConstruct extends Construct {
     /////      API       /////
     //////////////////////////
 
-    const subdomain = `${STAGE_TO_SUBDOMAIN_MAP[stage]}${domainName}`
+    const subdomain = `${STAGE_NAME_TO_SUBDOMAIN_MAP[stageName]}${domainName}`
 
     // API Subdomain
     const apiSubdomain = `api.${subdomain}`
 
     // Create the API Gateway REST API
-    let restApiName = `${STAGE_WITH_HYPHEN_MAP[stage]}${apiName}`
+    let restApiName = `${STAGE_NAME_WITH_HYPHEN_MAP[stageName]}${apiName}`
     const api = new apigateway.RestApi(this, restApiName, {
       restApiName: restApiName,
       defaultCorsPreflightOptions: {
@@ -106,7 +105,7 @@ export class ApiConstruct extends Construct {
         allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'X-Amz-User-Agent'],
       },
       deployOptions: {
-        stageName: STAGE_TO_API_STAGE_MAP[stage]
+        stageName: STAGE_NAME_TO_API_STAGE_MAP[stageName]
       }
     });
     
@@ -124,7 +123,7 @@ export class ApiConstruct extends Construct {
 
     // Pull in the hosted zone
     const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
-        domainName: `${STAGE_TO_SUBDOMAIN_MAP[stage]}${domainName}`,
+        domainName: `${STAGE_NAME_TO_SUBDOMAIN_MAP[stageName]}${domainName}`,
     });
   
     // Look up the certficate
