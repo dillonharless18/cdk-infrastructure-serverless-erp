@@ -8,16 +8,27 @@ import { InfrastructurePipelineStack } from '../lib/pipeline/pipeline-stack';
 
 require('dotenv').config({path:__dirname+'/./../../.env'})
 
+// TODO We have a somewhat inconsistent use of 'prod' and 'production'
+
 const app = new cdk.App();
 
-const APPLICATION_NAME    = "oneXerp"
-const API_NAME            = "oneXerpAPI"
-const CODESTAR_ARN        = "arn:aws:codestar-connections:us-east-1:136559125535:connection/c59440ca-db21-4051-b54a-810bbc89464f"
-const DOMAIN_NAME         = "onexerp.com"
-const PIPELINE_NAME       = "InfrastructurePipeline"
-const PIPELINE_STACK_NAME = "InfrastructurePipelineStack"
-const INFRA_REPO          = "dillonCF/oneXerp-Infrastructure"
-const LAMBDA_REPO         = "dillonCF/oneXerp-Lambdas"
+
+const APPLICATION_NAME            = "oneXerp"
+const API_NAME                    = "oneXerpAPI"
+const CODESTAR_ARN                = "arn:aws:codestar-connections:us-east-1:136559125535:connection/c59440ca-db21-4051-b54a-810bbc89464f"
+const DOMAIN_NAME                 = "onexerp.com"
+const PIPELINE_NAME               = "InfrastructurePipeline"
+const PIPELINE_STACK_NAME         = "InfrastructurePipelineStack"
+const INFRA_REPO                  = "dillonCF/oneXerp-Infrastructure"
+const LAMBDA_REPO                 = "dillonCF/oneXerp-Lambdas"
+const CUSTOM_OAUTH_CALLBACK_URLS  = {
+    development: ['https://dev.onexerp.com'],
+    prod: ['https://onexerp.com']
+}
+const CUSTOM_OAUTH_LOGOUT_URLS  = {
+    development: ['https://dev.onexerp.com/logout'],
+    prod: ['https://onexerp.com/logout']
+}
 
 
 
@@ -37,6 +48,8 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
         account: "136559125535",
         region: "us-east-1"
     },
+    customOauthCallbackURLsMap: CUSTOM_OAUTH_CALLBACK_URLS,
+    customOauthLogoutURLsMap: CUSTOM_OAUTH_LOGOUT_URLS,
     pipelineSource: CodePipelineSource.connection(INFRA_REPO, 'main', {
         connectionArn: CODESTAR_ARN
     }),

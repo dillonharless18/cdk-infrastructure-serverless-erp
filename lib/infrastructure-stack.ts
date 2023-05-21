@@ -8,7 +8,6 @@ import { SeedLambdaConstruct } from './database/seed-database-lambda-construct';
 
 interface InfrastructureStackProps extends StackProps {
     applicationName: string;
-    stage: string;
     domainName: string;
     env: {
         account: string;
@@ -19,6 +18,8 @@ interface InfrastructureStackProps extends StackProps {
     crossAccount: boolean;
     stageName: string;
     devAccountId: string;
+    customOauthCallbackURLsList: string[];
+    customOauthLogoutURLsList: string[];
 }
 
 /**
@@ -41,7 +42,9 @@ export class InfrastructureStack extends Stack {
         applicationName: props.applicationName,
         domainName: props.domainName,
         env: props.env,
-        stage: props.stage,
+        stageName: props.stageName,
+        customOauthCallbackURLsList: [...props.customOauthCallbackURLsList],
+        customOauthLogoutURLsList: [...props.customOauthLogoutURLsList],
     })
 
     const api = new ApiConstruct(this, 'ApiStack', {
@@ -49,13 +52,21 @@ export class InfrastructureStack extends Stack {
         certficateArn: props.certificateArn,
         domainName: props.domainName,
         env: props.env,
-        stage: props.stage,
+        stageName: props.stageName,
         userPool: cognito.userPool,
+        appClient: cognito.appClient,
         databaseSecurityGroup: database.securityGroup,
         vpc: database.vpc,
         dbCredentialsSecretName: database.secretName, 
         dbCredentialsSecretArn: database.secretArn, 
-        defaultDBName: database.defaultDatabaseName
+        defaultDBName: database.defaultDatabaseName,
+        APIRoles: {
+          admin: cognito.adminRole,
+          driver: cognito.driverRole,
+          basicuser: cognito.basicUserRole,
+          logistics: cognito.logisticsRole,
+          projectmanager: cognito.projectManagerRole
+        },        
     });
 
     const migrationsLambda = new MigrationsLambdaConstruct(

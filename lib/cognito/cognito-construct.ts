@@ -13,34 +13,42 @@ import path = require('path');
 
 interface CognitoConstructProps {
     applicationName: string;
-    stage: string;
     env: {
         account: string,
         region:  string
     }
     domainName: string;
+    stageName: string;
+    customOauthCallbackURLsList: string[];
+    customOauthLogoutURLsList: string[];
 }
 
 export class CognitoConstruct extends Construct {
     
+  public readonly adminRole: iam.Role;
+  public readonly basicUserRole: iam.Role;
+  public readonly driverRole: iam.Role;
+  public readonly logisticsRole: iam.Role;
+  public readonly projectManagerRole: iam.Role;
   public readonly userPool: cognito.IUserPool;
+  public readonly appClient: cognito.IUserPoolClient;
 
   constructor(scope: Construct, id: string, props: CognitoConstructProps) {
     super(scope, id);
     
 
-    type stageToSubdomainTypes = {
+    type stageNameToSubdomainTypes = {
         [key: string]: string
     }
 
     // Use to create cognito user pools domain names
-    const STAGE_TO_AUTH_PREFIX: stageToSubdomainTypes = {
+    const STAGE_NAME_TO_AUTH_PREFIX: stageNameToSubdomainTypes = {
         development: `dev-${props.applicationName.toLowerCase()}`,
         test:        `test-${props.applicationName.toLowerCase()}`,
         prod:        `${props.applicationName.toLowerCase()}`
     }
 
-    const { stage, domainName } = props
+    const { stageName, domainName } = props
 
     if ( !domainName ) throw new Error(`Error in cognito stack. domainName does not exist on \n Props: ${JSON.stringify(props, null , 2)}`);
 
@@ -64,7 +72,7 @@ export class CognitoConstruct extends Construct {
         return role;
     }
       
-    
+    // TODO Maybe in the api construct actually update these roles to only be able to access the specific api endpoints as well
     const adminRolePolicy = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'iam', 'roles', 'admin.json'), 'utf-8'));
     const basicUserRolePolicy = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'iam', 'roles', 'basic_user.json'), 'utf-8'));
     const logisticsRolePolicy = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'iam', 'roles', 'logistics.json'), 'utf-8'));
@@ -79,13 +87,18 @@ export class CognitoConstruct extends Construct {
     const driverPolicyDocument = iam.PolicyDocument.fromJson(driverRolePolicy);
 
 
-    // Create the roles using the createRole function
-    const adminRole = createRole(this, 'admin_role', 'admin_role', adminPolicyDocument);
-    const basicUserRole = createRole(this, 'basic_user_role', 'basic_user_role', basicUserPolicyDocument);
-    const logisticsRole = createRole(this, 'logistics_role', 'logistics_role', logisticsPolicyDocument);
-    const projectManagerRole = createRole(this, 'project_manager_role', 'project_manager_role', projectManagerPolicyDocument);
-    const driverRole = createRole(this, 'driver_role', 'driver_role', driverPolicyDocument);
+    // Create the roles using the createRole function - NOTE these are intentionally lower case
+    const adminRole = createRole(this, 'admin', 'admin', adminPolicyDocument);
+    const basicUserRole = createRole(this, 'basicuser', 'basicuser', basicUserPolicyDocument);
+    const logisticsRole = createRole(this, 'logistics', 'logistics', logisticsPolicyDocument);
+    const projectManagerRole = createRole(this, 'projectmanager', 'projectmanager', projectManagerPolicyDocument);
+    const driverRole = createRole(this, 'driver', 'driver', driverPolicyDocument);
 
+    this.adminRole = adminRole;
+    this.basicUserRole = basicUserRole;
+    this.logisticsRole = logisticsRole;
+    this.projectManagerRole = projectManagerRole;
+    this.driverRole = driverRole;
 
 
     //////////////////////////
@@ -120,15 +133,24 @@ export class CognitoConstruct extends Construct {
         generateSecret: false, // Disable generation of client secret
         authFlows: { // Enable username/password-based authentication
           userPassword: true,
-          userSrp: true
+          userSrp: true,
         },
+        oAuth: {
+          flows: {
+            authorizationCodeGrant: true,
+            implicitCodeGrant: false,
+            clientCredentials: false,
+          },
+          callbackUrls: [...props.customOauthCallbackURLsList],
+          logoutUrls:   [...props.customOauthLogoutURLsList]
+        }
     });
   
     // Define a domain for the user pool (e.g., my-domain.auth.us-west-2.amazoncognito.com)
     const userPoolDomain = new cognito.UserPoolDomain(this, 'UserPoolDomain', {
         userPool,
         cognitoDomain: {
-            domainPrefix: `${STAGE_TO_AUTH_PREFIX[stage]}`,
+            domainPrefix: `${STAGE_NAME_TO_AUTH_PREFIX[stageName]}`,
         },
     });
   
@@ -169,9 +191,18 @@ export class CognitoConstruct extends Construct {
     });
 
     
-    // TODO Add an identity pool. Use the users pool as an IdP and enable RBAC.
+    // Identity pool
+    const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
+      allowUnauthenticatedIdentities: false, // Don't allow unauthenticated users
+      cognitoIdentityProviders: [{
+          clientId: userPoolClient.userPoolClientId,
+          providerName: userPool.userPoolProviderName,
+      }],
+    });
 
-    this.userPool = userPool;
+
+    this.userPool  = userPool;
+    this.appClient = userPoolClient;
 
   }
 }

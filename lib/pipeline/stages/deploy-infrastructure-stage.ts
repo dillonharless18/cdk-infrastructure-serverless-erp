@@ -7,7 +7,6 @@ import { InfrastructureStack } from '../../infrastructure-stack';
 
 interface CustomStageProps extends StageProps {
     applicationName: string;
-    stage: string;
     domainName: string;
     env: {
         account: string;
@@ -18,6 +17,8 @@ interface CustomStageProps extends StageProps {
     crossAccount: boolean;
     stageName: string;
     devAccountId: string;
+    customOauthCallbackURLsList: string[];
+    customOauthLogoutURLsList: string[];
 }
 
 export class DeployInfrastructureStage extends Stage {
