@@ -20,10 +20,13 @@ import {
   SecurityGroup, 
   SubnetType 
 } from 'aws-cdk-lib/aws-ec2';
-import { IUserPool } from 'aws-cdk-lib/aws-cognito';
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { IUserPool, IUserPoolClient } from 'aws-cdk-lib/aws-cognito';
+import { PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
 import * as fs from "fs";
 import path = require('path');
+
+// NOTE These are intentionally lower-case in order to strip and lower case all the roles sent in the metadata to look for the match here
+type APIRoleOptions = 'admin' | 'basicuser' | 'driver' | 'logistics' | 'projectmanager'
 
 interface ApiConstructProps {
     apiName: string,
@@ -36,14 +39,18 @@ interface ApiConstructProps {
     databaseSecurityGroup: ISecurityGroup;
     stageName: string;
     userPool: IUserPool;
+    appClient: IUserPoolClient;
     vpc: IVpc,
     dbCredentialsSecretName: CfnOutput, 
     dbCredentialsSecretArn: CfnOutput, 
-    defaultDBName: string, 
+    defaultDBName: string,
+    APIRoles: Record<APIRoleOptions, Role>
 }
 
+
 export class ApiConstruct extends Construct {
-  public readonly databaseLambdaLayer: lambda.LayerVersion
+  public readonly databaseLambdaLayer:   lambda.LayerVersion
+  public readonly authorizerLambdaLayer: lambda.LayerVersion
 
   constructor(scope: Construct, id: string, props: ApiConstructProps) {
     super(scope, id);
@@ -87,6 +94,30 @@ export class ApiConstruct extends Construct {
     // const databaseVPCId = Fn.importValue(`DatabaseVPCArn`);
 
     //////////////////////////
+    //    Lambda Layers     //
+    //////////////////////////
+    const databaseLayer = new lambda.LayerVersion(this, 'DatabaseLayer', {
+      code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/lambda-layers/database-layer`),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
+      description: 'Exposes packages for db operations: knex, pg, and uuid.',
+    });
+
+    this.databaseLambdaLayer = databaseLayer
+
+    const authorizerLayer = new lambda.LayerVersion(this, 'DatabaseLayer', {
+      code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/lambda-layers/authorizer-layer`),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
+      description: 'Exposes packages for authorization operations: aws-jwt-verify.',
+    });
+
+    this.authorizerLambdaLayer = authorizerLayer
+
+
+    //////////////////////////
+    //    End Lambda Layers //
+    //////////////////////////
+
+    //////////////////////////
     /////      API       /////
     //////////////////////////
 
@@ -107,18 +138,6 @@ export class ApiConstruct extends Construct {
       deployOptions: {
         stageName: STAGE_NAME_TO_API_STAGE_MAP[stageName]
       }
-    });
-    
-
-    // Add Cognito Authorizer to the API Gateway
-    // const userPoolArn = Fn.importValue('UserPoolArn');
-    const authorizer = new apigateway.CfnAuthorizer(this, 'CognitoAuthorizer', {
-      name: 'CognitoAuthorizer',
-      type: 'COGNITO_USER_POOLS',
-      identitySource: 'method.request.header.Authorization',
-      // providerArns: [userPoolArn],
-      providerArns: [props.userPool.userPoolArn],
-      restApiId: api.restApiId,
     });
 
     // Pull in the hosted zone
@@ -152,25 +171,26 @@ export class ApiConstruct extends Construct {
     /////    End API     /////
     //////////////////////////
 
-
-    //////////////////////////
-    //    Lambda Layers     //
-    //////////////////////////
-    const databaseLayer = new lambda.LayerVersion(this, 'DatabaseLayer', {
-      code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/lambda-layers/database-layer`),
-      compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
-      description: 'Exposes packages for db operations: knex, pg, and uuid. TODO is to expose the reusable connection function itself.',
-    });
-
-    this.databaseLambdaLayer = databaseLayer
-    //////////////////////////
-    //    End Lambda Layers //
-    //////////////////////////
-
-
     //////////////////////////
     ///      Lambdas       ///
     //////////////////////////
+
+    // Custom Authorizer Lambda Function
+    const customAuthorizerLambda = new lambda.Function(this, 'MigrationLambda', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      functionName: 'lambdaAuthorizer',
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, 'lambda')),
+      timeout: Duration.seconds(30),
+      // securityGroups: [securityGroup],
+      // role: lambdaRole,
+      environment: {
+        USER_POOL_ID: props.userPool.userPoolId,
+        APP_CLIENT_ID: props.appClient.userPoolClientId
+      },
+      layers: [authorizerLayer]
+    });
+
 
     // This environment variable is set by the codebuild project when it pulls in the lambdas repository
     // The symlink ('../lambdas') wasn't working properly for some reason, so just using the env variable
@@ -185,33 +205,11 @@ export class ApiConstruct extends Construct {
     console.log(contents);
 
     // Set the path to the Lambda functions directory
-    // const lambdasPath = path.resolve(__dirname, '../lambdas/endpoints');
     const lambdasPath = path.join(lambdasPathFromEnv, '/endpoints')
     const testLambdasPath = path.resolve(__dirname, '../../test_lambdas/endpoints');
     const functionsPath = fs.existsSync(lambdasPath) ? lambdasPath : testLambdasPath;
 
-    // If there are no lambda functions present in the endpoints folder of the Lambdas repository, we'll get this error: The REST API doesn't contain any methods
-    // So we'll check if it's empty and if so, revert back to the testLambdasPath. We also revert if the lambdasPath was undefined
-    // const functionsPath = ( fs.existsSync(lambdasPath) && fs.readdirSync(lambdasPath).length < 1 )
-    //                       ? lambdasPath 
-    //                       : testLambdasPath;
-
-  
-
     console.log(`functionsPath: ${functionsPath}`)
-
-    
-
-    
-
-
-    // Getting the vpcId that was stored in SSM during databaseStack synth - fromLookup doesn't work with a CfnOutput
-    // const vpcId = StringParameter.valueFromLookup(this, 'DatabaseVPCId');
-    
-    // Pull in the databaseVPC
-    // const databaseVpc = Vpc.fromLookup(this, 'ImportedDatabaseVPC', {
-    //   vpcId: vpcId,
-    // });
 
     // Lambda security group
     const lambdaEndpointsSecurityGroup = new SecurityGroup(this, 'LambdaEndpointsSecurityGroup', {
@@ -228,6 +226,13 @@ export class ApiConstruct extends Construct {
     lambdaEndpointsSecurityGroup.connections.allowTo(databaseSecurityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the database');
 
 
+    
+    // Create the custom authorizer on the API GW and link it to the Lambda
+    const customAuthorizer = new apigateway.RequestAuthorizer(this, 'CustomAuthorizer', {
+      handler: customAuthorizerLambda,
+      identitySources: [apigateway.IdentitySource.header('Authorization')],
+      resultsCacheTtl: Duration.minutes(3),
+    });
 
 
     // Get the metadata for each Lambda function
@@ -273,65 +278,20 @@ export class ApiConstruct extends Construct {
 
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
       const nestedResource = createNestedResource(apiV1, metadata.apiPath);
-      nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
-        // TODO remove this or add it back based on how we authenticate
-        // authorizationType: apigateway.AuthorizationType.COGNITO,
-        // authorizer: {
-        //   authorizerId: authorizer.ref,
-        // },
-        // authorizationScopes: metadata.allowedGroups.map((group: string) => `cognito-idp:${group}`),
-        authorizationType: apigateway.AuthorizationType.NONE
-      });
+
+      // TODO - Change this to authorize all endpoints, just added for testing for now.
+      if ( metadata.apiPath === 'test-auth' ) {
+        nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
+          authorizationType: apigateway.AuthorizationType.CUSTOM,
+          authorizer: customAuthorizer
+        });  
+      } else {
+        nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
+          authorizationType: apigateway.AuthorizationType.NONE,
+        });
+      }
     });
 
-
-
-
-    // TODO - Custom Authorizer
-
-    // Create the custom authorizer Lambda function
-    // const customAuthorizerFunction = new lambda.Function(this, 'CustomAuthorizerFunction', {
-    //   runtime: lambda.Runtime.NODEJS_14_X,
-    //   code: lambda.Code.fromAsset('path/to/custom-authorizer/folder'),
-    //   handler: 'custom-authorizer.handler',
-    // });
-
-    // // Add the custom authorizer to your API Gateway
-    // const customAuthorizerFunction = new lambda.Function(this, 'CustomAuthorizerFunction', {
-    //   runtime: lambda.Runtime.NODEJS_14_X,
-    //   handler: 'index.handler',
-    //   code: lambda.Code.fromAsset('path/to/custom-authorizer'),
-    //   environment: {
-    //     METADATA_BUCKET_NAME: metadataBucket.bucketName,
-    //   },
-    // });
-
-    // This code should be added to the resource to make them use the custom authorizer
-    // const apiResource = api.root.addResource('endpoint-1');
-    // const protectedRoute = apiResource.addMethod('GET', yourLambdaIntegration, {
-    //   authorizationType: apigw.AuthorizationType.CUSTOM,
-    //   authorizer: customAuthorizer,
-    // });
-
-    // Grant the custom authorizer Lambda function permission to read objects from the S3 bucket
-    // const metadataBucket = s3.Bucket.fromBucketName(this, 'MetadataBucket', 'your-metadata-bucket-name');
-    // metadataBucket.grantRead(customAuthorizerFunction);
-
-
-    // S3 metadata bucket
-    // const metadataBucket = new s3.Bucket(this, 'MetadataBucket', {
-    //   removalPolicy: cdk.RemovalPolicy.DESTROY,
-    //   autoDeleteObjects: true,
-    //   versioned: false,
-    //   blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-    // });
-
-    // TODO - update this to upload the metadata to the appropriate key (probably as the api path)
-    // new s3deploy.BucketDeployment(this, 'DeployMetadata', {
-    //   sources: [s3deploy.Source.asset('./metadata')],
-    //   destinationBucket: metadataBucket,
-    // });
-    // metadataBucket.grantRead(customAuthorizerFunction);
 
     ///////////////////////////
     ///     End Lambdas     ///

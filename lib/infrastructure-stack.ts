@@ -54,11 +54,19 @@ export class InfrastructureStack extends Stack {
         env: props.env,
         stageName: props.stageName,
         userPool: cognito.userPool,
+        appClient: cognito.appClient,
         databaseSecurityGroup: database.securityGroup,
         vpc: database.vpc,
         dbCredentialsSecretName: database.secretName, 
         dbCredentialsSecretArn: database.secretArn, 
-        defaultDBName: database.defaultDatabaseName
+        defaultDBName: database.defaultDatabaseName,
+        APIRoles: {
+          admin: cognito.adminRole,
+          driver: cognito.driverRole,
+          basicuser: cognito.basicUserRole,
+          logistics: cognito.logisticsRole,
+          projectmanager: cognito.projectManagerRole
+        },        
     });
 
     const migrationsLambda = new MigrationsLambdaConstruct(
