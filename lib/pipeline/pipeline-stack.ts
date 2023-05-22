@@ -10,8 +10,8 @@ type StageNameOption = 'development' | 'prod'
 interface PipelineStackProps extends cdk.StackProps {
     apiName: string;
     applicationName: string;
-    customOauthCallbackURLsMap: Record<StageNameOption, string[]>
-    customOauthLogoutURLsMap: Record<StageNameOption, string[]>
+    customOauthCallbackURLsMap?: Record<StageNameOption, string[]>
+    customOauthLogoutURLsMap?: Record<StageNameOption, string[]>
     domainName: string;
     source: CodePipelineSource;
     pipelineSource: CodePipelineSource;
@@ -36,6 +36,9 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         if ( !props.customOauthCallbackURLsMap ) throw Error ("customOauthCallbackURLsMap is not defined")
         if ( !props.customOauthCallbackURLsMap.development ) throw Error ("customOauthCallbackURLsMap.development is not defined")
         if ( !props.customOauthCallbackURLsMap.prod ) throw Error ("customOauthCallbackURLsMap.prod is not defined")
+        if ( !props.customOauthLogoutURLsMap ) throw Error ("customOauthLogoutURLsMap is not defined")
+        if ( !props.customOauthLogoutURLsMap.development ) throw Error ("customOauthLogoutURLsMap.development is not defined")
+        if ( !props.customOauthLogoutURLsMap.prod ) throw Error ("customOauthLogoutURLsMap.prod is not defined")
         if ( !props.env) throw Error("props.env is not defined")
         if ( !props.env.account ) throw Error("account is not defined.")
         if ( !props.env.region ) throw Error("region is not defined.")
