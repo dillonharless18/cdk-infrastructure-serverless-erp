@@ -265,8 +265,8 @@ export class ApiConstruct extends Construct {
         exclude: ['cdk.out', 'node_modules', '.git']
       } ) ],
       destinationBucket: configBucket,
-      destinationKeyPrefix: 'authorizationConfig', // Optional prefix in destination bucket
-      exclude: ['cdk.out', 'node_modules', '.git']
+      destinationKeyPrefix: 'authorizationConfig',
+      exclude: ['cdk.out', 'node_modules', '.git'] // https://github.com/aws/aws-cdk/issues/3899 - The main solution here didn't solve our issue, but doing this did.
     });
 
 
