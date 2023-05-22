@@ -106,7 +106,7 @@ export class ApiConstruct extends Construct {
 
     this.databaseLambdaLayer = databaseLayer
 
-    const authorizerLayer = new lambda.LayerVersion(this, 'DatabaseLayer', {
+    const authorizerLayer = new lambda.LayerVersion(this, 'AuthorizerLayer', {
       code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/lambda-layers/authorizer-layer`),
       compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
       description: 'Exposes packages for authorization operations: aws-jwt-verify.',
