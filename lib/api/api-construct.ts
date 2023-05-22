@@ -260,12 +260,14 @@ export class ApiConstruct extends Construct {
 
 
     // Upload the config file to the S3 bucket
-    // new BucketDeployment(this, 'DeployConfig', {
-    //   sources: [ Source.asset( path.dirname(authorizationConfigFilePath) ) ],
-    //   destinationBucket: configBucket,
-    //   destinationKeyPrefix: 'authorizationConfig', // Optional prefix in destination bucket
-    //   exclude: ['cdk.out', 'node_modules', '.git']
-    // });
+    new BucketDeployment(this, 'DeployConfig', {
+      sources: [ Source.asset( path.dirname(authorizationConfigFilePath), {
+        exclude: ['cdk.out', 'node_modules', '.git']
+      } ) ],
+      destinationBucket: configBucket,
+      destinationKeyPrefix: 'authorizationConfig', // Optional prefix in destination bucket
+      exclude: ['cdk.out', 'node_modules', '.git']
+    });
 
 
     
