@@ -184,7 +184,7 @@ export class ApiConstruct extends Construct {
     });    
 
     // Custom Authorizer Lambda Function
-    const customAuthorizerLambda = new lambda.Function(this, 'MigrationLambda', {
+    const customAuthorizerLambda = new lambda.Function(this, 'AuthorizerLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
       functionName: 'lambdaAuthorizer',
       handler: 'index.handler',
