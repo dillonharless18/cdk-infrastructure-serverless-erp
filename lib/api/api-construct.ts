@@ -188,7 +188,7 @@ export class ApiConstruct extends Construct {
       runtime: lambda.Runtime.NODEJS_18_X,
       functionName: 'lambdaAuthorizer',
       handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, 'lambda')),
+      code: lambda.Code.fromAsset(path.join(__dirname, 'custom-authorizer')),
       timeout: Duration.seconds(30),
       // securityGroups: [securityGroup],
       // role: lambdaRole,

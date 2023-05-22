@@ -10,7 +10,7 @@
     "test": "jest",
     "cdk": "cdk",
     "format": "standard --fix",
-    "migration:make": "node node_modules/.bin/knex migrate:make --migrations-directory lib/lambda/migrations -x ts"
+    "migration:make": "node node_modules/.bin/knex migrate:make --migrations-directory lib/database/migrations-lambda/migrations -x ts"
   },
   "devDependencies": {
     "@types/jest": "^29.2.3",
