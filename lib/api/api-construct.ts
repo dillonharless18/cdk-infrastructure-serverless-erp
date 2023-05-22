@@ -247,7 +247,7 @@ export class ApiConstruct extends Construct {
     const customAuthorizer = new apigateway.RequestAuthorizer(this, 'CustomAuthorizer', {
       handler: customAuthorizerLambda,
       identitySources: [apigateway.IdentitySource.header('Authorization')],
-      resultsCacheTtl: Duration.minutes(3),
+      resultsCacheTtl: Duration.minutes(0),
     });
 
 
