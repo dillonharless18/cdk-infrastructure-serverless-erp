@@ -57,7 +57,7 @@ export class SeedLambdaConstruct extends Construct {
       runtime: lambda.Runtime.NODEJS_18_X,
       functionName: this.lambdaFunctionName,
       handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, 'seed')),
+      code: lambda.Code.fromAsset(path.join(__dirname, 'seed-lambda')),
       timeout: Duration.minutes(10),
       vpc: vpc,
       securityGroups: [securityGroup],
