@@ -57,7 +57,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                 commands: [
                     "npm ci",
                     "npm run build",
-                    "cd lib/database/lambda",
+                    "cd lib/database/migrations-lambda",
                     "npm ci --production",
                     "cd -",
                     "cd $CODEBUILD_SRC_DIR_dillonCF_oneXerp_Lambdas_Source",
