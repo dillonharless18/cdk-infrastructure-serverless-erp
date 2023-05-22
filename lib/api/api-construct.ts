@@ -109,7 +109,7 @@ export class ApiConstruct extends Construct {
     const authorizerLayer = new lambda.LayerVersion(this, 'AuthorizerLayer', {
       code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/lambda-layers/authorizer-layer`),
       compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
-      description: 'Exposes packages for authorization operations: aws-jwt-verify.',
+      description: 'Exposes packages for authorization operations: aws-jwt-verify.'
     });
 
     this.authorizerLambdaLayer = authorizerLayer
@@ -188,7 +188,7 @@ export class ApiConstruct extends Construct {
       runtime: lambda.Runtime.NODEJS_18_X,
       functionName: 'lambdaAuthorizer',
       handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, 'custom-authorizer')),
+      code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/api/custom-authorizer`),
       timeout: Duration.seconds(30),
       // securityGroups: [securityGroup],
       // role: lambdaRole,
