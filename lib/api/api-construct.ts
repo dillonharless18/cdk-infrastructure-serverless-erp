@@ -264,6 +264,7 @@ export class ApiConstruct extends Construct {
       sources: [ Source.asset( path.dirname(authorizationConfigFilePath) ) ],
       destinationBucket: configBucket,
       destinationKeyPrefix: 'authorizationConfig', // Optional prefix in destination bucket
+      exclude: ['cdk.out']
     });
 
 
