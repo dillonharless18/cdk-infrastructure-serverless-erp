@@ -312,20 +312,31 @@ export class ApiConstruct extends Construct {
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
       const nestedResource = createNestedResource(apiV1, metadata.apiPath);
 
+
+      // Create the proper request parameters object to work with API Gateway mapping templates
+      const mappingTemplateParameters = metadata.requestParameters 
+                                ? { ...metadata.requestParameters }
+                                : null
+      const updatedMappingTemplateParameters = Object.keys(mappingTemplateParameters).reduce((updatedParams, key) => {
+        const updatedKey = `method.request.querystring.${key}`;
+        updatedParams[updatedKey] = mappingTemplateParameters[key];
+        return updatedParams;
+      }, {} as { [key: string]: boolean });
+
       // TODO - Change this to authorize all endpoints, just added for testing for now.
       if ( metadata.apiPath === 'test-auth' ) {
         nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
           authorizationType: apigateway.AuthorizationType.CUSTOM,
           authorizer: customAuthorizer,
-          requestParameters: metadata.requestParameters
-                             ? { ...metadata.requestParameters }
+          requestParameters: updatedMappingTemplateParameters
+                             ? { ...updatedMappingTemplateParameters }
                              : undefined
         });  
       } else {
         nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
           authorizationType: apigateway.AuthorizationType.NONE,
-          requestParameters: metadata.requestParameters
-                             ? { ...metadata.requestParameters }
+          requestParameters: updatedMappingTemplateParameters
+                             ? { ...updatedMappingTemplateParameters }
                              : undefined
         });
       }
