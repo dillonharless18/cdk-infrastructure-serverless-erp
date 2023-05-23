@@ -139,11 +139,8 @@ export class ApiConstruct extends Construct {
       },
       deployOptions: {
         stageName: STAGE_NAME_TO_API_STAGE_MAP[stageName]
-      },
+      }
     });
-    // api.addGatewayResponse('ApiGatewayResponse', {
-
-    // })
 
     // Pull in the hosted zone
     const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
@@ -310,23 +307,7 @@ export class ApiConstruct extends Construct {
       lambdaFunction.addToRolePolicy(secretsManagerAccessPolicy);
 
       // Create the API Gateway integration for the Lambda function - works even for Lambdas in a VPC
-      const lambdaIntegration = new apigateway.LambdaIntegration(lambdaFunction, {
-        integrationResponses:
-        [
-          {
-            responseParameters: {
-              'method.response.header.Access-Control-Allow-Origin': "'*'",
-            },
-            responseTemplates: {
-              'application/json': JSON.stringify({
-                message: '$util.parseJson($input.body)',
-                state: 'ok',
-              }),
-            },
-            statusCode: '200',
-          }
-        ]
-      });
+      const lambdaIntegration = new apigateway.LambdaIntegration(lambdaFunction, {});
 
       // Add the resource and method to the API Gateway, using the metadata for the path and HTTP method
       const nestedResource = createNestedResource(apiV1, metadata.apiPath);
@@ -352,16 +333,7 @@ export class ApiConstruct extends Construct {
           authorizer: customAuthorizer,
           requestParameters: updatedMappingTemplateParameters
                              ? { ...updatedMappingTemplateParameters }
-                             : undefined,
-          methodResponses: [{ 
-            statusCode: '200', // TODO see if this is the correct way to go about this
-            // important for CORS
-            responseParameters: {
-                'method.response.header.Content-Type': true,
-                'method.response.header.Access-Control-Allow-Origin': true,
-                // 'method.response.header.Access-Control-Allow-Credentials': true // TODO see if this is needed
-              }
-          }]
+                             : undefined
         });  
       } else {
         nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
