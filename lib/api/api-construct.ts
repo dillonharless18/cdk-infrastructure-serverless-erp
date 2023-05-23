@@ -316,11 +316,17 @@ export class ApiConstruct extends Construct {
       if ( metadata.apiPath === 'test-auth' ) {
         nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
           authorizationType: apigateway.AuthorizationType.CUSTOM,
-          authorizer: customAuthorizer
+          authorizer: customAuthorizer,
+          requestParameters: metadata.requestParameters
+                             ? { ...metadata.requestParameters }
+                             : undefined
         });  
       } else {
         nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
           authorizationType: apigateway.AuthorizationType.NONE,
+          requestParameters: metadata.requestParameters
+                             ? { ...metadata.requestParameters }
+                             : undefined
         });
       }
     });
