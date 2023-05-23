@@ -326,6 +326,8 @@ export class ApiConstruct extends Construct {
         }, {} as { [key: string]: boolean });
       }
 
+      console.log(`Creating method: ${metadata.httpMethod} for path: ${metadata.apiPath}`);
+
       // TODO - Change this to authorize all endpoints, just added for testing for now.
       if ( metadata.apiPath === 'test-auth' ) {
         nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
