@@ -317,11 +317,14 @@ export class ApiConstruct extends Construct {
       const mappingTemplateParameters = metadata.requestParameters 
                                 ? { ...metadata.requestParameters }
                                 : null
-      const updatedMappingTemplateParameters = Object.keys(mappingTemplateParameters).reduce((updatedParams, key) => {
-        const updatedKey = `method.request.querystring.${key}`;
-        updatedParams[updatedKey] = mappingTemplateParameters[key];
-        return updatedParams;
-      }, {} as { [key: string]: boolean });
+      let updatedMappingTemplateParameters
+      if ( mappingTemplateParameters ) {
+        updatedMappingTemplateParameters = Object.keys(mappingTemplateParameters).reduce((updatedParams, key) => {
+          const updatedKey = `method.request.querystring.${key}`;
+          updatedParams[updatedKey] = mappingTemplateParameters[key];
+          return updatedParams;
+        }, {} as { [key: string]: boolean });
+      }
 
       // TODO - Change this to authorize all endpoints, just added for testing for now.
       if ( metadata.apiPath === 'test-auth' ) {
