@@ -326,10 +326,11 @@ export class ApiConstruct extends Construct {
         }, {} as { [key: string]: boolean });
       }
 
-      console.log(`Creating method: ${metadata.httpMethod} for path: ${metadata.apiPath}`);
+      
 
       // TODO - Change this to authorize all endpoints, just added for testing for now.
       if ( metadata.apiPath === 'test-auth' ) {
+        console.log(`Creating method: ${metadata.httpMethod} for path: ${metadata.apiPath}`);
         nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
           authorizationType: apigateway.AuthorizationType.CUSTOM,
           authorizer: customAuthorizer,
@@ -338,6 +339,7 @@ export class ApiConstruct extends Construct {
                              : undefined
         });  
       } else {
+        console.log(`Creating method: ${metadata.httpMethod} for path: ${metadata.apiPath}`);
         nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
           authorizationType: apigateway.AuthorizationType.NONE,
           requestParameters: updatedMappingTemplateParameters
@@ -346,6 +348,8 @@ export class ApiConstruct extends Construct {
         });
       }
     });
+
+    
 
 
     ///////////////////////////
