@@ -378,6 +378,8 @@ const getFunctionMetadata = (functionsPath: string) => {
     }
   });
 
+  console.log(`functionMetadata: ${JSON.stringify(functionMetadata, null, 2)}`)
+
   return functionMetadata;
 }
 
