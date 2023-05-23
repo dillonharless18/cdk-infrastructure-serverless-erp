@@ -383,6 +383,24 @@ const getFunctionMetadata = (functionsPath: string) => {
   return functionMetadata;
 }
 
+// // Function to create a nested resource for a given path
+// const createNestedResource = (parentResource: apigateway.Resource, path: string): apigateway.Resource => {
+//   const pathParts = path.split('/').filter((part) => part !== '');
+//   let currentResource = parentResource;
+
+//   for (const part of pathParts) {
+//     // Avoid synthing a duplicate API gateway resource to avoid error 
+//     let existingResource = currentResource.getResource(part);
+//     if (existingResource) {
+//       currentResource = existingResource as apigateway.Resource;
+//     } else {
+//       currentResource = currentResource.addResource(part);
+//     }
+//   }
+
+//   return currentResource;
+// }
+
 // Function to create a nested resource for a given path
 const createNestedResource = (parentResource: apigateway.Resource, path: string): apigateway.Resource => {
   const pathParts = path.split('/').filter((part) => part !== '');
@@ -393,10 +411,20 @@ const createNestedResource = (parentResource: apigateway.Resource, path: string)
     let existingResource = currentResource.getResource(part);
     if (existingResource) {
       currentResource = existingResource as apigateway.Resource;
+      console.log(`Existing resource found for path part: ${part}. Using this resource.`);
     } else {
       currentResource = currentResource.addResource(part);
+      console.log(`No existing resource found for path part: ${part}. Creating a new one.`);
     }
+
+    // Log the current resource's ID and the path it is associated with
+    console.log(`Current resource ID: ${currentResource.resourceId}`);
+    console.log(`Current resource path: ${currentResource.path}`);
   }
 
+  // Log the final resource's ID and path before returning it
+  console.log(`Final resource ID: ${currentResource.resourceId}`);
+  console.log(`Final resource path: ${currentResource.path}`);
+  
   return currentResource;
 }
