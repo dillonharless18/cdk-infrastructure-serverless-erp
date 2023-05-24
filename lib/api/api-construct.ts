@@ -273,6 +273,28 @@ export class ApiConstruct extends Construct {
     
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
+
+      if (
+         metadata.apiPath === 'request-workspace/purchase-order-request-items'
+         && metadata.httpMethod === 'GET'
+      ) {
+        return
+      }
+
+      if (
+         metadata.apiPath === 'getUrgentOrderStatus'
+         && metadata.httpMethod === 'GET'
+      ) {
+        return
+      }
+
+      if (
+         metadata.apiPath === 'request-workspace/purchase-order-request-item-comment'
+         && metadata.httpMethod === 'POST'
+      ) {
+        return
+      }
+
       // Create the Lambda function
       const lambdaFunction = new lambda.Function(this, `Lambda-${metadata.name}`, {
         code: lambda.Code.fromAsset(path.join(functionsPath, metadata.name)),
