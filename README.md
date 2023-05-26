@@ -105,11 +105,11 @@ This respository watches the oneXerp-Lambdas repository to dynamically create th
 └── anotherFile.js
 ```
 
-It uses the `metadata.json` file within each Lambda file to automatically create the API. See the `test_lambdas` folder for an example. These `test_lambdas` are used for unit testing the CDK. The API is created in API Gateway. Everything is automated from the API Gateway Resources, to stage deployment, to custom authorization. The pipeline aggregates which groups should be allowed to execute which API endpoints based on the metadata files found in the lambda folders and stores that config in S3, updating it each time it runs. The custom authorizer pulls it down for each invocation and checks whether it should allow the invocation or not.
+It uses the `metadata.json` file within each Lambda folder to automatically create the API. See the `test_lambdas` folder for an example. These `test_lambdas` are used for unit testing the CDK. The API is created in API Gateway. Everything is automated from the API Gateway Resources, to stage deployment, to custom authorization. The pipeline aggregates which groups should be allowed to execute which API endpoints based on the metadata files found in the lambda folders and stores that config in S3, updating it each time it runs. The custom authorizer pulls it down for each invocation and checks whether it should allow the invocation or not.
 
 ### Breakdown of `metadata.json` file
 
-Here are two examples of a `metadata.json` file:
+Here is an examples of a `metadata.json` file:
 
 ```json
 {
@@ -147,6 +147,7 @@ To add a new API endpoint, follow these steps:
 3. Create the Lambda function's code file (e.g., `index.js`) inside the new directory
       *NOTE*: Dependencies are handled by Lambda Layers in the infrastructure repository. Please keep all large dependencies in `devDependencies` in `package.json` to avoid large bundles. See the Infrastructure Repository for the list of Lambda Layers available.
       *NOTE*: The Lambdas are created in NODE_JS_18 Execution Environment. Please ensure you account for this and use the AWS SDK V3. The imports have changed from V2 and it is the only version of the AWS SDK available by default for NODE_JS_18.
+      *NOTE*: CORS Headers *must* be added to the response of each Lambda function since the lambdas are a proxy integration in the API gateway and handling of the request is forwarded to them.
 4. The `ApiStack` will automatically create the Lambda function, integration, and API Gateway resource based on the `metadata.json` file. It will associate it with the proper Cognito User Pools according to the allowedGroups property in the metadata.json file.
 
 ## Testing
