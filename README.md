@@ -9,6 +9,7 @@ This repository contains the AWS CDK code for creating and managing the infrastr
 1. [Node.js](https://nodejs.org/) (v18.x or later)
 2. [AWS CLI](https://aws.amazon.com/cli/)
 3. [AWS CDK](https://aws.amazon.com/cdk/)
+3. [AWS SDK V3](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/index.html)
 
 ### Installation
 
