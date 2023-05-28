@@ -40,6 +40,14 @@ export class VeryfiIntegrationConstruct extends Construct {
       functionName: lambdaProducer,
       vpc: props.vpc,
       code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/veryfi-integration/lambda/event-producer`),
+      // TODO: Create environment variables with a secrets manager
+      environment: {
+        CLIENT_ID: '',
+        CLIENT_SECRET: '',
+        USERNAME: '',
+        API_KEY: '',
+        TARGET_DB_NAME: ''
+      }
     });
 
     // Create the Veryfi-document-event-consumer Lambda function
@@ -50,7 +58,10 @@ export class VeryfiIntegrationConstruct extends Construct {
         functionName: lambdaConsumer,
         vpc: props.vpc,
         code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/veryfi-integration/lambda/event-consumer`),
-        layers: [...props.databaseLambdaLayer]
+        layers: [...props.databaseLambdaLayer],
+        environment: {
+
+        }
       });
     
     // Create the Veryfi-document-event-broker SQS queue and DLQ
