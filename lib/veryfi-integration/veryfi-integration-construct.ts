@@ -10,8 +10,9 @@ import {
     Port,
     SecurityGroup, 
   } from 'aws-cdk-lib/aws-ec2';
+import { PolicyStatement } from "aws-cdk-lib/aws-iam/lib/policy-statement";
 
-interface VeryfiIntegrationConstructProps {
+export interface VeryfiIntegrationConstructProps {
     env: {
       region:  string
     }
@@ -20,7 +21,7 @@ interface VeryfiIntegrationConstructProps {
     vpc: IVpc,
 }
 
-class VeryfiIntegrationConstruct extends Construct {
+export class VeryfiIntegrationConstruct extends Construct {
   constructor(scope: Construct, id: string, props: VeryfiIntegrationConstructProps) {
     super(scope, id);
 
@@ -71,7 +72,7 @@ class VeryfiIntegrationConstruct extends Construct {
     const databaseSecurityGroup = SecurityGroup.fromSecurityGroupId(this, 'ImportedOneXerpDatabaseSecurityGroup', props.databaseSecurityGroup.securityGroupId);
   
     // Adds egress to the database security group, and ingress in the database security group from the veryfiIntegrationLambdaSecurityGroup    
-    veryfiIntegrationLambdaSecurityGroup.connections.allowTo(databaseSecurityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the database');
+    veryfiIntegrationLambdaSecurityGroup.connections.allowTo(databaseSecurityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the oneXerp database');
 
     // Create the event source mapping between the veryfiDocumentEventConsumer and the VeryfiDocumentEventBrokerQueue
      veryfiDocumentEventConsumer.addEventSource(new SqsEventSource(veryfiDocumentEventBrokerQueue));
@@ -79,6 +80,13 @@ class VeryfiIntegrationConstruct extends Construct {
     // Grant Producer and consumer permissions to Broker
     veryfiDocumentEventBrokerQueue.grantSendMessages(veryfiDocumentEventProducer);
     veryfiDocumentEventBrokerQueue.grantConsumeMessages(veryfiDocumentEventConsumer);
+
+    // Grant Event Consumer access to the secrets manager for DB credentials
+    const secretsManagerAccessPolicy = new PolicyStatement({
+        actions: ['secretsmanager:GetSecretValue'],
+        resources: [`*`],
+      });
+    veryfiDocumentEventConsumer.addToRolePolicy(secretsManagerAccessPolicy);
   }
 }
 
