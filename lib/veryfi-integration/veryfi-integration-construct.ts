@@ -18,7 +18,8 @@ export interface VeryfiIntegrationConstructProps {
     }
     databaseSecurityGroup: ISecurityGroup;
     stageName: string;
-    vpc: IVpc,
+    vpc: IVpc;
+    databaseLambdaLayer: lambda.LayerVersion[];
 }
 
 export class VeryfiIntegrationConstruct extends Construct {
@@ -49,6 +50,7 @@ export class VeryfiIntegrationConstruct extends Construct {
         functionName: lambdaConsumer,
         vpc: props.vpc,
         code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/veryfi-integration/lambda/event-consumer`),
+        layers: [...props.databaseLambdaLayer]
       });
     
     // Create the Veryfi-document-event-broker SQS queue and DLQ
