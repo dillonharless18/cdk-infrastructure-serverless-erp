@@ -10,6 +10,6 @@ import { region_info } from "aws-cdk-lib";
  * @param stage  the AWS stage
  * @param resourceName the resource name
  */
-function createResourceWithHyphenatedName(region: String, stage: String, resourceName: String) {
+export function createResourceWithHyphenatedName(region: String, stage: String, resourceName: String) {
     return `${stage}-${region}-${resourceName}}`;
 }
