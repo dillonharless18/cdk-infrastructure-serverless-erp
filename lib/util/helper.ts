@@ -11,5 +11,5 @@ import { region_info } from "aws-cdk-lib";
  * @param resourceName the resource name
  */
 export function createResourceWithHyphenatedName(region: String, stage: String, resourceName: String) {
-    return `${resourceName}-${stage}-${region}}`;
+    return `${resourceName}-${stage}-${region}`;
 }
