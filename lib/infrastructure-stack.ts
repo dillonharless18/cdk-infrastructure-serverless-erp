@@ -5,6 +5,7 @@ import { MigrationsLambdaConstruct } from './database/migrations-lambda-construc
 import { CognitoConstruct } from './cognito/cognito-construct';
 import { ApiConstruct } from './api/api-construct';
 import { SeedLambdaConstruct } from './database/seed-database-lambda-construct';
+import { VeryfiIntegrationConstruct } from './veryfi-integration/veryfi-integration-construct';
 
 interface InfrastructureStackProps extends StackProps {
     applicationName: string;
@@ -96,6 +97,14 @@ export class InfrastructureStack extends Stack {
       [api.databaseLambdaLayer],
       props.stageName,
     );
+
+    const verifyIntegrationStack = new VeryfiIntegrationConstruct(this, 'VerifyIntegration', {
+      env: props.env,
+      databaseSecurityGroup: database.securityGroup,
+      stageName: props.stageName,
+      vpc: database.vpc,
+      databaseLambdaLayer: [api.databaseLambdaLayer]
+    });
     
   }
 }
