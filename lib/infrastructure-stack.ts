@@ -6,7 +6,6 @@ import { CognitoConstruct } from './cognito/cognito-construct';
 import { ApiConstruct } from './api/api-construct';
 import { SeedLambdaConstruct } from './database/seed-database-lambda-construct';
 import { VeryfiIntegrationConstruct } from './veryfi-integration/veryfi-integration-construct';
-import { env } from 'process';
 
 interface InfrastructureStackProps extends StackProps {
     applicationName: string;

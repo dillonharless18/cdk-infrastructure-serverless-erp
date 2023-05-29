@@ -31,6 +31,16 @@ export class VeryfiIntegrationConstruct extends Construct {
     const lambdaProducer = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventProducerLambda')
     const lambdaConsumer = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventConsumerLambda')
     const lambdaSecurityGroupName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiLambdaSecurityGroup')
+    
+    // Create the Veryfi-document-event-broker SQS queue and DLQ
+    const veryfiDocumentEventDLQ : Queue = new Queue(this, dlqName);
+    const veryfiDocumentEventBrokerQueue : Queue = new Queue(this, queueName, {
+      visibilityTimeout: Duration.minutes(5),
+      deadLetterQueue: {
+        queue: veryfiDocumentEventDLQ,
+        maxReceiveCount: 5
+      }
+    })
 
     // Create the Veryfi-document-event-producer Lambda function
     const veryfiDocumentEventProducer = new lambda.Function(this, 'VeryfiDocumentEventProducer', {
@@ -38,13 +48,13 @@ export class VeryfiIntegrationConstruct extends Construct {
       handler: 'index.handler',
       timeout: Duration.seconds(30),
       functionName: lambdaProducer,
-      vpc: props.vpc,
       code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/veryfi-integration/lambda/event-producer`),
       environment: {
         CLIENT_ID: 'vrfum8CF1oC7ka104tjEBKfmf4NYiE3gzLo8igS',
         CLIENT_SECRET: 'FwxDFcfuZw7PTt0iARJxtp3w3JoET7vRePhIU1FbR2ytU7VLzUkeKYsVBXd8CSM8Xgl8SrE5Do0brNu0kuczzGTiWmTKzTVFJFFBueH66vXU34r2RYZV2eguwkV0tjoc',
         USERNAME: 'chaamail',
         API_KEY: '1f1e83e8e9d688f57d0321728d384ba8',
+        SQS_QUEUE_URL: veryfiDocumentEventBrokerQueue.queueUrl,
       }
     });
 
@@ -58,16 +68,6 @@ export class VeryfiIntegrationConstruct extends Construct {
         code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/veryfi-integration/lambda/event-consumer`),
         layers: [...props.databaseLambdaLayer],
       });
-    
-    // Create the Veryfi-document-event-broker SQS queue and DLQ
-    const veryfiDocumentEventDLQ : Queue = new Queue(this, dlqName);
-    const veryfiDocumentEventBrokerQueue : Queue = new Queue(this, queueName, {
-      visibilityTimeout: Duration.minutes(5),
-      deadLetterQueue: {
-        queue: veryfiDocumentEventDLQ,
-        maxReceiveCount: 5
-      }
-    })
 
     // Lambda security group
     const veryfiIntegrationLambdaSecurityGroup = new SecurityGroup(this, lambdaSecurityGroupName, {
