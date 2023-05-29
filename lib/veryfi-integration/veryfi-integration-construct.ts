@@ -10,7 +10,7 @@ import {
     Port,
     SecurityGroup, 
   } from 'aws-cdk-lib/aws-ec2';
-import { PolicyStatement } from "aws-cdk-lib/aws-iam/lib/policy-statement";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 export interface VeryfiIntegrationConstructProps {
     env: {
