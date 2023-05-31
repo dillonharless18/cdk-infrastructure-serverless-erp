@@ -15,7 +15,7 @@ const app = new cdk.App();
 
 const APPLICATION_NAME            = "oneXerp"
 const API_NAME                    = "oneXerpAPI"
-const CODESTAR_ARN                = "arn:aws:codestar-connections:us-east-1:136559125535:connection/c59440ca-db21-4051-b54a-810bbc89464f"
+const CODESTAR_ARN                = "arn:aws:codestar-connections:us-east-1:136559125535:connection/c59440ca-db21-4051-b54a-810bbc89464f" // TODO see how programmatic we can make this
 const DOMAIN_NAME                 = "onexerp.com"
 const PIPELINE_NAME               = "InfrastructurePipeline"
 const PIPELINE_STACK_NAME         = "InfrastructurePipelineStack"
