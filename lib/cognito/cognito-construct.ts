@@ -200,6 +200,17 @@ export class CognitoConstruct extends Construct {
       }],
     });
 
+    new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
+      identityPoolId: identityPool.ref,
+      roleMappings: {
+        [`${userPool.userPoolId}:${userPoolClient.userPoolClientId}`]: {
+          type: 'Token',
+          ambiguousRoleResolution: 'Deny',
+        },
+      },
+    });
+    
+
 
     this.userPool  = userPool;
     this.appClient = userPoolClient;
