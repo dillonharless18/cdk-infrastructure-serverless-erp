@@ -200,15 +200,26 @@ export class CognitoConstruct extends Construct {
       }],
     });
 
-    new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
+    const identityPoolRoleAttachment = new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
       identityPoolId: identityPool.ref,
       roleMappings: {
         [`${userPool.userPoolId}:${userPoolClient.userPoolClientId}`]: {
           type: 'Token',
           ambiguousRoleResolution: 'Deny',
-        },
-      },
+        }
+      }
     });
+  
+    // CDK has an issue with resolving the role mappings by referencing the user pool created here so we are passing raw JSON: https://github.com/aws/aws-cdk/issues/12988
+    identityPoolRoleAttachment.addOverride(
+      'Properties.RoleMappings', 
+      {
+        [cdk.Fn.join(':', [cdk.Fn.ref(userPool.userPoolId), cdk.Fn.ref(userPoolClient.userPoolClientId)]).toString()]: {
+          Type: 'Token',
+          AmbiguousRoleResolution: 'Deny',
+        }
+      }
+    );
     
 
 
