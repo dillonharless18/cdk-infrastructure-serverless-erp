@@ -200,15 +200,22 @@ export class CognitoConstruct extends Construct {
       }],
     });
 
-    // const identityPoolRoleAttachment = new cognito.CfnIdentityPoolRoleAttachment(this, 'IdentityPoolRoleAttachment', {
-    //   identityPoolId: identityPool.ref,
-    //   roleMappings: {
-    //     [`${userPool.userPoolId}:${userPoolClient.userPoolClientId}`]: {
-    //       type: 'Token',
-    //       ambiguousRoleResolution: 'Deny',
-    //     }
-    //   }
-    // });
+    new cognito.CfnIdentityPoolRoleAttachment(this, 'identity-pool-role-attachment', {
+      identityPoolId: identityPool.ref,
+      roles: {},
+      roleMappings: {
+        mapping: {
+          type: 'Token',
+          ambiguousRoleResolution: 'Deny',
+          identityProvider: `cognito-idp.${
+            cdk.Stack.of(this).region
+          }.amazonaws.com/${userPool.userPoolId}:${
+            userPoolClient.userPoolClientId
+          }`,
+        },
+      },
+    });
+    
 
 
     this.userPool  = userPool;
