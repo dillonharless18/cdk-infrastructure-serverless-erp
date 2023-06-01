@@ -127,11 +127,11 @@ export class CognitoConstruct extends Construct {
 
 
     // Create the roles using the createCustomRole function - NOTE these are intentionally lower case
-    const adminRole = createCustomRole(this, 'admin', 'admin', adminPolicyDocument, userPoolClient.userPoolClientId);
-    const basicUserRole = createCustomRole(this, 'basicuser', 'basicuser', basicUserPolicyDocument, userPoolClient.userPoolClientId);
-    const logisticsRole = createCustomRole(this, 'logistics', 'logistics', logisticsPolicyDocument, userPoolClient.userPoolClientId);
-    const projectManagerRole = createCustomRole(this, 'projectmanager', 'projectmanager', projectManagerPolicyDocument, userPoolClient.userPoolClientId);
-    const driverRole = createCustomRole(this, 'driver', 'driver', driverPolicyDocument, userPoolClient.userPoolClientId);
+    const adminRole = createCustomRole(this, 'admin', 'admin', adminPolicyDocument, identityPool.ref);
+    const basicUserRole = createCustomRole(this, 'basicuser', 'basicuser', basicUserPolicyDocument, identityPool.ref);
+    const logisticsRole = createCustomRole(this, 'logistics', 'logistics', logisticsPolicyDocument, identityPool.ref);
+    const projectManagerRole = createCustomRole(this, 'projectmanager', 'projectmanager', projectManagerPolicyDocument, identityPool.ref);
+    const driverRole = createCustomRole(this, 'driver', 'driver', driverPolicyDocument, identityPool.ref);
 
     this.adminRole = adminRole;
     this.basicUserRole = basicUserRole;
