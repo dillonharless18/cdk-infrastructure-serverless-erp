@@ -11,6 +11,7 @@
   "author": "Chaa Loftin",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-sqs": "^3.345.0",
     "@veryfi/veryfi-sdk": "^1.2.2"
   },
   "devDependencies": {
