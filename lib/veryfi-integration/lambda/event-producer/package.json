@@ -1,14 +1,10 @@
 {
-  "name": "veryfiintegrationlibrary",
+  "name": "veryfieventproducer",
   "version": "1.0.0",
   "description": "The library that will be used to extract OCR data from VeryFi",
   "type": "module",
   "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "test": "jest --coverage"
-  },
-  "author": "Chaa Loftin",
+  "author": "",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.345.0",
