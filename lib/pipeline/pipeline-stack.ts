@@ -16,6 +16,12 @@ interface PipelineStackProps extends cdk.StackProps {
     source: CodePipelineSource;
     pipelineSource: CodePipelineSource;
     pipelineName: string;
+    enableQBDIntegrationDevelopment: boolean;
+    enableQBDIntegrationProduction: boolean;
+    amiNameQBDDevelopment?: string;
+    amiOwnersQBDDevelopment?: string[];
+    amiNameQBDProduction?: string;
+    amiOwnersQBDProduction?: string[];
 }
 
 interface Environment {
@@ -142,7 +148,10 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             stageName: this.devStageName,
             devAccountId: envVariables.developmentAccount,
             customOauthCallbackURLsList: props.customOauthCallbackURLsMap[this.devStageName],
-            customOauthLogoutURLsList: props.customOauthLogoutURLsMap[this.devStageName]
+            customOauthLogoutURLsList: props.customOauthLogoutURLsMap[this.devStageName],
+            enableQBDIntegration: props.enableQBDIntegrationDevelopment,
+            amiNameQBD: props.amiNameQBDDevelopment,
+            amiOwnersQBD: props.amiOwnersQBDDevelopment
         });
         
         pipeline.addStage(devStage, {
@@ -166,7 +175,10 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             stageName: this.prodStageName,
             devAccountId: envVariables.developmentAccount,
             customOauthCallbackURLsList: props.customOauthCallbackURLsMap[this.prodStageName],
-            customOauthLogoutURLsList: props.customOauthLogoutURLsMap[this.prodStageName]
+            customOauthLogoutURLsList: props.customOauthLogoutURLsMap[this.prodStageName],
+            enableQBDIntegration: props.enableQBDIntegrationProduction,
+            amiNameQBD: props.amiNameQBDProduction,
+            amiOwnersQBD: props.amiOwnersQBDProduction
         });
         pipeline.addStage(prodStage, {
             pre: [

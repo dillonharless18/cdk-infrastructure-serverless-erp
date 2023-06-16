@@ -19,6 +19,9 @@ interface CustomStageProps extends StageProps {
     devAccountId: string;
     customOauthCallbackURLsList: string[];
     customOauthLogoutURLsList: string[];
+    enableQBDIntegration: boolean;
+    amiNameQBD?: string;
+    amiOwnersQBD?: string[];
 }
 
 export class DeployInfrastructureStage extends Stage {
