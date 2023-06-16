@@ -1,13 +1,4 @@
-import { 
-    aws_ec2 as ec2,
-    aws_sqs as sqs,
-    aws_iam as iam,
-    Duration
- } from "aws-cdk-lib";
-import { AutoScalingGroup } from "aws-cdk-lib/aws-autoscaling";
-import { InstanceType, Vpc } from "aws-cdk-lib/aws-ec2";
-import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
-import { Queue } from "aws-cdk-lib/aws-sqs";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 import { QuickBooksDesktopConstruct } from "./quickbooks-desktop-construct";
 

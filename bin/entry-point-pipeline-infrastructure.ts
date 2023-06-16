@@ -67,7 +67,7 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
     }),
     source: CodePipelineSource.connection(LAMBDA_REPO, 'main', {
         connectionArn: CODESTAR_ARN
-    }),
+    })
 });
 
 function safelyRetrieveEnvVariable(envName: string): string {
