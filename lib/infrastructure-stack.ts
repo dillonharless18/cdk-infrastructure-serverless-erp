@@ -6,6 +6,7 @@ import { CognitoConstruct } from './cognito/cognito-construct';
 import { ApiConstruct } from './api/api-construct';
 import { SeedLambdaConstruct } from './database/seed-database-lambda-construct';
 import { VeryfiIntegrationConstruct } from './veryfi-integration/veryfi-integration-construct';
+import { ExtensibleFinanceConstruct } from './extensible-finance-module/extensible-finance-module';
 
 interface InfrastructureStackProps extends StackProps {
     applicationName: string;
@@ -21,6 +22,9 @@ interface InfrastructureStackProps extends StackProps {
     devAccountId: string;
     customOauthCallbackURLsList: string[];
     customOauthLogoutURLsList: string[];
+    enableQBDIntegration: boolean;
+    amiNameQBD?: string;
+    amiOwnersQBD?: string[];
 }
 
 /**
@@ -105,6 +109,13 @@ export class InfrastructureStack extends Stack {
       vpc: database.vpc,
       databaseLambdaLayer: [api.databaseLambdaLayer]
     });
+
+    const extensibleFinanceModule = new ExtensibleFinanceConstruct(this, 'ExtensibleFinanceModule', {
+      enableQBDIntegration: props.enableQBDIntegration,
+      amiNameQBD: props.amiNameQBD,
+      amiOwnersQBD: props.amiOwnersQBD,
+      vpc: database.vpc, 
+    })
     
   }
 }

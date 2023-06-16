@@ -14,9 +14,15 @@ const app = new cdk.App();
 
 
 const APPLICATION_NAME            = "oneXerp"
+const AMI_NAME_QB_DEVELOPMENT     = "oneXerp"
+const AMI_OWNERS_QB_DEVELOPMENT   = ["136559125535"]
+const AMI_NAME_QB_PRODUCTION      = "oneXerp" // TODO see if this needs to change for production
+const AMI_OWNERS_QB_PRODUCTION    = ["136559125535"] // TODO see if this needs to change for production
 const API_NAME                    = "oneXerpAPI"
 const CODESTAR_ARN                = "arn:aws:codestar-connections:us-east-1:136559125535:connection/c59440ca-db21-4051-b54a-810bbc89464f" // TODO see how programmatic we can make this
 const DOMAIN_NAME                 = "onexerp.com"
+const ENABLE_QBD_DEVELOPMENT      = false
+const ENABLE_QBD_PRODUCTION       = false
 const PIPELINE_NAME               = "InfrastructurePipeline"
 const PIPELINE_STACK_NAME         = "InfrastructurePipelineStack"
 const INFRA_REPO                  = "dillonCF/oneXerp-Infrastructure"
@@ -40,9 +46,15 @@ const envVariables = {
 }
 
 new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
+    amiNameQBDDevelopment:AMI_NAME_QB_DEVELOPMENT,
+    amiOwnersQBDDevelopment:AMI_OWNERS_QB_DEVELOPMENT,
+    amiNameQBDProduction:AMI_NAME_QB_PRODUCTION,
+    amiOwnersQBDProduction:AMI_OWNERS_QB_PRODUCTION,
     apiName: API_NAME,
     applicationName: APPLICATION_NAME,
     domainName: DOMAIN_NAME,
+    enableQBDIntegrationDevelopment: ENABLE_QBD_DEVELOPMENT,
+    enableQBDIntegrationProduction: ENABLE_QBD_PRODUCTION,
     pipelineName: PIPELINE_NAME,
     env: {
         account: "136559125535",
@@ -55,7 +67,7 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
     }),
     source: CodePipelineSource.connection(LAMBDA_REPO, 'main', {
         connectionArn: CODESTAR_ARN
-    })
+    }),
 });
 
 function safelyRetrieveEnvVariable(envName: string): string {
