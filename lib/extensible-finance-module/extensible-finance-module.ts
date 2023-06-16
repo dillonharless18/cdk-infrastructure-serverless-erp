@@ -1,6 +1,7 @@
 import { Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 import { QuickBooksDesktopConstruct } from "./quickbooks-desktop-construct";
+import { Topic } from "aws-cdk-lib/aws-sns";
 
 interface IExtensibleFinanceConstruct {
     vpc: Vpc;
@@ -17,6 +18,20 @@ interface IExtensibleFinanceConstruct {
 export class ExtensibleFinanceConstruct extends Construct {
   constructor(scope: Construct, id: string, props: IExtensibleFinanceConstruct) {
     super(scope, id);
+
+
+    ////////////////
+    // Start SNS  //
+    ////////////////
+
+    const poEventsTopic = new Topic(this, 'POEventsTopic', {
+      displayName: 'Finance events topic'
+    });
+
+    /////////////
+    // End SNS //
+    ////////////
+
 
     /////////////////////////////
     // StartQBD Infrastructure //
