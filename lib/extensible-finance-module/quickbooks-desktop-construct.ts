@@ -2,7 +2,8 @@ import {
     aws_ec2 as ec2,
     aws_sqs as sqs,
     aws_iam as iam,
-    Duration
+    Duration,
+    CfnOutput
  } from "aws-cdk-lib";
 import { AutoScalingGroup } from "aws-cdk-lib/aws-autoscaling";
 import { InstanceType, Vpc } from "aws-cdk-lib/aws-ec2";
@@ -37,6 +38,10 @@ export class QuickBooksDesktopConstruct extends Construct {
       const ingressQueue = new Queue(this, 'IngressQueue', {
         visibilityTimeout: Duration.seconds(60)
       });
+
+      // Output the ARNs of the queues
+      new CfnOutput(this, 'QBDEgressQueueArn', { value: egressQueue.queueArn, exportName: 'QBDEgressQueueArn' });
+      new CfnOutput(this, 'QBDIngressQueueArn', { value: ingressQueue.queueArn, exportName: 'QBDIngressQueueArn' });
   
       // TODO make this conditional. Maybe we just want the queues and nothing else
       const role = new Role(this, 'QBDEC2Role', {
@@ -48,19 +53,27 @@ export class QuickBooksDesktopConstruct extends Construct {
       ingressQueue.grantSendMessages(role);
       ingressQueue.grantConsumeMessages(role);
   
-      // Use an AMI that has QBD installed, and preferably a stable version of the application.
-      const ami = ec2.MachineImage.lookup({
-        name: props.amiName,
-        owners: props.amiOwners
-      });
+    // TODO uncomment this to enable the EC2 instance creation.
+    // TODO Pending tasks before this should be done 
+                /**
+                 * Confirm code pulls from the queues properly
+                 * Confirm AMI works properly - create one manually with it
+                 * Set up Autoscaling group health checks
+                 * Figure out the best way to deploy the code here
+                 */
+    // Use an AMI that has QBD installed, and preferably a stable version of the application.
+    //   const ami = ec2.MachineImage.lookup({
+    //     name: props.amiName,
+    //     owners: props.amiOwners
+    //   });
   
-      const asg = new AutoScalingGroup(this, 'QBDASG', {
-        vpc: props.vpc,
-        instanceType: InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.LARGE),
-        machineImage: ami,
-        role,
-        minCapacity: 1,
-        maxCapacity: 1
-      });
+    //   const asg = new AutoScalingGroup(this, 'QBDASG', {
+    //     vpc: props.vpc,
+    //     instanceType: InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.LARGE),
+    //     machineImage: ami,
+    //     role,
+    //     minCapacity: 1,
+    //     maxCapacity: 1
+    //   });
     }
   }
