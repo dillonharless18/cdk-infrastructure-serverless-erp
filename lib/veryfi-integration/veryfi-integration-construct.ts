@@ -27,7 +27,7 @@ export class VeryfiIntegrationConstruct extends Construct {
   constructor(scope: Construct, id: string, props: VeryfiIntegrationConstructProps) {
     super(scope, id);
 
-    const veryfiImageBucketName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'veryfiDocumentBucket')
+    const veryfiImageBucketName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentBucket')
     const dlqName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventDLQ')
     const queueName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventBrokerQueue')
     const lambdaProducer = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventProducerLambda')
