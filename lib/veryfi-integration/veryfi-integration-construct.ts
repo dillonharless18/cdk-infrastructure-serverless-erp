@@ -1,6 +1,7 @@
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
-import { Duration } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { Construct }   from 'constructs';
 import { createResourceWithHyphenatedName } from "../util/helper";
@@ -26,11 +27,19 @@ export class VeryfiIntegrationConstruct extends Construct {
   constructor(scope: Construct, id: string, props: VeryfiIntegrationConstructProps) {
     super(scope, id);
 
+    const veryfiImageBucketName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'veryfiDocumentBucket')
     const dlqName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventDLQ')
     const queueName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventBrokerQueue')
     const lambdaProducer = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventProducerLambda')
     const lambdaConsumer = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventConsumerLambda')
     const lambdaSecurityGroupName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiLambdaSecurityGroup')
+
+
+    // Create the Veryfi image bucket to store all purchase order images
+    const veryfiImageBucket : Bucket = new Bucket(this, veryfiImageBucketName, {
+      removalPolicy: RemovalPolicy.RETAIN, // retain the bucket if the stack is accidentally deleted
+      autoDeleteObjects: false,            // retain all objects if the bucket is deleted
+    });
     
     // Create the Veryfi-document-event-broker SQS queue and DLQ
     const veryfiDocumentEventDLQ : Queue = new Queue(this, dlqName);
@@ -83,11 +92,14 @@ export class VeryfiIntegrationConstruct extends Construct {
     veryfiIntegrationLambdaSecurityGroup.connections.allowTo(databaseSecurityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the oneXerp database');
 
     // Create the event source mapping between the veryfiDocumentEventConsumer and the VeryfiDocumentEventBrokerQueue
-     veryfiDocumentEventConsumer.addEventSource(new SqsEventSource(veryfiDocumentEventBrokerQueue));
+    veryfiDocumentEventConsumer.addEventSource(new SqsEventSource(veryfiDocumentEventBrokerQueue));
 
     // Grant Producer and consumer permissions to Broker
     veryfiDocumentEventBrokerQueue.grantSendMessages(veryfiDocumentEventProducer);
     veryfiDocumentEventBrokerQueue.grantConsumeMessages(veryfiDocumentEventConsumer);
+
+    // Grant Consumer write access to the veryfi image bucket
+    veryfiImageBucket.grantWrite(veryfiDocumentEventConsumer)
 
     // Grant Event Consumer access to the secrets manager for DB credentials
     const secretsManagerAccessPolicy = new PolicyStatement({
