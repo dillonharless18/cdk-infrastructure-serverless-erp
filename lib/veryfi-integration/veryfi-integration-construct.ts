@@ -27,7 +27,7 @@ export class VeryfiIntegrationConstruct extends Construct {
   constructor(scope: Construct, id: string, props: VeryfiIntegrationConstructProps) {
     super(scope, id);
 
-    const veryfiImageBucketName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentBucket')
+    const veryfiPurchaseOrderImageBucketName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiPurchaseOrderImageBucket')
     const dlqName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventDLQ')
     const queueName = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventBrokerQueue')
     const lambdaProducer = createResourceWithHyphenatedName(props.env.region, props.stageName, 'VeryfiDocumentEventProducerLambda')
@@ -36,7 +36,7 @@ export class VeryfiIntegrationConstruct extends Construct {
 
 
     // Create the Veryfi image bucket to store all purchase order images
-    const veryfiImageBucket : Bucket = new Bucket(this, veryfiImageBucketName, {
+    const veryfiPurchaseOrderImageBucket : Bucket = new Bucket(this, veryfiPurchaseOrderImageBucketName, {
       removalPolicy: RemovalPolicy.RETAIN, // retain the bucket if the stack is accidentally deleted
       autoDeleteObjects: false,            // retain all objects if the bucket is deleted
     });
@@ -99,7 +99,7 @@ export class VeryfiIntegrationConstruct extends Construct {
     veryfiDocumentEventBrokerQueue.grantConsumeMessages(veryfiDocumentEventConsumer);
 
     // Grant Consumer write access to the veryfi image bucket
-    veryfiImageBucket.grantWrite(veryfiDocumentEventConsumer)
+    veryfiPurchaseOrderImageBucket.grantWrite(veryfiDocumentEventConsumer)
 
     // Grant Event Consumer access to the secrets manager for DB credentials
     const secretsManagerAccessPolicy = new PolicyStatement({
