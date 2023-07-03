@@ -28,6 +28,8 @@ test('InfrastructurePipelineStack creates a pipeline with the correct stages', (
     },
     source: CodePipelineSource.gitHub('owner/repo', 'main'),
     pipelineSource: CodePipelineSource.gitHub('owner/pipeline-repo', 'main'),
+    enableQBDIntegrationDevelopment: true,
+    enableQBDIntegrationProduction: true,
   });
   const template = Template.fromStack(stack);
 
