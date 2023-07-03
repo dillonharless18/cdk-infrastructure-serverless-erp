@@ -75,6 +75,9 @@ export class VeryfiIntegrationConstruct extends Construct {
         functionName: lambdaConsumer,
         vpc: props.vpc,
         code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/veryfi-integration/lambda/event-consumer`),
+        environment: {
+          BUCKET_NAME: veryfiPurchaseOrderImageBucket.bucketName,
+        },
         layers: [...props.databaseLambdaLayer],
       });
 
