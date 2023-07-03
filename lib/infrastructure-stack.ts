@@ -105,6 +105,7 @@ export class InfrastructureStack extends Stack {
     const verifyIntegrationStack = new VeryfiIntegrationConstruct(this, 'VerifyIntegration', {
       env: props.env,
       databaseSecurityGroup: database.securityGroup,
+      databaseCredentialsSecretArn: database.secretArn, 
       stageName: props.stageName,
       vpc: database.vpc,
       databaseLambdaLayer: [api.databaseLambdaLayer]

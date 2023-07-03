@@ -1,7 +1,7 @@
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
-import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { Construct }   from 'constructs';
 import { createResourceWithHyphenatedName } from "../util/helper";
@@ -18,6 +18,7 @@ export interface VeryfiIntegrationConstructProps {
       region:  string
     }
     databaseSecurityGroup: ISecurityGroup;
+    databaseCredentialsSecretArn: CfnOutput,
     stageName: string;
     vpc: IVpc;
     databaseLambdaLayer: lambda.LayerVersion[];
@@ -106,8 +107,11 @@ export class VeryfiIntegrationConstruct extends Construct {
 
     // Grant Event Consumer access to the secrets manager for DB credentials
     const secretsManagerAccessPolicy = new PolicyStatement({
-        actions: ['secretsmanager:GetSecretValue'],
-        resources: [`*`],
+        actions: [
+          'secretsmanager:GetSecretValue',
+          'kms:Decrypt'
+        ],
+        resources: [ props.databaseCredentialsSecretArn.value ],
       });
     veryfiDocumentEventConsumer.addToRolePolicy(secretsManagerAccessPolicy);
   }
