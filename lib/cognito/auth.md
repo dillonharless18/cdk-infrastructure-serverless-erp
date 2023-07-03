@@ -42,7 +42,7 @@ The POST request would look something like this in bash:
 curl -X POST \
   https://dev-onexerp.auth.us-east-1.amazoncognito.com/oauth2/token \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=authorization_code&client_id=1t65ujrotp1esefli5l9fnko8t&code=<auth-code>&redirect_uri=https://dev.onexerp.com'
+  -d 'grant_type=authorization_code&client_id=1t65ujrotp1esefli5l9fnko8t&code=<auth-code>&redirect_uri=https://dev.onexerp.com&code_verifier=<code_verifier>'
 ```
 
 where the client_id has been replaced with the actual client id of oneXerp's development app client (as of 7.3.2023). The `<auth-code>`
