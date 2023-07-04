@@ -106,6 +106,8 @@ export class InfrastructureStack extends Stack {
       env: props.env,
       databaseSecurityGroup: database.securityGroup,
       databaseCredentialsSecretArn: database.secretArn, 
+      dbCredentialsSecretName: database.secretName,
+      defaultDBName: database.defaultDatabaseName,
       stageName: props.stageName,
       vpc: database.vpc,
       databaseLambdaLayer: [api.databaseLambdaLayer]
