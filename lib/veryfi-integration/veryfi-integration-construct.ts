@@ -11,7 +11,7 @@ import {
     Port,
     SecurityGroup, 
   } from 'aws-cdk-lib/aws-ec2';
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 export interface VeryfiIntegrationConstructProps {
     env: {
@@ -106,14 +106,22 @@ export class VeryfiIntegrationConstruct extends Construct {
     veryfiPurchaseOrderImageBucket.grantWrite(veryfiDocumentEventConsumer)
 
     // Grant Event Consumer access to the secrets manager for DB credentials
-    const secretsManagerAccessPolicy = new PolicyStatement({
-        actions: [
-          'secretsmanager:GetSecretValue',
-          'kms:Decrypt'
-        ],
-        resources: [ props.databaseCredentialsSecretArn.value ],
-      });
-    veryfiDocumentEventConsumer.addToRolePolicy(secretsManagerAccessPolicy);
+    // Create a Secrets Manager access policy
+    const secretsManagerAccessPolicy = new Policy(this, 'SecretsManagerAccessPolicy', {
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: [
+            'secretsmanager:GetSecretValue',
+            'kms:Decrypt',
+          ],
+          resources: [ props.databaseCredentialsSecretArn.value ],
+        }),
+      ],
+    });
+
+    // Attach the Secrets Manager access policy to the role
+    veryfiDocumentEventConsumer.role?.attachInlinePolicy(secretsManagerAccessPolicy);
   }
 }
 
