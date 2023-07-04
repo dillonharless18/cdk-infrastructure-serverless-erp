@@ -19,6 +19,8 @@ export interface VeryfiIntegrationConstructProps {
     }
     databaseSecurityGroup: ISecurityGroup;
     databaseCredentialsSecretArn: CfnOutput,
+    dbCredentialsSecretName: CfnOutput, 
+    defaultDBName: string, 
     stageName: string;
     vpc: IVpc;
     databaseLambdaLayer: lambda.LayerVersion[];
@@ -78,6 +80,8 @@ export class VeryfiIntegrationConstruct extends Construct {
         code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/veryfi-integration/lambda/event-consumer`),
         environment: {
           BUCKET_NAME: veryfiPurchaseOrderImageBucket.bucketName,
+          RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
+          RDS_DB_NAME: props.defaultDBName,
         },
         layers: [...props.databaseLambdaLayer],
       });
