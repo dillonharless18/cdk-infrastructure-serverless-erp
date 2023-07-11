@@ -328,9 +328,13 @@ export class ApiConstruct extends Construct {
       }
 
       
-
-      // TODO - Change this to authorize all endpoints, just added for testing for now.
-      if ( metadata.apiPath === 'test-auth' ) {
+      // To enable auth for an API endpoint, add the api path here
+      const apisBehindAuth = [
+        'test-auth',
+        'getAllProjects'
+      ]
+      
+      if ( apisBehindAuth.includes(metadata.apiPath) ) {
         console.log(`Creating method: ${metadata.httpMethod} for path: ${metadata.apiPath}`);
         nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
           authorizationType: apigateway.AuthorizationType.CUSTOM,
