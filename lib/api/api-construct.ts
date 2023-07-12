@@ -330,8 +330,7 @@ export class ApiConstruct extends Construct {
       
       // To enable auth for an API endpoint, add the api path here
       const apisBehindAuth = [
-        'test-auth',
-        'getAllProjects'
+        'test-auth'
       ]
       
       if ( apisBehindAuth.includes(metadata.apiPath) ) {
