@@ -1,6 +1,0 @@
-{
-    "apiPath": "users",
-    "httpMethod": "POST",
-    "name": "createUser",
-    "allowedGroups": ["admin"]
-  }
