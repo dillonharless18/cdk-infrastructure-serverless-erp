@@ -28,52 +28,52 @@ interface IQuickBooksDesktopConstructProps {
  */
 
 export class QuickBooksDesktopConstruct extends Construct {
-    constructor(scope: Construct, id: string, props: IQuickBooksDesktopConstructProps) {
-      super(scope, id);
+  constructor(scope: Construct, id: string, props: IQuickBooksDesktopConstructProps) {
+    super(scope, id);
 
-      const egressQueue = new Queue(this, 'EgressQueue', {
-        visibilityTimeout: Duration.seconds(60),
-      });
-  
-      const ingressQueue = new Queue(this, 'IngressQueue', {
-        visibilityTimeout: Duration.seconds(60)
-      });
+    const egressQueue = new Queue(this, 'EgressQueue', {
+      visibilityTimeout: Duration.seconds(60),
+    });
 
-      // Output the ARNs of the queues
-      new CfnOutput(this, 'toQBDQueueArn', { value: egressQueue.queueArn, exportName: 'toQBDQueueArn' });
-      new CfnOutput(this, 'fromQBDQueueArn', { value: ingressQueue.queueArn, exportName: 'fromQBDQueueArn' });
-  
-      // TODO make this conditional. Maybe we just want the queues and nothing else
-      const role = new Role(this, 'QBDEC2Role', {
-        assumedBy: new ServicePrincipal('ec2.amazonaws.com')
-      });
-  
-      egressQueue.grantSendMessages(role);
-      egressQueue.grantConsumeMessages(role);
-      ingressQueue.grantSendMessages(role);
-      ingressQueue.grantConsumeMessages(role);
-  
-    // TODO uncomment this to enable the EC2 instance creation.
-    // TODO Pending tasks before this should be done 
-                /**
-                 * Confirm code pulls from the queues properly
-                 * Confirm AMI works properly - create one manually with it
-                 * Set up Autoscaling group health checks
-                 * Figure out the best way to deploy the code here
-                 */
-    // Use an AMI that has QBD installed, and preferably a stable version of the application.
-    //   const ami = ec2.MachineImage.lookup({
-    //     name: props.amiName,
-    //     owners: props.amiOwners
-    //   });
-  
-    //   const asg = new AutoScalingGroup(this, 'QBDASG', {
-    //     vpc: props.vpc,
-    //     instanceType: InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.LARGE),
-    //     machineImage: ami,
-    //     role,
-    //     minCapacity: 1,
-    //     maxCapacity: 1
-    //   });
-    }
+    const ingressQueue = new Queue(this, 'IngressQueue', {
+      visibilityTimeout: Duration.seconds(60)
+    });
+
+    // Output the ARNs of the queues
+    new CfnOutput(this, 'egressQueue', { value: egressQueue.queueArn, exportName: 'egressQueue' });
+    new CfnOutput(this, 'ingressQueue', { value: ingressQueue.queueArn, exportName: 'ingressQueue' });
+
+    // TODO make this conditional. Maybe we just want the queues and nothing else
+    const role = new Role(this, 'QBDEC2Role', {
+      assumedBy: new ServicePrincipal('ec2.amazonaws.com')
+    });
+
+    egressQueue.grantSendMessages(role);
+    egressQueue.grantConsumeMessages(role);
+    ingressQueue.grantSendMessages(role);
+    ingressQueue.grantConsumeMessages(role);
+
+  // TODO uncomment this to enable the EC2 instance creation.
+  // TODO Pending tasks before this should be done 
+              /**
+               * Confirm code pulls from the queues properly
+               * Confirm AMI works properly - create one manually with it
+               * Set up Autoscaling group health checks
+               * Figure out the best way to deploy the code here
+               */
+  // Use an AMI that has QBD installed, and preferably a stable version of the application.
+  //   const ami = ec2.MachineImage.lookup({
+  //     name: props.amiName,
+  //     owners: props.amiOwners
+  //   });
+
+  //   const asg = new AutoScalingGroup(this, 'QBDASG', {
+  //     vpc: props.vpc,
+  //     instanceType: InstanceType.of(ec2.InstanceClass.T2, ec2.InstanceSize.LARGE),
+  //     machineImage: ami,
+  //     role,
+  //     minCapacity: 1,
+  //     maxCapacity: 1
+  //   });
   }
+}
