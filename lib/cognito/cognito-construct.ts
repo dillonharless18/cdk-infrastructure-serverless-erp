@@ -10,6 +10,8 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as fs from "fs";
 import path = require('path');
 import { createCustomRole } from './util';
+import { CustomBucket } from '../s3/s3-bucket-construct';
+import { BucketEncryption } from 'aws-cdk-lib/aws-s3';
 
 interface CognitoConstructProps {
     applicationName: string;
@@ -139,6 +141,20 @@ export class CognitoConstruct extends Construct {
     this.projectManagerRole = projectManagerRole;
     this.driverRole = driverRole;
 
+    // Create assets bucket and grant permissions to application roles
+    const assetBucket = new CustomBucket(this, `${props.applicationName.toLowerCase()}-${props.stageName}-assets`,{
+        bucketName: `${props.applicationName}-${props.stageName}-assets`,
+        versioned: false,
+        encryption: BucketEncryption.S3_MANAGED,
+        removalPolicy: cdk.RemovalPolicy.SNAPSHOT
+      }
+    );
+
+    assetBucket.bucket.grantReadWrite(adminRole)
+    assetBucket.bucket.grantReadWrite(basicUserRole)
+    assetBucket.bucket.grantReadWrite(logisticsRole)
+    assetBucket.bucket.grantReadWrite(projectManagerRole)
+    assetBucket.bucket.grantReadWrite(driverRole)
 
     ///////////////////////////////////
     ///      Cognito - Config       ///
