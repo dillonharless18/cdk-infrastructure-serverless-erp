@@ -330,8 +330,11 @@ export class ApiConstruct extends Construct {
       
       // To enable auth for an API endpoint, add the api path here
       const apisBehindAuth = [
-        'test-auth'
-      ]
+        "test-auth",
+        "getAllProjects",
+        "item-requests",
+        "purchase-orders/ocr-imported-purchase-order-drafts/{ocrImportedPurchaseOrderId}",
+      ];
       
       if ( apisBehindAuth.includes(metadata.apiPath) ) {
         console.log(`Creating method: ${metadata.httpMethod} for path: ${metadata.apiPath}`);
