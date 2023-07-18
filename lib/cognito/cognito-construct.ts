@@ -143,7 +143,7 @@ export class CognitoConstruct extends Construct {
 
     // Create assets bucket and grant permissions to application roles
     const assetBucket = new CustomBucket(this, `${props.applicationName.toLowerCase()}-${props.stageName}-assets`,{
-        bucketName: `${props.applicationName}-${props.stageName}-assets`,
+        bucketName: `${props.applicationName.toLowerCase()}-${props.stageName}-assets`,
         versioned: false,
         encryption: BucketEncryption.S3_MANAGED,
         removalPolicy: cdk.RemovalPolicy.SNAPSHOT
