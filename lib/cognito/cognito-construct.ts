@@ -146,7 +146,7 @@ export class CognitoConstruct extends Construct {
         bucketName: `${props.applicationName.toLowerCase()}-${props.stageName}-assets`,
         versioned: false,
         encryption: BucketEncryption.S3_MANAGED,
-        removalPolicy: cdk.RemovalPolicy.SNAPSHOT
+        removalPolicy: cdk.RemovalPolicy.RETAIN
       }
     );
 
