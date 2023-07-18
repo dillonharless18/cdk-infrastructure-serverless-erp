@@ -28,11 +28,11 @@ const PIPELINE_STACK_NAME         = "InfrastructurePipelineStack"
 const INFRA_REPO                  = "dillonCF/oneXerp-Infrastructure"
 const LAMBDA_REPO                 = "dillonCF/oneXerp-Lambdas"
 const CUSTOM_OAUTH_CALLBACK_URLS  = {
-    development: ['https://dev.onexerp.com'],
+    development: ['https://dev.onexerp.com', 'http://localhost:3001','http://localhost:3000','http://localhost','https://localhost:3001'],
     prod: ['https://onexerp.com']
 }
 const CUSTOM_OAUTH_LOGOUT_URLS  = {
-    development: ['https://dev.onexerp.com/logout'],
+    development: ['https://dev.onexerp.com/logout','http://localhost:3001/logout','http://localhost:3000/logout','http://localhost/logout','https://localhost:3001/logout'],
     prod: ['https://onexerp.com/logout']
 }
 
