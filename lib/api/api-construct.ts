@@ -20,7 +20,7 @@ import {
   SecurityGroup, 
   SubnetType 
 } from 'aws-cdk-lib/aws-ec2';
-import { IUserPool, IUserPoolClient } from 'aws-cdk-lib/aws-cognito';
+import { IUserPool, IUserPoolClient, UserPool } from 'aws-cdk-lib/aws-cognito';
 import { PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
 import * as fs from "fs";
 import path = require('path');
@@ -274,6 +274,7 @@ export class ApiConstruct extends Construct {
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
 
+      const cognitoUserPoolIdMap = metadata.name == "createUser" ? { USER_POOL_ID: props.userPool.userPoolId } : {}
       // Create the Lambda function
       const lambdaFunction = new lambda.Function(this, `Lambda-${metadata.name}`, {
         code: lambda.Code.fromAsset(path.join(functionsPath, metadata.name)),
@@ -288,9 +289,11 @@ export class ApiConstruct extends Construct {
         securityGroups: [lambdaEndpointsSecurityGroup],
         environment: metadata.environment ? { 
           ...metadata.environment,
+          ...cognitoUserPoolIdMap,
           RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
           RDS_DB_NAME: props.defaultDBName,
         } : {
+          ...cognitoUserPoolIdMap,
           RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
           RDS_DB_NAME: props.defaultDBName,
         },
