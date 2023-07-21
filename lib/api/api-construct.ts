@@ -331,35 +331,15 @@ export class ApiConstruct extends Construct {
       }
 
       
-      // To enable auth for an API endpoint, add the api path here
-      const apisBehindAuth = [
-        "test-auth",
-        "getAllProjects",
-        "item-requests",
-        "purchase-orders/ocr-imported-purchase-order-drafts/{ocrImportedPurchaseOrderId}",
-      ];
-      
-      if ( apisBehindAuth.includes(metadata.apiPath) ) {
-        console.log(`Creating method: ${metadata.httpMethod} for path: ${metadata.apiPath}`);
-        nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
-          authorizationType: apigateway.AuthorizationType.CUSTOM,
-          authorizer: customAuthorizer,
-          requestParameters: updatedMappingTemplateParameters
-                             ? { ...updatedMappingTemplateParameters }
-                             : undefined
-        });  
-      } else {
-        console.log(`Creating method: ${metadata.httpMethod} for path: ${metadata.apiPath}`);
-        nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
-          authorizationType: apigateway.AuthorizationType.NONE,
-          requestParameters: updatedMappingTemplateParameters
-                             ? { ...updatedMappingTemplateParameters }
-                             : undefined
-        });
-      }
+      console.log(`Creating method: ${metadata.httpMethod} for path: ${metadata.apiPath}`);
+      nestedResource.addMethod(metadata.httpMethod, lambdaIntegration, {
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+        authorizer: customAuthorizer,
+        requestParameters: updatedMappingTemplateParameters
+                            ? { ...updatedMappingTemplateParameters }
+                            : undefined
+      });  
     });
-
-    
 
 
     ///////////////////////////
@@ -367,12 +347,12 @@ export class ApiConstruct extends Construct {
     ///////////////////////////
 
   }
-}
+}   // End APIConstruct
 
 
-//////////////////////////
-///      Helpers       ///
-//////////////////////////
+////////////////////////////////
+///      Begin Helpers       ///
+////////////////////////////////
 
 // Function to get metadata for Lambda functions
 const getFunctionMetadata = (functionsPath: string) => {
