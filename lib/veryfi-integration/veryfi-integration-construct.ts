@@ -74,7 +74,8 @@ export class VeryfiIntegrationConstruct extends Construct {
     const veryfiDocumentEventConsumer = new lambda.Function(this, 'VeryfiDocumentEventConsumer', {
         runtime: lambda.Runtime.NODEJS_18_X,
         handler: 'index.handler',
-        timeout: Duration.seconds(60),
+        timeout: Duration.seconds(30),
+        memorySize: 256,
         functionName: lambdaConsumer,
         vpc: props.vpc,
         code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/veryfi-integration/lambda/event-consumer`),
