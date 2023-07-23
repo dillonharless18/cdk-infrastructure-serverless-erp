@@ -40,8 +40,8 @@ export class QuickBooksDesktopConstruct extends Construct {
     });
 
     // Output the ARNs of the queues
-    new CfnOutput(this, 'egressQueue', { value: egressQueue.queueArn, exportName: 'egressQueue' });
-    new CfnOutput(this, 'ingressQueue', { value: ingressQueue.queueArn, exportName: 'ingressQueue' });
+    new CfnOutput(this, 'egressQueue', { value: egressQueue.queueUrl, exportName: 'egressQueue' });
+    new CfnOutput(this, 'ingressQueue', { value: ingressQueue.queueUrl, exportName: 'ingressQueue' });
 
     // TODO make this conditional. Maybe we just want the queues and nothing else
     const role = new Role(this, 'QBDEC2Role', {
