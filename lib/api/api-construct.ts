@@ -21,7 +21,7 @@ import {
   SubnetType 
 } from 'aws-cdk-lib/aws-ec2';
 import { IUserPool, IUserPoolClient, UserPool } from 'aws-cdk-lib/aws-cognito';
-import { PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
+import { ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as fs from "fs";
 import path = require('path');
 import { Bucket } from 'aws-cdk-lib/aws-s3';
@@ -269,7 +269,18 @@ export class ApiConstruct extends Construct {
       exclude: ['cdk.out', 'node_modules', '.git'] // https://github.com/aws/aws-cdk/issues/3899 - The main solution here didn't solve our issue, but doing this did.
     });
 
+    // API Lambda role
+    const apiLambdaRole = new Role(this, 'LambdaExecutionRole', {
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+    });
 
+    apiLambdaRole.addToPolicy(new PolicyStatement({
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: ['*'],
+    }));
+
+    apiLambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole'));
+    apiLambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'));
     
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
@@ -297,18 +308,12 @@ export class ApiConstruct extends Construct {
           RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
           RDS_DB_NAME: props.defaultDBName,
         },
+        role: apiLambdaRole,
         timeout: Duration.seconds(15),
         layers: [databaseLayer]
       });
-
       
 
-      // Give the lambdas access to secrets
-      const secretsManagerAccessPolicy = new PolicyStatement({
-        actions: ['secretsmanager:GetSecretValue'],
-        resources: [`*`],
-      });
-      lambdaFunction.addToRolePolicy(secretsManagerAccessPolicy);
 
       // Create the API Gateway integration for the Lambda function - works even for Lambdas in a VPC
       const lambdaIntegration = new apigateway.LambdaIntegration(lambdaFunction, {});
