@@ -1,7 +1,7 @@
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
-import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { aws_events, aws_events_targets, CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { Construct }   from 'constructs';
 import { createResourceWithHyphenatedName } from "../util/helper";
@@ -45,13 +45,14 @@ export class VeryfiIntegrationConstruct extends Construct {
     });
     
     // Create the Veryfi-document-event-broker SQS queue and DLQ
-    const veryfiDocumentEventDLQ : Queue = new Queue(this, dlqName);
+    const veryfiDocumentEventDLQ : Queue = new Queue(this, dlqName, { queueName: dlqName });
     const veryfiDocumentEventBrokerQueue : Queue = new Queue(this, queueName, {
       visibilityTimeout: Duration.minutes(5),
       deadLetterQueue: {
         queue: veryfiDocumentEventDLQ,
         maxReceiveCount: 5
-      }
+      },
+      queueName: queueName
     })
 
     // Create the Veryfi-document-event-producer Lambda function
@@ -97,8 +98,16 @@ export class VeryfiIntegrationConstruct extends Construct {
     // Get the security group from ID
     const databaseSecurityGroup = SecurityGroup.fromSecurityGroupId(this, 'ImportedOneXerpDatabaseSecurityGroup', props.databaseSecurityGroup.securityGroupId);
   
-    // Adds egress to the database security group, and ingress in the database security group from the veryfiIntegrationLambdaSecurityGroup    
+    // Adds ingress and egress in the database security group from the veryfiIntegrationLambdaSecurityGroup    
     veryfiIntegrationLambdaSecurityGroup.connections.allowTo(databaseSecurityGroup, Port.tcp(443), 'Allow Lambda endpoints to access the oneXerp database');
+
+    // Make VeryfiDocumentEvent Producer a CRON JOB running on an an hourly basis in dev and every 15 minutes in prod
+    const hourlyEventRule = new aws_events.Rule(this, 'VeryfiCronJobRule', {
+      schedule: aws_events.Schedule.cron({ 
+        minute: props.stageName.toLowerCase() === 'development' ? '0' : '0/15', 
+      }),
+    });
+    hourlyEventRule.addTarget(new aws_events_targets.LambdaFunction(veryfiDocumentEventProducer));
 
     // Create the event source mapping between the veryfiDocumentEventConsumer and the VeryfiDocumentEventBrokerQueue
     veryfiDocumentEventConsumer.addEventSource(new SqsEventSource(veryfiDocumentEventBrokerQueue));
