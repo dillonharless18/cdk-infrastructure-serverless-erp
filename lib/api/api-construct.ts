@@ -117,7 +117,7 @@ export class ApiConstruct extends Construct {
     this.authorizerLambdaLayer = authorizerLayer
     
     const errorLayer = new lambda.LayerVersion(this, 'ErrorLayer', {
-      code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/lambda-layers/error-layer`),
+      code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/lambda-layers/errors-layer`),
       compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
       description: 'Centralizes API error response building.'
     });
