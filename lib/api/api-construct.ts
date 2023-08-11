@@ -160,6 +160,25 @@ export class ApiConstruct extends Construct {
       }
     });
 
+    // CORS headers
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': "'*'",
+      'Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+      'Access-Control-Allow-Methods': "'OPTIONS,GET,PUT,POST,DELETE'",
+    };
+
+    // Add Gateway Response for 4xx errors with CORS headers
+    api.addGatewayResponse('4xxResponse', {
+      type: apigateway.ResponseType.DEFAULT_4XX,
+      responseHeaders: corsHeaders,
+    });
+
+    // Add Gateway Response for 5xx errors with CORS headers
+    api.addGatewayResponse('5xxResponse', {
+      type: apigateway.ResponseType.DEFAULT_5XX,
+      responseHeaders: corsHeaders,
+    });
+
     // Pull in the hosted zone
     const hostedZone = HostedZone.fromLookup(this, 'HostedZone', {
         domainName: `${STAGE_NAME_TO_SUBDOMAIN_MAP[stageName]}${domainName}`,
