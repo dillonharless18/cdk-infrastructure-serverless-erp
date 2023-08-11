@@ -68,7 +68,9 @@ The repository is organized as follows:
 │   │   └── cognito-stack.ts
 |   ├── lambda-layers/
 |   |   ├── authorizer-layer/
-|   |   └── database-layer/
+|   |   ├── database-layer/
+|   |   ├── errors-layer/
+|   |   └── response-layer/
 │   └── pipeline/
 │       └── pipeline-stack.ts
 ├── package.json

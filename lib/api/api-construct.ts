@@ -53,6 +53,8 @@ interface ApiConstructProps {
 export class ApiConstruct extends Construct {
   public readonly databaseLambdaLayer:   lambda.LayerVersion
   public readonly authorizerLambdaLayer: lambda.LayerVersion
+  public readonly errorLambdaLayer:      lambda.LayerVersion
+  public readonly responseLambdaLayer:   lambda.LayerVersion
 
   constructor(scope: Construct, id: string, props: ApiConstructProps) {
     super(scope, id);
@@ -113,6 +115,22 @@ export class ApiConstruct extends Construct {
     });
 
     this.authorizerLambdaLayer = authorizerLayer
+    
+    const errorLayer = new lambda.LayerVersion(this, 'ErrorLayer', {
+      code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/lambda-layers/errors-layer`),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
+      description: 'Centralizes API error response building.'
+    });
+
+    this.errorLambdaLayer = errorLayer
+
+    const responseLayer = new lambda.LayerVersion(this, 'ResponseLayer', {
+      code: lambda.Code.fromAsset(`${process.env.CODEBUILD_SRC_DIR}/lib/lambda-layers/response-layer`),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
+      description: 'Centralizes API response building.'
+    });
+
+    this.responseLambdaLayer = responseLayer
 
 
     //////////////////////////
@@ -310,7 +328,7 @@ export class ApiConstruct extends Construct {
         },
         role: apiLambdaRole,
         timeout: Duration.seconds(15),
-        layers: [databaseLayer]
+        layers: [databaseLayer, errorLayer, responseLayer]
       });
       
 
