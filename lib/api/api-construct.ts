@@ -273,7 +273,7 @@ export class ApiConstruct extends Construct {
     const functionMetadata = getFunctionMetadata(functionsPath);
 
     // Save the authorization config as determined by the functions' metadata files.
-    const authorizationConfigFilePath = './authorizationConfig.json';
+    const authorizationConfigFilePath = './authorizationConfig/authorizationConfig.json';
     fs.writeFileSync(authorizationConfigFilePath, JSON.stringify(functionMetadata));
 
 
