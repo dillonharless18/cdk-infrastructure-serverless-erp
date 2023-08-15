@@ -22,6 +22,8 @@ jobs:
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm ci
+            - name: Print directory
+            - run: echo "Current directory: $PWD" # Add this line to print the current directory
             - name: List installed packages
               run: npm list
             - run: npm test
