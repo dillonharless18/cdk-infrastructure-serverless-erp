@@ -13,7 +13,7 @@ jobs:
 
         strategy:
             matrix:
-                node-version: [18.x]
+                node-version: [18.x] # Use the desired Node.js version here
 
         steps:
             - uses: actions/checkout@v2
@@ -22,4 +22,6 @@ jobs:
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm ci
+            - name: List installed packages
+              run: npm list
             - run: npm test
