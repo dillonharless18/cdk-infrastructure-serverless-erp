@@ -22,6 +22,6 @@ jobs:
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm ci
-            - run: npm install @babel/core @babel/preset-env # Install Babel dependencies
-            - run: npx babel src --out-dir dist # Build your files with Babel
+            - run: npm install --save-dev babel-cli @babel/core @babel/preset-env # Install Babel dependencies
+            - run: npx babel src --out-dir dist --presets=@babel/preset-env # Build your files with Babel
             - run: npm test
