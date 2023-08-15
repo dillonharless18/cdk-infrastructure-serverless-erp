@@ -17,3 +17,6 @@ pipeline-template-test-output.json
 
 .env
 
+.vscode/settings.json
+
+coverage
