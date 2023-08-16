@@ -1,25 +1,28 @@
-# Runs npm test when a PR is created or a PR attempts to merge with main
-name: Node.js CI
+name: Run Jest Tests
 
 on:
     push:
-        branches: [main]
+        branches:
+            - main # replace with your default branch if not "main"
     pull_request:
-        branches: [main]
+        branches:
+            - main # replace with your default branch if not "main"
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-
-        strategy:
-            matrix:
-                node-version: [18.x]
+    test:
+        runs-on: ubuntu-latest # the OS for the GitHub runner
 
         steps:
-            - uses: actions/checkout@v2
-            - name: Use Node.js ${{ matrix.node-version }}
+            - name: Checkout repository
+              uses: actions/checkout@v2
+
+            - name: Set up Node.js
               uses: actions/setup-node@v2
               with:
-                  node-version: ${{ matrix.node-version }}
-            - run: npm ci
-            - run: npm test
+                  node-version: "18.x" # Ensure the version matches your project's version
+
+            - name: Install dependencies
+              run: npm install
+
+            - name: Run tests
+              run: npm test
