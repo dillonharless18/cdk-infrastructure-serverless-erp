@@ -318,6 +318,7 @@ export class ApiConstruct extends Construct {
 
     apiLambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole'));
     apiLambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'));
+    apiLambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('service-role/AmazonCognitoPowerUser'));
     
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
