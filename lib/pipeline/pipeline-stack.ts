@@ -169,7 +169,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         //////////////////////
         //    Test Stage    //
         //////////////////////
-        const testStage = new DeployInfrastructureStage(this, `DeployStage-${this.devStageName}`, {
+        const testStage = new DeployInfrastructureStage(this, `DeployStage-${this.testStageName}`, {
             env: { 
                 account: envVariables.developmentAccount,
                 region: this.region
