@@ -5,7 +5,7 @@ import { Construct } from 'constructs';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { DeployInfrastructureStage } from './stages/deploy-infrastructure-stage';
 
-type StageNameOption = 'development' | 'prod'
+type StageNameOption = 'development' | 'test' | 'prod'
 
 interface PipelineStackProps extends cdk.StackProps {
     apiName: string;
@@ -17,6 +17,7 @@ interface PipelineStackProps extends cdk.StackProps {
     pipelineSource: CodePipelineSource;
     pipelineName: string;
     enableQBDIntegrationDevelopment: boolean;
+    enableQBDIntegrationTest: boolean,
     enableQBDIntegrationProduction: boolean;
     amiNameQBDDevelopment?: string;
     amiOwnersQBDDevelopment?: string[];
@@ -32,6 +33,7 @@ interface Environment {
 
 export class InfrastructurePipelineStack extends cdk.Stack {
     private readonly devStageName: StageNameOption  = 'development';
+    private readonly testStageName: StageNameOption = 'test';
     private readonly prodStageName: StageNameOption = 'prod';
 
     constructor(scope: Construct, id: string, envVariables: Environment, props: PipelineStackProps) {
@@ -164,6 +166,37 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             post: [this.generateDatabaseSchemaMigration(devStage, this.region, this.account)]
         });
 
+        //////////////////////
+        //    Test Stage    //
+        //////////////////////
+        const testStage = new DeployInfrastructureStage(this, `DeployStage-${this.devStageName}`, {
+            env: { 
+                account: envVariables.developmentAccount,
+                region: this.region
+            },
+            applicationName: props.applicationName,
+            domainName: props.domainName,
+            apiName: props.apiName,
+            certificateArn: "arn:aws:acm:us-east-1:965371537242:certificate/63fe3769-b735-4660-8bb9-710d7619e67c",
+            crossAccount: true,
+            stageName: this.testStageName,
+            devAccountId: envVariables.developmentAccount,
+            customOauthCallbackURLsList: props.customOauthCallbackURLsMap[this.testStageName],
+            customOauthLogoutURLsList: props.customOauthLogoutURLsMap[this.testStageName],
+            enableQBDIntegration: props.enableQBDIntegrationTest,
+            amiNameQBD: props.amiNameQBDDevelopment,
+            amiOwnersQBD: props.amiOwnersQBDDevelopment
+        });
+        
+        pipeline.addStage(testStage, {
+            pre: [
+                new ManualApprovalStep('ApproveForTest', {
+                    comment: "Approve deployment to test environment"
+                })
+                ],
+            post: [this.generateDatabaseSchemaMigration(testStage, this.region, this.account)]
+        });
+
 
         ////////////////////////////
         //    Production Stage    //
@@ -188,8 +221,8 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         });
         pipeline.addStage(prodStage, {
             pre: [
-            new ManualApprovalStep('ManualApproval', {
-                comment: "Approve deployment to production"
+            new ManualApprovalStep('ApproveForProd', {
+                comment: "Approve deployment to production environment"
             })
             ],
             post: [this.generateDatabaseSchemaMigration(prodStage, this.region, envVariables.productionAccount)]
@@ -211,7 +244,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             })
         ]
     
-        if (stage.stageName === this.prodStageName) {
+        if ( stage.stageName === this.testStageName || stage.stageName === this.prodStageName ) {
             // Assume cross account role if production environment
             buildCommands.push(
                 `aws sts assume-role --role-arn arn:aws:iam::${account}:role/${stage.crossAccountLambdaInvokeRoleName} --role-session-name "CrossAccountSession" > credentials.json`,
