@@ -195,7 +195,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                     comment: "Approve deployment to test environment"
                 })
                 ],
-            post: [this.generateDatabaseSchemaMigration(testStage, this.region, this.account)]
+            post: [this.generateDatabaseSchemaMigration(testStage, this.region, envVariables.testAccount)]
         });
 
 
