@@ -22,6 +22,7 @@ const API_NAME                    = "oneXerpAPI"
 const CODESTAR_ARN                = "arn:aws:codestar-connections:us-east-1:136559125535:connection/c59440ca-db21-4051-b54a-810bbc89464f" // TODO see how programmatic we can make this
 const DOMAIN_NAME                 = "onexerp.com"
 const ENABLE_QBD_DEVELOPMENT      = true
+const ENABLE_QBD_TEST             = true
 const ENABLE_QBD_PRODUCTION       = true
 const PIPELINE_NAME               = "InfrastructurePipeline"
 const PIPELINE_STACK_NAME         = "InfrastructurePipelineStack"
@@ -29,10 +30,12 @@ const INFRA_REPO                  = "dillonCF/oneXerp-Infrastructure"
 const LAMBDA_REPO                 = "dillonCF/oneXerp-Lambdas"
 const CUSTOM_OAUTH_CALLBACK_URLS  = {
     development: ['https://dev.onexerp.com', 'http://localhost:3001','http://localhost:3000','http://localhost','https://localhost:3001'],
+    test: ['https://test.onexerp.com'],
     prod: ['https://onexerp.com']
 }
 const CUSTOM_OAUTH_LOGOUT_URLS  = {
     development: ['https://dev.onexerp.com/logout','http://localhost:3001/logout','http://localhost:3000/logout','http://localhost/logout','https://localhost:3001/logout'],
+    test: ['https://test.onexerp.com/logout'],
     prod: ['https://onexerp.com/logout']
 }
 
@@ -41,8 +44,9 @@ const CUSTOM_OAUTH_LOGOUT_URLS  = {
 // environment variables set in the cdk-deploy-to script
 const envVariables = {
     developmentAccount: '136559125535',
-    productionAccount: '743614460397',
-    region: 'us-east-1',
+    testAccount:        '965371537242',
+    productionAccount:  '743614460397',
+    region:             'us-east-1',
 }
 
 new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
@@ -54,6 +58,7 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
     applicationName: APPLICATION_NAME,
     domainName: DOMAIN_NAME,
     enableQBDIntegrationDevelopment: ENABLE_QBD_DEVELOPMENT,
+    enableQBDIntegrationTest: ENABLE_QBD_TEST,
     enableQBDIntegrationProduction: ENABLE_QBD_PRODUCTION,
     pipelineName: PIPELINE_NAME,
     env: {
