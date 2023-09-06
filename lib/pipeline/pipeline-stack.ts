@@ -27,6 +27,7 @@ interface PipelineStackProps extends cdk.StackProps {
 
 interface Environment {
     developmentAccount: string,
+    testAccount: string,
     productionAccount: string,
     region: string,
 }
@@ -171,7 +172,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         //////////////////////
         const testStage = new DeployInfrastructureStage(this, `DeployStage-${this.testStageName}`, {
             env: { 
-                account: envVariables.developmentAccount,
+                account: envVariables.testAccount,
                 region: this.region
             },
             applicationName: props.applicationName,
