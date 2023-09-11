@@ -323,7 +323,7 @@ export class ApiConstruct extends Construct {
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
 
-      const cognitoUserPoolIdMap = metadata.name == "createUser" ? { USER_POOL_ID: props.userPool.userPoolId } : {}
+      const cognitoUserPoolIdMap = metadata.name == "createUser" || "updateUser" ? { USER_POOL_ID: props.userPool.userPoolId } : {}
       // Create the Lambda function
       const lambdaFunction = new lambda.Function(this, `Lambda-${metadata.name}`, {
         code: lambda.Code.fromAsset(path.join(functionsPath, metadata.name)),
