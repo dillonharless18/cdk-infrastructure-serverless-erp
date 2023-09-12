@@ -69,6 +69,11 @@ export class CognitoConstruct extends Construct {
         email: true,
         username: true,
       },
+      mfa: cognito.Mfa.OPTIONAL, // We can change this to Mfa.OFF OR Mfa.REQUIRED if needed
+      mfaSecondFactor: {
+        sms: false, // Set to true if client wants SMS MFA
+        otp: true   // Set to true if client was TOTP MFA
+      },
       autoVerify: { // Automatically verify the email address of newly created users
         email: true,
       },
