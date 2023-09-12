@@ -84,6 +84,8 @@ export class CognitoConstruct extends Construct {
         requireUppercase: true,
         requireSymbols: true,
       },
+      smsRole: undefined,
+      smsRoleExternalId: undefined
     });
 
     // Define the app client for the user pool
