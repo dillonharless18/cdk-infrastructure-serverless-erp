@@ -42,6 +42,13 @@ export class InfrastructureStack extends Stack {
     const database = new AuroraServerlessV2Construct(this, 'DatabaseConstruct', { 
       stageName: props.stageName 
     })
+
+    const extensibleFinanceModule = new ExtensibleFinanceConstruct(this, 'ExtensibleFinanceModule', {
+      enableQBDIntegration: props.enableQBDIntegration,
+      amiNameQBD: props.amiNameQBD,
+      amiOwnersQBD: props.amiOwnersQBD,
+      vpc: database.vpc, 
+    })
     
     const cognito = new CognitoConstruct(this, 'CognitoConstruct', {
         applicationName: props.applicationName,
@@ -71,7 +78,9 @@ export class InfrastructureStack extends Stack {
           basicuser: cognito.basicUserRole,
           logistics: cognito.logisticsRole,
           projectmanager: cognito.projectManagerRole
-        },        
+        },
+        ingressQueue: extensibleFinanceModule.ingressQueue ? extensibleFinanceModule.ingressQueue : null,
+        egressQueue:  extensibleFinanceModule.egressQueue  ? extensibleFinanceModule.egressQueue  : null,
     });
 
     const migrationsLambda = new MigrationsLambdaConstruct(
@@ -111,14 +120,6 @@ export class InfrastructureStack extends Stack {
       stageName: props.stageName,
       vpc: database.vpc,
       databaseLambdaLayer: [api.databaseLambdaLayer]
-    });
-
-    const extensibleFinanceModule = new ExtensibleFinanceConstruct(this, 'ExtensibleFinanceModule', {
-      enableQBDIntegration: props.enableQBDIntegration,
-      amiNameQBD: props.amiNameQBD,
-      amiOwnersQBD: props.amiOwnersQBD,
-      vpc: database.vpc, 
-    })
-    
+    });    
   }
 }
