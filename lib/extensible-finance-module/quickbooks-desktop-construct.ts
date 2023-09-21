@@ -28,30 +28,35 @@ interface IQuickBooksDesktopConstructProps {
  */
 
 export class QuickBooksDesktopConstruct extends Construct {
+  public readonly egressQueue:  Queue;
+  public readonly ingressQueue: Queue;
+
   constructor(scope: Construct, id: string, props: IQuickBooksDesktopConstructProps) {
     super(scope, id);
 
-    const egressQueue = new Queue(this, 'EgressQueue', {
+    this.egressQueue = new Queue(this, 'EgressQueue', {
       visibilityTimeout: Duration.seconds(60),
+      fifo: true
     });
 
-    const ingressQueue = new Queue(this, 'IngressQueue', {
-      visibilityTimeout: Duration.seconds(60)
+    this.ingressQueue = new Queue(this, 'IngressQueue', {
+      visibilityTimeout: Duration.seconds(60),
+      fifo: true
     });
 
     // Output the ARNs of the queues
-    new CfnOutput(this, 'egressQueue', { value: egressQueue.queueUrl, exportName: 'egressQueue' });
-    new CfnOutput(this, 'ingressQueue', { value: ingressQueue.queueUrl, exportName: 'ingressQueue' });
+    const egressQueueURLCFOutput  = new CfnOutput(this, 'egressQueue', { value: this.egressQueue.queueUrl, exportName: 'egressQueue' });
+    const ingressQueueURLCFOutput = new CfnOutput(this, 'ingressQueue', { value: this.ingressQueue.queueUrl, exportName: 'ingressQueue' });
 
     // TODO make this conditional. Maybe we just want the queues and nothing else
     const role = new Role(this, 'QBDEC2Role', {
       assumedBy: new ServicePrincipal('ec2.amazonaws.com')
     });
 
-    egressQueue.grantSendMessages(role);
-    egressQueue.grantConsumeMessages(role);
-    ingressQueue.grantSendMessages(role);
-    ingressQueue.grantConsumeMessages(role);
+    this.egressQueue.grantSendMessages(role);
+    this.egressQueue.grantConsumeMessages(role);
+    this.ingressQueue.grantSendMessages(role);
+    this.ingressQueue.grantConsumeMessages(role);
 
   // TODO uncomment this to enable the EC2 instance creation.
   // TODO Pending tasks before this should be done 
