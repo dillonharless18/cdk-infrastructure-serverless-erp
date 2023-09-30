@@ -36,12 +36,14 @@ export class QuickBooksDesktopConstruct extends Construct {
 
     this.egressQueue = new Queue(this, 'EgressQueue', {
       visibilityTimeout: Duration.seconds(60),
-      fifo: true
+      fifo: true,
+      contentBasedDeduplication: true
     });
 
     this.ingressQueue = new Queue(this, 'IngressQueue', {
       visibilityTimeout: Duration.seconds(60),
-      fifo: true
+      fifo: true,
+      contentBasedDeduplication: true
     });
 
     // Output the ARNs of the queues
