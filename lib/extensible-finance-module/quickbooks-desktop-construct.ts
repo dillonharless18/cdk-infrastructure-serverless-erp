@@ -7,7 +7,7 @@ import {
  } from "aws-cdk-lib";
 import { AutoScalingGroup } from "aws-cdk-lib/aws-autoscaling";
 import { InstanceType, Vpc } from "aws-cdk-lib/aws-ec2";
-import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { ManagedPolicy, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 
@@ -52,8 +52,16 @@ export class QuickBooksDesktopConstruct extends Construct {
 
     // TODO make this conditional. Maybe we just want the queues and nothing else
     const role = new Role(this, 'QBDEC2Role', {
-      assumedBy: new ServicePrincipal('ec2.amazonaws.com')
+      assumedBy: new ServicePrincipal('ec2.amazonaws.com'),
+      roleName: 'QBDServerRole'
     });
+
+    // TODO - Pare down these permissions
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2FullAccess'));
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonSQSFullAccess'));
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMPatchAssociation'));
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AWSCloudFormationFullAccess'));
 
     this.egressQueue.grantSendMessages(role);
     this.egressQueue.grantConsumeMessages(role);
