@@ -9,12 +9,14 @@ import { AutoScalingGroup } from "aws-cdk-lib/aws-autoscaling";
 import { InstanceType, Vpc } from "aws-cdk-lib/aws-ec2";
 import { ManagedPolicy, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Queue } from "aws-cdk-lib/aws-sqs";
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Construct } from "constructs";
 
 interface IQuickBooksDesktopConstructProps {
     vpc: Vpc;
     amiName: string;
     amiOwners: string[];    
+    applicationName: string;
 }
 
 /**
@@ -44,6 +46,19 @@ export class QuickBooksDesktopConstruct extends Construct {
       visibilityTimeout: Duration.seconds(60),
       fifo: true,
       contentBasedDeduplication: true
+    });
+
+    // Store the queue URLs in the Parameter Store
+    new StringParameter(this, 'EgressQueueURLParameter', {
+      parameterName: `/${props.applicationName}/EgressQueueURL`,
+      stringValue: this.egressQueue.queueUrl,
+      description: 'URL for the EgressQueue'
+    });
+
+    new StringParameter(this, 'IngressQueueURLParameter', {
+      parameterName: `/${props.applicationName}/IngressQueueURL`,
+      stringValue: this.ingressQueue.queueUrl,
+      description: 'URL for the IngressQueue'
     });
 
     // Output the ARNs of the queues

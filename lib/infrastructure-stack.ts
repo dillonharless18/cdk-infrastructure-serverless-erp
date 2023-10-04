@@ -44,6 +44,7 @@ export class InfrastructureStack extends Stack {
     })
 
     const extensibleFinanceModule = new ExtensibleFinanceConstruct(this, 'ExtensibleFinanceModule', {
+      applicationName: props.applicationName,
       enableQBDIntegration: props.enableQBDIntegration,
       amiNameQBD: props.amiNameQBD,
       amiOwnersQBD: props.amiOwnersQBD,

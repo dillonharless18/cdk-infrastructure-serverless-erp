@@ -9,6 +9,7 @@ interface IExtensibleFinanceConstruct {
     enableQBDIntegration: boolean;
     amiNameQBD?: string;
     amiOwnersQBD?: string[];
+    applicationName: string;
 }
 
 /**
@@ -50,6 +51,7 @@ export class ExtensibleFinanceConstruct extends Construct {
     if ( props.enableQBDIntegration && props.amiNameQBD && props.amiOwnersQBD && props.amiOwnersQBD.length > 0) {
 
       qbdInfra = new QuickBooksDesktopConstruct(this, 'QBDInfra', {
+        applicationName: props.applicationName,
         amiName: props.amiNameQBD,
         amiOwners: props.amiOwnersQBD,
         vpc: props.vpc        
