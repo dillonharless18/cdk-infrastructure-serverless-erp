@@ -16,6 +16,7 @@ interface IQuickBooksDesktopConstructProps {
     vpc: Vpc;
     amiName: string;
     amiOwners: string[];    
+    applicationName: string;
 }
 
 /**
@@ -49,13 +50,13 @@ export class QuickBooksDesktopConstruct extends Construct {
 
     // Store the queue URLs in the Parameter Store
     new StringParameter(this, 'EgressQueueURLParameter', {
-      parameterName: '/oneXerp/EgressQueueURL',
+      parameterName: `/${props.applicationName}/EgressQueueURL`,
       stringValue: this.egressQueue.queueUrl,
       description: 'URL for the EgressQueue'
     });
 
     new StringParameter(this, 'IngressQueueURLParameter', {
-      parameterName: '/oneXerp/IngressQueueURL',
+      parameterName: `/${props.applicationName}/IngressQueueURL`,
       stringValue: this.ingressQueue.queueUrl,
       description: 'URL for the IngressQueue'
     });
