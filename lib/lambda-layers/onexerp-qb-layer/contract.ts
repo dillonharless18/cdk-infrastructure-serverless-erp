@@ -1,6 +1,17 @@
-type ActionType = "CREATE_PO" | "CREATE_VENDOR" | "UPDATE_VENDOR" | "CREATE_CUSTOMER" | "UPDATE_CUSTOMER" | "CREATE_JOB" | "UPDATE_JOB";
+enum ActionType {
+    CREATE_PO = "CREATE_PO",
+    CREATE_VENDOR = "CREATE_VENDOR",
+    UPDATE_VENDOR = "UPDATE_VENDOR",
+    CREATE_CUSTOMER = "CREATE_CUSTOMER",
+    UPDATE_CUSTOMER = "UPDATE_CUSTOMER",
+    CREATE_JOB = "CREATE_JOB",
+    UPDATE_JOB = "UPDATE_JOB",
+}
 
-type ItemType = "Materials" | "Other";
+enum ItemType {
+    Materials = "Materials",
+    Other = "Other",
+}
 
 type Address = {
     Addr1: string
@@ -17,6 +28,7 @@ type Address = {
 
 interface OneXerpObject {
     oneXerpId: string; // UUID of the entity in oneXerp
+    
 }
 
 ///////////////////////////
@@ -42,7 +54,7 @@ interface CreateVendorMessage {
 
 
 const createVendorMessage: CreateVendorMessage = {
-    actionType: "CREATE_VENDOR",
+    actionType: ActionType.CREATE_VENDOR,
     body: {
         oneXerpId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         Name: "Test Vendor Name",
@@ -73,7 +85,7 @@ interface UpdateVendorMessage {
 }
 
 const updateVendorMessage: UpdateVendorMessage = {
-    actionType: "UPDATE_VENDOR",
+    actionType: ActionType.UPDATE_VENDOR,
     body: {
         oneXerpId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         Name: "Test Vendor Name",
@@ -122,7 +134,7 @@ interface CreateCustomerMessage {
 }
 
 const createCustomerMessage: CreateCustomerMessage = {
-    actionType: "CREATE_CUSTOMER",
+    actionType: ActionType.CREATE_CUSTOMER,
     body: {
         oneXerpId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         Name: "Test Customer Name",
@@ -153,7 +165,7 @@ interface UpdateCustomerMessage {
 }
 
 const updateCustomerMessage: UpdateCustomerMessage = {
-    actionType: "UPDATE_CUSTOMER",
+    actionType: ActionType.UPDATE_CUSTOMER,
     body: {
         oneXerpId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         Name: "Test Customer Name",
@@ -203,7 +215,7 @@ interface CreateJobMessage {
 }
 
 const createJobMessage: CreateJobMessage = {
-    actionType: "CREATE_JOB",
+    actionType: ActionType.CREATE_JOB,
     body: {
         oneXerpId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         JobCode: "1234",
@@ -223,7 +235,7 @@ interface UpdateJobMessage {
 }
 
 const updateJobMessage: UpdateJobMessage = {
-    actionType: "UPDATE_JOB",
+    actionType: ActionType.UPDATE_JOB,
     body: {
         oneXerpId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         JobCode: "1234",
@@ -237,7 +249,7 @@ const updateJobMessage: UpdateJobMessage = {
 
 // Example of reassociating the job with a different customer
 const updateJobMessageReassociateCustomer: UpdateJobMessage = {
-    actionType: "UPDATE_JOB",
+    actionType: ActionType.UPDATE_JOB,
     body: {
         oneXerpId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
         JobCode: "1234",            // Note that we need this in order to look up the job in QB
@@ -277,7 +289,7 @@ interface CreatePOMessage {
 }
 
 const createPurchaseOrderMessage: CreatePOMessage = {
-    actionType: "CREATE_PO",
+    actionType: ActionType.CREATE_PO,
     body: {
         oneXerpId: "12345678-abcd-1234-abcd-1234567890ab", 
         VendorName: "3form",
@@ -324,5 +336,5 @@ interface IngressMessage {
 const createPOIngressMessage: IngressMessage = {
     QuickbooksId: "CREATE_PO",
     OneXerpId:    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    Type:         "CREATE_PO"
+    Type:         ActionType.CREATE_PO
 }
