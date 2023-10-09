@@ -28,6 +28,7 @@
     "typescript": "~4.9.3"
   },
   "dependencies": {
+    "@aws-sdk/client-sqs": "^3.421.0",
     "@babel/core": "^7.22.10",
     "@babel/preset-env": "^7.22.10",
     "@types/aws-lambda": "^8.10.114",
@@ -37,6 +38,7 @@
     "constructs": "^10.0.0",
     "module-alias": "^2.2.3",
     "node-fetch": "^3.3.2",
-    "source-map-support": "^0.5.21"
+    "source-map-support": "^0.5.21",
+    "zod": "^3.22.4"
   }
 }
