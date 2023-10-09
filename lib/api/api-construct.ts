@@ -26,6 +26,7 @@ import * as fs from "fs";
 import path = require('path');
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+import { Queue } from 'aws-cdk-lib/aws-sqs';
 
 // NOTE These are intentionally lower-case in order to strip and lower case all the roles sent in the metadata to look for the match here
 type APIRoleOptions = 'admin' | 'basicuser' | 'driver' | 'logistics' | 'projectmanager'
@@ -47,6 +48,8 @@ interface ApiConstructProps {
     dbCredentialsSecretArn: CfnOutput, 
     defaultDBName: string,
     APIRoles: Record<APIRoleOptions, Role>
+    egressQueue:   Queue | null;
+    ingressQueue:  Queue | null;
 }
 
 
@@ -319,11 +322,13 @@ export class ApiConstruct extends Construct {
     apiLambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole'));
     apiLambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'));
     apiLambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonCognitoPowerUser'));
+    apiLambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonSQSFullAccess'));
+
     
     // Iterate through the metadata and create Lambda functions, integrations, and API Gateway resources
     functionMetadata.forEach((metadata) => {
 
-      const cognitoUserPoolIdMap = metadata.name == "createUser" ? { USER_POOL_ID: props.userPool.userPoolId } : {}
+      const cognitoUserPoolIdMap = metadata.name == "createUser" || "updateUser" ? { USER_POOL_ID: props.userPool.userPoolId } : {}
       // Create the Lambda function
       const lambdaFunction = new lambda.Function(this, `Lambda-${metadata.name}`, {
         code: lambda.Code.fromAsset(path.join(functionsPath, metadata.name)),
@@ -341,10 +346,14 @@ export class ApiConstruct extends Construct {
           ...cognitoUserPoolIdMap,
           RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
           RDS_DB_NAME: props.defaultDBName,
+          EGRESS_QUEUE_URL: props.egressQueue?.queueUrl,
+          INGRESS_QUEUE_URL: props.ingressQueue?.queueUrl,
         } : {
           ...cognitoUserPoolIdMap,
           RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
           RDS_DB_NAME: props.defaultDBName,
+          EGRESS_QUEUE_URL: props.egressQueue?.queueUrl,
+          INGRESS_QUEUE_URL: props.ingressQueue?.queueUrl,
         },
         role: apiLambdaRole,
         timeout: Duration.seconds(15),

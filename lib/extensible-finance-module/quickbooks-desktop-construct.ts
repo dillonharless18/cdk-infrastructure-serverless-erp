@@ -7,14 +7,16 @@ import {
  } from "aws-cdk-lib";
 import { AutoScalingGroup } from "aws-cdk-lib/aws-autoscaling";
 import { InstanceType, Vpc } from "aws-cdk-lib/aws-ec2";
-import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { ManagedPolicy, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Queue } from "aws-cdk-lib/aws-sqs";
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { Construct } from "constructs";
 
 interface IQuickBooksDesktopConstructProps {
     vpc: Vpc;
     amiName: string;
     amiOwners: string[];    
+    applicationName: string;
 }
 
 /**
@@ -28,30 +30,58 @@ interface IQuickBooksDesktopConstructProps {
  */
 
 export class QuickBooksDesktopConstruct extends Construct {
+  public readonly egressQueue:  Queue;
+  public readonly ingressQueue: Queue;
+
   constructor(scope: Construct, id: string, props: IQuickBooksDesktopConstructProps) {
     super(scope, id);
 
-    const egressQueue = new Queue(this, 'EgressQueue', {
+    this.egressQueue = new Queue(this, 'EgressQueue', {
       visibilityTimeout: Duration.seconds(60),
+      fifo: true,
+      contentBasedDeduplication: true
     });
 
-    const ingressQueue = new Queue(this, 'IngressQueue', {
-      visibilityTimeout: Duration.seconds(60)
+    this.ingressQueue = new Queue(this, 'IngressQueue', {
+      visibilityTimeout: Duration.seconds(60),
+      fifo: true,
+      contentBasedDeduplication: true
+    });
+
+    // Store the queue URLs in the Parameter Store
+    new StringParameter(this, 'EgressQueueURLParameter', {
+      parameterName: `/${props.applicationName}/EgressQueueURL`,
+      stringValue: this.egressQueue.queueUrl,
+      description: 'URL for the EgressQueue'
+    });
+
+    new StringParameter(this, 'IngressQueueURLParameter', {
+      parameterName: `/${props.applicationName}/IngressQueueURL`,
+      stringValue: this.ingressQueue.queueUrl,
+      description: 'URL for the IngressQueue'
     });
 
     // Output the ARNs of the queues
-    new CfnOutput(this, 'egressQueue', { value: egressQueue.queueUrl, exportName: 'egressQueue' });
-    new CfnOutput(this, 'ingressQueue', { value: ingressQueue.queueUrl, exportName: 'ingressQueue' });
+    const egressQueueURLCFOutput  = new CfnOutput(this, 'egressQueue', { value: this.egressQueue.queueUrl, exportName: 'egressQueue' });
+    const ingressQueueURLCFOutput = new CfnOutput(this, 'ingressQueue', { value: this.ingressQueue.queueUrl, exportName: 'ingressQueue' });
 
     // TODO make this conditional. Maybe we just want the queues and nothing else
     const role = new Role(this, 'QBDEC2Role', {
-      assumedBy: new ServicePrincipal('ec2.amazonaws.com')
+      assumedBy: new ServicePrincipal('ec2.amazonaws.com'),
+      roleName: 'QBDServerRole'
     });
 
-    egressQueue.grantSendMessages(role);
-    egressQueue.grantConsumeMessages(role);
-    ingressQueue.grantSendMessages(role);
-    ingressQueue.grantConsumeMessages(role);
+    // TODO - Pare down these permissions
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2FullAccess'));
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonSQSFullAccess'));
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMPatchAssociation'));
+    role.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('AWSCloudFormationFullAccess'));
+
+    this.egressQueue.grantSendMessages(role);
+    this.egressQueue.grantConsumeMessages(role);
+    this.ingressQueue.grantSendMessages(role);
+    this.ingressQueue.grantConsumeMessages(role);
 
   // TODO uncomment this to enable the EC2 instance creation.
   // TODO Pending tasks before this should be done 

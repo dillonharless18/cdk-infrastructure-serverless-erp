@@ -185,7 +185,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             customOauthCallbackURLsList: props.customOauthCallbackURLsMap[this.testStageName],
             customOauthLogoutURLsList: props.customOauthLogoutURLsMap[this.testStageName],
             enableQBDIntegration: props.enableQBDIntegrationTest,
-            amiNameQBD: props.amiNameQBDDevelopment,
+            amiNameQBD: props.amiNameQBDDevelopment, // TODO update this
             amiOwnersQBD: props.amiOwnersQBDDevelopment
         });
         

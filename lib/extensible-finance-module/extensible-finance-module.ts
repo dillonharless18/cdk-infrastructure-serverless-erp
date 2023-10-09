@@ -1,3 +1,4 @@
+import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 import { QuickBooksDesktopConstruct } from "./quickbooks-desktop-construct";
@@ -8,6 +9,7 @@ interface IExtensibleFinanceConstruct {
     enableQBDIntegration: boolean;
     amiNameQBD?: string;
     amiOwnersQBD?: string[];
+    applicationName: string;
 }
 
 /**
@@ -16,6 +18,9 @@ interface IExtensibleFinanceConstruct {
  */
 
 export class ExtensibleFinanceConstruct extends Construct {
+  public readonly egressQueue: Queue | null = null;
+  public readonly ingressQueue: Queue | null = null;
+
   constructor(scope: Construct, id: string, props: IExtensibleFinanceConstruct) {
     super(scope, id);
 
@@ -44,11 +49,16 @@ export class ExtensibleFinanceConstruct extends Construct {
 
     let qbdInfra
     if ( props.enableQBDIntegration && props.amiNameQBD && props.amiOwnersQBD && props.amiOwnersQBD.length > 0) {
+
       qbdInfra = new QuickBooksDesktopConstruct(this, 'QBDInfra', {
+        applicationName: props.applicationName,
         amiName: props.amiNameQBD,
         amiOwners: props.amiOwnersQBD,
         vpc: props.vpc        
       })
+
+      this.egressQueue  = qbdInfra.egressQueue;
+      this.ingressQueue = qbdInfra.ingressQueue; 
     }
 
     ////////////////////////////
