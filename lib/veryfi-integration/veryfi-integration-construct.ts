@@ -169,7 +169,7 @@ export class VeryfiIntegrationConstruct extends Construct {
         );
 
         // Make VeryfiDocumentEvent Producer a CRON JOB running on an an hourly basis in dev and every 15 minutes in prod
-        const hourlyEventRule = new aws_events.Rule(this, "VeryfiCronJobRule", {
+        const cronJobEvenRule = new aws_events.Rule(this, "VeryfiCronJobRule", {
             schedule: aws_events.Schedule.cron({
                 minute:
                     props.stageName.toLowerCase() === "development"
@@ -177,7 +177,7 @@ export class VeryfiIntegrationConstruct extends Construct {
                         : "0/15",
             }),
         });
-        hourlyEventRule.addTarget(
+        cronJobEvenRule.addTarget(
             new aws_events_targets.LambdaFunction(veryfiDocumentEventProducer)
         );
 
