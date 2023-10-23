@@ -12,17 +12,17 @@ import { CreateCustomerMessage } from "../OneXerpEgressQueueMessage/classes/Crea
 import { UpdateCustomerMessage } from "../OneXerpEgressQueueMessage/classes/UpdateCustomerMessage";
 import { CreateJobMessage } from "../OneXerpEgressQueueMessage/classes/CreateJobMessage";
 import { UpdateJobMessage } from "../OneXerpEgressQueueMessage/classes/UpdateJobMessage";
+import { SQSEvent } from "aws-lambda";
+import { OneXerpIngressMessage } from "../OneXerpIngressMessage/classes/OneXerpIngressMessage";
+import { IOneXerpIngressMessage } from "../OneXerpIngressMessage/interfaces/IOneXerpIngressMessage";
 
 export class OneXerpQBUtil {
     private readonly oneXerpEgressQueueClient: SQSClient;
-    private readonly awsRegion: string = process!.env!["AWS_REGION"]!;
     private readonly oneXerpEgressQueueUrl: string =
         process.env["EGRESS_QUEUE_URL"]!;
 
-    public constructor() {
-        this.oneXerpEgressQueueClient = new SQSClient({
-            region: this.awsRegion,
-        });
+    public constructor(sqsClient: SQSClient) {
+        this.oneXerpEgressQueueClient = sqsClient;
     }
     /**
      * Sends a message to the oneXerp QB Egress Queue given a url and message body.
@@ -51,6 +51,54 @@ export class OneXerpQBUtil {
             );
             throw error;
         }
+    }
+
+    /**
+     *
+     * Used to process SQS events that are received from the OneXerpQBIngressQueue.
+     * This method will catch and throw errors, so the caller must be ready to handle
+     * the thrown errors.
+     *
+     * This method expects the caller to handle thrown exceptions.
+     */
+    public receiveMessageFromOneXerpQBIngressQueue(
+        event: SQSEvent
+    ): IOneXerpIngressMessage[] {
+        const oneXerpQBIngressMessages: IOneXerpIngressMessage[] = [];
+
+        try {
+            for (const record of event.Records) {
+                const messageBody = JSON.parse(record.body);
+                const ingressMessage = new OneXerpIngressMessage(
+                    messageBody.OneXerpId,
+                    messageBody.QuickbooksId,
+                    messageBody.Type,
+                    messageBody.ErrorMessage
+                );
+
+                console.log(
+                    "Received OneXerpQBIngressQueue message:",
+                    ingressMessage
+                );
+
+                oneXerpQBIngressMessages.push(ingressMessage);
+            }
+        } catch (error) {
+            console.error(
+                "Error processing OneXerpQBIngressQueue SQS event:",
+                error
+            );
+            throw error;
+        }
+
+        return oneXerpQBIngressMessages;
+    }
+
+    /**
+     * Gets the AWS region that a given lambda runtime environment exists in
+     */
+    public getAwsRegion(): string {
+        return process!.env!["AWS_REGION"]!;
     }
 
     /**
