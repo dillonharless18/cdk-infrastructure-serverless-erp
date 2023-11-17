@@ -20,6 +20,7 @@ interface InfrastructureStackProps extends StackProps {
     crossAccount: boolean;
     stageName: string;
     devAccountId: string;
+    corsS3AssetsAllowedOrigins: string[];
     customOauthCallbackURLsList: string[];
     customOauthLogoutURLsList: string[];
     enableQBDIntegration: boolean;
@@ -56,6 +57,7 @@ export class InfrastructureStack extends Stack {
         domainName: props.domainName,
         env: props.env,
         stageName: props.stageName,
+        corsS3AssetsAllowedOrigins: props.corsS3AssetsAllowedOrigins,
         customOauthCallbackURLsList: [...props.customOauthCallbackURLsList],
         customOauthLogoutURLsList: [...props.customOauthLogoutURLsList],
     })

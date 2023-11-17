@@ -21,6 +21,7 @@ interface CognitoConstructProps {
     }
     domainName: string;
     stageName: string;
+    corsS3AssetsAllowedOrigins: string[];
     customOauthCallbackURLsList: string[];
     customOauthLogoutURLsList: string[];
 }
@@ -100,7 +101,7 @@ export class CognitoConstruct extends Construct {
         flows: {
           authorizationCodeGrant: true,
           implicitCodeGrant: false,
-          clientCredentials: false,
+          clientCredentials: false
         },
         callbackUrls: [...props.customOauthCallbackURLsList],
         logoutUrls:   [...props.customOauthLogoutURLsList]
@@ -162,6 +163,28 @@ export class CognitoConstruct extends Construct {
     assetBucket.bucket.grantReadWrite(logisticsRole)
     assetBucket.bucket.grantReadWrite(projectManagerRole)
     assetBucket.bucket.grantReadWrite(driverRole)
+    
+    // Add appropriate CORS Rules to bucket per env
+    let corsAllowedMethods = [
+      cdk.aws_s3.HttpMethods.GET, 
+      cdk.aws_s3.HttpMethods.POST, 
+      cdk.aws_s3.HttpMethods.PUT, 
+      cdk.aws_s3.HttpMethods.DELETE
+    ]
+
+    let corsExposedHeaders = [
+      'x-amz-server-side-encryption',
+      'x-amz-request-id',
+      'x-amz-id-2'
+    ]
+
+    assetBucket.bucket.addCorsRule({
+      allowedMethods: corsAllowedMethods, // TODO - Determine what allowedMethods we actually need
+      allowedOrigins: props.corsS3AssetsAllowedOrigins,
+      allowedHeaders: ['*'],
+      exposedHeaders: corsExposedHeaders,
+      maxAge: 3000 // Cache preflight requests for 3000 seconds
+    });
 
     ///////////////////////////////////
     ///      Cognito - Config       ///
