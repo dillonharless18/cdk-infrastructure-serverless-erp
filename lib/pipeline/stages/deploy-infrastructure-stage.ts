@@ -11,12 +11,13 @@ interface CustomStageProps extends StageProps {
     env: {
         account: string;
         region:  string;
-    }
+    },
     apiName: string;
     certificateArn: string;
     crossAccount: boolean;
     stageName: string;
     devAccountId: string;
+    corsS3AssetsAllowedOrigins: string[];
     customOauthCallbackURLsList: string[];
     customOauthLogoutURLsList: string[];
     enableQBDIntegration: boolean;

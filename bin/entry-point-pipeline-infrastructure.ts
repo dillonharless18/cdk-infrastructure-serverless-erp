@@ -38,6 +38,11 @@ const CUSTOM_OAUTH_LOGOUT_URLS  = {
     test: ['https://test.onexerp.com/logout'],
     prod: ['https://onexerp.com/logout']
 }
+const CORS_S3_BUCKET_ALLOWED_ORIGINS  = {
+    development: ['https://dev.onexerp.com', 'http://localhost:3001','http://localhost:3000','http://localhost','https://localhost:3001'],
+    test: ['https://test.onexerp.com'],
+    prod: ['https://onexerp.com']
+}
 
 
 
@@ -56,6 +61,7 @@ new InfrastructurePipelineStack(app, `${PIPELINE_STACK_NAME}`, envVariables, {
     amiOwnersQBDProduction:AMI_OWNERS_QB_PRODUCTION,
     apiName: API_NAME,
     applicationName: APPLICATION_NAME,
+    corsS3AssetsAllowedOrigins: CORS_S3_BUCKET_ALLOWED_ORIGINS,
     domainName: DOMAIN_NAME,
     enableQBDIntegrationDevelopment: ENABLE_QBD_DEVELOPMENT,
     enableQBDIntegrationTest: ENABLE_QBD_TEST,

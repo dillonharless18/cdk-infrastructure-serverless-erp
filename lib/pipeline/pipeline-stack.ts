@@ -10,6 +10,7 @@ type StageNameOption = 'development' | 'test' | 'prod'
 interface PipelineStackProps extends cdk.StackProps {
     apiName: string;
     applicationName: string;
+    corsS3AssetsAllowedOrigins: Record<StageNameOption, string[]>
     customOauthCallbackURLsMap?: Record<StageNameOption, string[]>
     customOauthLogoutURLsMap?: Record<StageNameOption, string[]>
     domainName: string;
@@ -48,6 +49,9 @@ export class InfrastructurePipelineStack extends cdk.Stack {
         if ( !props.customOauthLogoutURLsMap ) throw Error ("customOauthLogoutURLsMap is not defined")
         if ( !props.customOauthLogoutURLsMap.development ) throw Error ("customOauthLogoutURLsMap.development is not defined")
         if ( !props.customOauthLogoutURLsMap.prod ) throw Error ("customOauthLogoutURLsMap.prod is not defined")
+        if ( !props.corsS3AssetsAllowedOrigins ) throw Error ("corsS3AssetsAllowedOrigins is not defined")
+        if ( !props.corsS3AssetsAllowedOrigins.development ) throw Error ("corsS3AssetsAllowedOrigins.development is not defined")
+        if ( !props.corsS3AssetsAllowedOrigins.prod ) throw Error ("corsS3AssetsAllowedOrigins.prod is not defined")
         if ( !props.env) throw Error("props.env is not defined")
         if ( !props.env.account ) throw Error("account is not defined.")
         if ( !props.env.region ) throw Error("region is not defined.")
@@ -153,6 +157,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             domainName: props.domainName,
             apiName: props.apiName,
             certificateArn: "arn:aws:acm:us-east-1:136559125535:certificate/dfd3aaa6-d14e-4ac9-b33a-fcbe51f54989",
+            corsS3AssetsAllowedOrigins: props.corsS3AssetsAllowedOrigins[this.devStageName],
             crossAccount: false, // TODO look into this
             stageName: this.devStageName,
             devAccountId: envVariables.developmentAccount,
@@ -179,6 +184,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             domainName: props.domainName,
             apiName: props.apiName,
             certificateArn: "arn:aws:acm:us-east-1:965371537242:certificate/63fe3769-b735-4660-8bb9-710d7619e67c",
+            corsS3AssetsAllowedOrigins: props.corsS3AssetsAllowedOrigins[this.testStageName],
             crossAccount: true,
             stageName: this.testStageName,
             devAccountId: envVariables.developmentAccount,
@@ -211,6 +217,7 @@ export class InfrastructurePipelineStack extends cdk.Stack {
             domainName: props.domainName,
             apiName: props.apiName,
             certificateArn: "arn:aws:acm:us-east-1:743614460397:certificate/57206c73-27f6-4fee-bf04-3297fa3a0703",
+            corsS3AssetsAllowedOrigins: props.corsS3AssetsAllowedOrigins[this.prodStageName],
             crossAccount: true, // TODO look into this
             stageName: this.prodStageName,
             devAccountId: envVariables.developmentAccount,
