@@ -192,7 +192,7 @@ export class VeryfiIntegrationConstruct extends Construct {
         );
 
         // Grant Consumer write access to the veryfi image bucket
-        assetBucket.grantWrite(veryfiDocumentEventProducer);
+        assetBucket.grantWrite(veryfiDocumentEventConsumer);
 
         // Grant Event Consumer access to the secrets manager for DB credentials
         // Create a Secrets Manager access policy
