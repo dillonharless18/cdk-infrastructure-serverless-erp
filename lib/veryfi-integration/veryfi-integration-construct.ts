@@ -67,6 +67,7 @@ export class VeryfiIntegrationConstruct extends Construct {
             props.stageName,
             "VeryfiLambdaSecurityGroup"
         );
+        // The bucket that will stored all images that are ingested by veryfi
         const assetBucketArn = Fn.importValue("AssetBucketArnExport");
         const assetBucket = Bucket.fromBucketArn(
             this,
