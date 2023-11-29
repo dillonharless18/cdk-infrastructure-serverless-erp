@@ -6,6 +6,7 @@ import {
     aws_events_targets,
     CfnOutput,
     Duration,
+    Fn,
     RemovalPolicy,
 } from "aws-cdk-lib";
 import { Queue } from "aws-cdk-lib/aws-sqs";
@@ -66,15 +67,12 @@ export class VeryfiIntegrationConstruct extends Construct {
             props.stageName,
             "VeryfiLambdaSecurityGroup"
         );
-
-        // Create the Veryfi image bucket to store all purchase order images
-        const veryfiPurchaseOrderImageBucket: Bucket = new Bucket(
+        // The bucket that will store all images that are ingested by veryfi
+        const assetBucketArn = Fn.importValue("AssetBucketArnExport");
+        const assetBucket = Bucket.fromBucketArn(
             this,
-            veryfiPurchaseOrderImageBucketName,
-            {
-                removalPolicy: RemovalPolicy.RETAIN, // retain the bucket if the stack is accidentally deleted
-                autoDeleteObjects: false, // retain all objects if the bucket is deleted
-            }
+            "ImportedAssetBucket",
+            assetBucketArn
         );
 
         // Create the Veryfi-document-event-broker SQS queue and DLQ
@@ -134,7 +132,7 @@ export class VeryfiIntegrationConstruct extends Construct {
                     `${process.env.CODEBUILD_SRC_DIR}/lib/veryfi-integration/lambda/event-consumer`
                 ),
                 environment: {
-                    BUCKET_NAME: veryfiPurchaseOrderImageBucket.bucketName,
+                    BUCKET_NAME: assetBucket.bucketName,
                     RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
                     RDS_DB_NAME: props.defaultDBName,
                 },
@@ -195,7 +193,7 @@ export class VeryfiIntegrationConstruct extends Construct {
         );
 
         // Grant Consumer write access to the veryfi image bucket
-        veryfiPurchaseOrderImageBucket.grantWrite(veryfiDocumentEventConsumer);
+        assetBucket.grantWrite(veryfiDocumentEventConsumer);
 
         // Grant Event Consumer access to the secrets manager for DB credentials
         // Create a Secrets Manager access policy
