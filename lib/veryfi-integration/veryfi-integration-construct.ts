@@ -14,6 +14,7 @@ import { Construct } from "constructs";
 import { createResourceWithHyphenatedName } from "../util/helper";
 import { ISecurityGroup, IVpc, Port, SecurityGroup } from "aws-cdk-lib/aws-ec2";
 import { Effect, Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { CustomBucket } from "../s3/s3-bucket-construct";
 
 export interface VeryfiIntegrationConstructProps {
     env: {
@@ -26,6 +27,7 @@ export interface VeryfiIntegrationConstructProps {
     stageName: string;
     vpc: IVpc;
     databaseLambdaLayer: lambda.LayerVersion[];
+    assetBucket: CustomBucket;
 }
 
 export class VeryfiIntegrationConstruct extends Construct {
@@ -66,13 +68,6 @@ export class VeryfiIntegrationConstruct extends Construct {
             props.env.region,
             props.stageName,
             "VeryfiLambdaSecurityGroup"
-        );
-        // The bucket that will store all images that are ingested by veryfi
-        const assetBucketArn = Fn.importValue("AssetBucketArnExport");
-        const assetBucket = Bucket.fromBucketArn(
-            this,
-            "ImportedAssetBucket",
-            assetBucketArn
         );
 
         // Create the Veryfi-document-event-broker SQS queue and DLQ
@@ -132,7 +127,7 @@ export class VeryfiIntegrationConstruct extends Construct {
                     `${process.env.CODEBUILD_SRC_DIR}/lib/veryfi-integration/lambda/event-consumer`
                 ),
                 environment: {
-                    BUCKET_NAME: assetBucket.bucketName,
+                    BUCKET_NAME: props.assetBucket.bucket.bucketName,
                     RDS_DB_PASS_SECRET_ID: props.dbCredentialsSecretName.value,
                     RDS_DB_NAME: props.defaultDBName,
                 },
@@ -192,8 +187,8 @@ export class VeryfiIntegrationConstruct extends Construct {
             veryfiDocumentEventConsumer
         );
 
-        // Grant Consumer write access to the veryfi image bucket
-        assetBucket.grantWrite(veryfiDocumentEventConsumer);
+        // Grant Consumer write access to the veryfi asset bucket
+        props.assetBucket.bucket.grantWrite(veryfiDocumentEventConsumer);
 
         // Grant Event Consumer access to the secrets manager for DB credentials
         // Create a Secrets Manager access policy

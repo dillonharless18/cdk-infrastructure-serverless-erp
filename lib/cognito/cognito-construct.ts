@@ -34,6 +34,7 @@ export class CognitoConstruct extends Construct {
     public readonly projectManagerRole: iam.Role;
     public readonly userPool: cognito.IUserPool;
     public readonly appClient: cognito.IUserPoolClient;
+    public readonly oneXerpAssetsBucket: CustomBucket;
 
     constructor(scope: Construct, id: string, props: CognitoConstructProps) {
         super(scope, id);
@@ -242,18 +243,12 @@ export class CognitoConstruct extends Construct {
                 removalPolicy: cdk.RemovalPolicy.RETAIN,
             }
         );
-
+        this.oneXerpAssetsBucket = assetBucket;
         assetBucket.bucket.grantReadWrite(adminRole);
         assetBucket.bucket.grantReadWrite(basicUserRole);
         assetBucket.bucket.grantReadWrite(logisticsRole);
         assetBucket.bucket.grantReadWrite(projectManagerRole);
         assetBucket.bucket.grantReadWrite(driverRole);
-
-        // Export the bucket ARN
-        new cdk.CfnOutput(this, "AssetBucketArn", {
-            value: assetBucket.bucket.bucketArn,
-            exportName: "AssetBucketArnExport",
-        });
 
         // Add appropriate CORS Rules to bucket per env
         let corsAllowedMethods = [
