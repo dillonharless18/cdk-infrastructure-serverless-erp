@@ -91,6 +91,9 @@ export class InfrastructurePipelineStack extends cdk.Stack {
                     "cd $CODEBUILD_SRC_DIR/lib/veryfi-integration/lambda/event-producer",
                     "npm ci --production",
                     "cd -",
+                    "cd $CODEBUILD_SRC_DIR/lib/veryfi-integration/lambda/event-consumer",
+                    "npm ci --production",
+                    "cd -",
                     "npx cdk synth"
                 ],
                 env: {
