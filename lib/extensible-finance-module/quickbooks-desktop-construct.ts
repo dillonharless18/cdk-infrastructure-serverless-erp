@@ -40,14 +40,14 @@ export class QuickBooksDesktopConstruct extends Construct {
       visibilityTimeout: Duration.seconds(60),
       fifo: true,
       contentBasedDeduplication: true,
-      receiveMessageWaitTime: Duration.seconds(5)
+      receiveMessageWaitTime: Duration.seconds(20)
     });
 
     this.ingressQueue = new Queue(this, 'IngressQueue', {
       visibilityTimeout: Duration.seconds(60),
       fifo: true,
       contentBasedDeduplication: true,
-      receiveMessageWaitTime: Duration.seconds(5)
+      receiveMessageWaitTime: Duration.seconds(20)
     });
 
     // Store the queue URLs in the Parameter Store
