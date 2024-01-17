@@ -35,7 +35,7 @@ export class AuroraServerlessV2Construct extends Construct {
   public readonly secretName: CfnOutput;
   public readonly securityGroup: ec2.SecurityGroup;
   public readonly vpc: ec2.Vpc;
-  public readonly defaultDatabaseName: string = "applicationDatabase";
+  public readonly defaultDatabaseName: string = "applicationDB";
   public readonly lambdaIamRoleForDbAccess: Role;
   public readonly databaseProxy: rds.DatabaseProxy;
 
@@ -112,7 +112,7 @@ export class AuroraServerlessV2Construct extends Construct {
       // RDS proxy
       const rdsProxy = new rds.DatabaseProxy(this, 'RdsProxy', {
         vpc: databaseVpc,
-        dbProxyName: 'application-database-proxy',
+        dbProxyName: 'application-db-proxy',
         secrets: [secret],
         securityGroups: [databaseSecurityGroup],
         proxyTarget: rds.ProxyTarget.fromCluster(cluster)
