@@ -77,7 +77,7 @@ export class AuroraServerlessV2Construct extends Construct {
     // Full spec https://github.com/aws/aws-cdk/issues/20197#issuecomment-1117555047
     const cluster = new rds.DatabaseCluster(this, 'DbCluster', {
         engine: rds.DatabaseClusterEngine.auroraPostgres({
-          version: rds.AuroraPostgresEngineVersion.VER_13_6,
+          version: rds.AuroraPostgresEngineVersion.VER_13_7,
         }),
         defaultDatabaseName: this.defaultDatabaseName,
         instances: 1,
