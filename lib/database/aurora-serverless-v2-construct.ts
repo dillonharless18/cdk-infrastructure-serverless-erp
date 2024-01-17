@@ -57,7 +57,7 @@ export class AuroraServerlessV2Construct extends Construct {
 
     // Storing VPC ID in SSM because using a CFN export inside vpc.fromLookUp in other stacks doesn't work due to tokenization of the CFN output.
     new StringParameter(this, 'VPCID', {
-      parameterName: `DatabaseVPCId`,
+      parameterName: `DbVPCId`,
       stringValue: databaseVpc.vpcId
     })
     
