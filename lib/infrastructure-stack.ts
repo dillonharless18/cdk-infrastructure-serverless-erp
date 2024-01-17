@@ -7,9 +7,11 @@ import { ApiConstruct } from "./api/api-construct";
 import { SeedLambdaConstruct } from "./database/seed-database-lambda-construct";
 import { VeryfiIntegrationConstruct } from "./veryfi-integration/veryfi-integration-construct";
 import { ExtensibleFinanceConstruct } from "./extensible-finance-module/extensible-finance-module";
+import { DatabaseStack } from "./pipeline/stacks/database-stack";
 
 interface InfrastructureStackProps extends StackProps {
     applicationName: string;
+    database: DatabaseStack;
     domainName: string;
     env: {
         account: string;
@@ -44,13 +46,15 @@ export class InfrastructureStack extends Stack {
 
         if (!props) throw Error("props is not defined");
 
-        const database = new AuroraServerlessV2Construct(
-            this,
-            "DatabaseConstruct",
-            {
-                stageName: props.stageName,
-            }
-        );
+        // const database = new AuroraServerlessV2Construct(
+        //     this,
+        //     "DatabaseConstruct",
+        //     {
+        //         stageName: props.stageName,
+        //     }
+        // );
+
+        const database = props.database
 
         const extensibleFinanceModule = new ExtensibleFinanceConstruct(
             this,
