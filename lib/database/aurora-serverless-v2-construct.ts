@@ -63,7 +63,7 @@ export class AuroraServerlessV2Construct extends Construct {
     
     // Create a secret to store the database credentials
     const secret = new secretsmanager.Secret(this, 'DatabaseSecret', {
-        secretName: 'database-credentials',
+        secretName: 'database-creds',
         generateSecretString: {
           secretStringTemplate: JSON.stringify({
               username: 'postgres',
